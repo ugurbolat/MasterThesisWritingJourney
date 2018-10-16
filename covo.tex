@@ -1,0 +1,171 @@
+%        File: covo.tex
+%     Created: Di Okt 16 10:00  2018 C
+% Last Change: Di Okt 16 10:00  2018 C
+%
+
+\documentclass[a4paper]{report}
+% ***************************PACKAGES***************************
+\usepackage{graphicx}
+\usepackage{caption,setspace}
+\usepackage{subcaption}
+\captionsetup[figure]{width=0.7\textwidth,font={small}}
+\usepackage{float}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{hyperref}
+\usepackage{siunitx}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{mwe}
+\usepackage{tabularx}
+\usepackage{cite}
+\usepackage{hyperref}
+\usepackage{bookmark}
+
+
+% ***************************CONFIGS***************************
+% for numbering per section
+\numberwithin{figure}{section}
+% removing ugly colored rectangles from references
+\usepackage{xcolor}
+\hypersetup{
+    hidelinks,
+    colorlinks = false,
+    %linkcolor={black},
+    %citecolor={black},
+    %urlcolor={black}
+  }
+% command for table tabular alignment
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+% command for argmin and argmax
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\newcommand{\R}{\mathbb{R}}
+% commands for cascading subfigures
+\newsavebox{\subfloatbox}
+\newcommand{\topfloat}[2][\empty]% #1 = caption, #2=image
+ {\savebox\subfloatbox{#2}%
+  \begin{minipage}[t]{\wd\subfloatbox}
+    \usebox\subfloatbox
+    \subcaption{#1}
+  \end{minipage}}
+\newcommand{\bottomfloat}[2][\empty]% #1 = caption, #2=image
+ {\savebox\subfloatbox{#2}%
+  \begin{minipage}[b]{\wd\subfloatbox}
+    \captionsetup{position=top}%
+    \subcaption{#1}
+    \usebox\subfloatbox
+  \end{minipage}}
+
+
+
+% ***************************ACRONYMS***************************
+\usepackage[toc, shortcuts]{glossaries}
+\makeglossaries
+\newacronym{vo}{VO}{Visual Odometry}
+
+
+
+\begin{document}
+
+% ***************************TITLE***************************
+\begin{titlepage}
+\begin{center}
+
+%  \includegraphics[width=\textwidth]{../fig/tuc_logo.jpg}
+
+\vspace{1.5cm}
+
+
+{\Huge \textbf{Master Thesis}}\\
+\vspace{0.5cm}
+{\huge \textbf{An Error Aware RGB-D \\Visual Odometry}}
+
+
+\vspace{2.5cm}
+
+{\huge \textbf{U\u{g}ur Bolat}}
+
+\vfill
+
+Date:
+
+\vspace{1.2cm}
+
+Supervisors: \\
+Dr.-Ing. Sven Lange \\
+M.Sc. Tim Pfeifer
+
+\vspace{0.8cm}
+
+Faculty of Electrical Engineering and Information Technology\\
+Professorship of Process Automation
+
+\end{center}
+\end{titlepage}
+
+% ***************************TABLE OF CONTENT ETC.***************************
+\tableofcontents
+\newpage
+\listoffigures
+\listoftables
+\newpage
+\printglossary[type=\acronymtype,title={Abbreviations}]
+\newpage
+
+% ***************************DOCUMENT***************************
+
+\begin{abstract}
+
+
+\end{abstract}
+
+\newpage
+
+% ***************************CP1-INTRO***************************
+\chapter{Introduction} \label{cp_intro}
+
+
+\newpage
+
+% ***************************CP2-VO***************************
+\chapter{Visual Odometry} \label{cp_vo}
+
+\section{Related Works} \label{sc_related_works}
+
+\section{Camera Models} \label{sc_cam_models}
+
+\section{Image Features} \label{sc_img_features}
+
+\section{Feature Matching} \label{sc_feature_matching}
+
+\section{Motion Estimation} \label{sc_motion_estim}
+
+% ***************************CP3-MOTIVATION***************************
+\chapter{Motivation} \label{cp_motivation}
+
+% ***************************CP4-CoVO***************************
+\chapter{An Error-Aware RGB-D Visual Odometry} \label{cp_covo}
+
+\section{Modeling Spatial Uncertainty} \label{sc_spatial_uncertainty}
+
+\section{Weighted Least-Squares Optimization} \label{sc_weighted_lsq}
+
+\section{Covariance Estimation} \label{sc_covariance_estim}
+
+% ***************************CP5-EVALUATION***************************
+\chapter{Evaluation} \label{cp_evaluation}
+
+% ***************************CP6-CONCLUSION***************************
+\chapter{Conclusion} \label{cp_conc}
+
+% ***************************CP7-EVALUATION***************************
+\chapter{Reference} \label{cp_ref}
+
+
+% ***************************CP7-EVALUATION***************************
+\chapter{Appendices} \label{cp_appendices}
+
+\end{document}
+
+
