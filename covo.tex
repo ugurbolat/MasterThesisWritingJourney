@@ -155,7 +155,7 @@ and this is known as the \textit{Camera Coordinate System} $(x_{cam}, y_{cam}, z
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
-  {fig/unofficial/pinhole_model.png}
+  {fig/ref_imgs/pinhole_model.png}
   \caption{REMEMBER TO DRAW HORIZ/VERT Fx and Fy. The Pinhole Model}
 	\label{fig:pinhole}
 \end{figure}
@@ -181,7 +181,8 @@ in the following way if we utilize the homogenous coordinates:
     V\\
     1
   \end{pmatrix}
-  =
+  \sim
+  Z
   \begin{pmatrix}
     f_xX/Z\\
     f_yY/Z\\
@@ -205,17 +206,17 @@ in the following way if we utilize the homogenous coordinates:
     Z\\
     1
   \end{pmatrix}
-\end{equation} \label{eq:proj_1}
+\end{equation} \label{eq:proj_func_w_f}
 
 This equation applies for the case when 3D points are 
 projected onto a plane where the principal point is the origin. 
 However, the common convention in partice 
-is to have the origin at the left-bottom corner not in the centre.
+is to have the origin at the (not entirely sure) left-bottom corner not in the centre.
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
-  {fig/unofficial/pinhole_offset.png}
+  {fig/ref_imgs/pinhole_offset.png}
 	\caption{Principle Point Offset}
 	\label{fig:pinhole_offset}
 \end{figure}
@@ -228,7 +229,8 @@ Thus, we get offsets, which can further be added into our function:
     V\\
     1
   \end{pmatrix}
-  =
+  \sim
+  Z
   \begin{pmatrix}
     (f_xX + Z c_x)/Z\\
     (f_yY + Z c_y)/Z\\
@@ -252,16 +254,41 @@ Thus, we get offsets, which can further be added into our function:
     Z\\
     1
   \end{pmatrix}
-\end{equation} \label{eq:proj_1}
+\end{equation} \label{eq:proj_func_w_f_c}
 
 where $c_x$ and $c_y$ are coordinates of the principal point \textbf{p}.
 
-\# Talk about square pixels and skew paramater.
+In addition to pricipal offsets, inaccurately synchronized pixel-sampling 
+process can result in \textit{skewed pixels}. This camera imperfection leads to 
+non-square pixels as seen in Figure-\ref{fig:skewed}.
+
+\begin{figure}[H]
+	\centering
+  \includegraphics[width=0.5\linewidth,natwidth=640,natheight=640]
+  {fig/ref_imgs/skew.png}
+  \caption{REMEMBER TO DRAW FOR X and Y.Skew and Non-Square Pixels}
+	\label{fig:skewed}
+\end{figure}
+
+We can scale the square pixels, having 1:1 pixel aspect ratio, with the 
+corresponding skew parameters $\eta_x$, $\eta_y$ and $s$:
 
 \begin{equation}
   \begin{pmatrix}
     U\\
     V\\
+    1
+  \end{pmatrix}
+  \sim
+  \begin{bmatrix}
+    f_x\eta_x & s & c_x & 0\\
+    0 & f_y\eta_y & c_y & 0\\
+    0 & 0 & 1 & 0\\
+  \end{bmatrix}
+  \begin{pmatrix}
+    X\\
+    Y\\
+    Z\\
     1
   \end{pmatrix}
   =
@@ -276,10 +303,13 @@ where $c_x$ and $c_y$ are coordinates of the principal point \textbf{p}.
     Z\\
     1
   \end{pmatrix}
-\end{equation} \label{eq:proj_2}
+\end{equation} \label{eq:proj_func_w_square_pix_skew}
 
+Generally, the skewed pixels issues occurred in ealier versions of CCD cameras 
+and this is mostly fixed in new generation digital cameras. Therefore, 
+we can neglate this effect by taking $\eta_x=1$, $\eta_y=1$ and $s=0$.
 
-Then, we extract $\mathbf{K}$ matrix:
+Next, we can extract:
 
 \begin{equation}
   \mathbf{K} = 
@@ -290,12 +320,35 @@ Then, we extract $\mathbf{K}$ matrix:
   \end{bmatrix}
 \end{equation} \label{eq:k_matrix}
 
-The $K$ is called \textit{intrinsic parameters matrix}. Now, we can further 
-simplify it by applying the following substitution:
+The $\mathbf{K}$ matrix is called 
+\textit{intrinsic parameters matrix}, which represents the characteristics of 
+a camera sensor. Note that, we 
+can further reformulate the notation \ref{eq:proj_func_w_square_pix_skew} in more 
+compact form:
 
 \begin{equation}
-  U_{img} = K[I|0]X_{cam}
-\end{equation} \label{eq:simplfied_proj_func}
+  \mathbf{U_{img}} = \mathbf{K}[\mathbf{I}|\mathbf{0}]\mathbf{X_{cam}}
+\end{equation} \label{eq:simplyfied_proj_func}
+
+\begin{figure}[H]
+	\centering
+  \includegraphics[width=\linewidth,natwidth=640,natheight=640]
+  {fig/ref_imgs/cam_model_rot_trans.png}
+  \caption{Camera Rotation and Translation}
+  \label{fig:cam_model_rot_trans}
+\end{figure}
+
+Remember that, the Z-axis of the Camera Coordinate System aligns with the 
+principal axis that is \textit{local} to camera frame. In fact, we have 3D points that 
+we represent in the \textit{World Coordinate System} 
+which we refer as the \textit{global} frame. 
+These two coordinates systems 
+can be transformed one another by a rotation and a translation as it is 
+depicted in Figure-\ref{fig:cam_model_rot_trans} but we are interested in 
+converting from the World Coordinate to Camera Coordinate System in this case.
+To do so, we first perform series of rotations around each axis of the 
+cartesian coordinate system in Euclidean space by using 
+\textit{rotation matrices} where $R_x, R_y, R_z \in SO(3)$ is the rotation group:
 
 \begin{equation}
   R_x(\theta) = 
@@ -304,7 +357,7 @@ simplify it by applying the following substitution:
     0 & cos\theta & -sin\theta\\
     0 & sin\theta & cos\theta
   \end{bmatrix}
-\end{equation}
+\end{equation} \label{eq:rot_matrx_x}
 
 \begin{equation}
   R_y(\theta) = 
@@ -313,7 +366,7 @@ simplify it by applying the following substitution:
     0 & 1 & 0\\
     sin\theta & 0 & cos\theta
   \end{bmatrix}
-\end{equation}
+\end{equation} \label{eq:rot_matrx_y}
 
 \begin{equation}
   R_z(\theta) = 
@@ -322,17 +375,94 @@ simplify it by applying the following substitution:
     sin\theta & cos\theta & 0\\
     0 & 0 & 1
   \end{bmatrix}
-\end{equation}
+\end{equation} \label{eq:rot_matrx_z}
+
+One can concatenate all three rotations about axes z, y, x respectively:
 
 \begin{equation}
   \mathbf{R} = \mathbf{R_z(\gamma)}\mathbf{R_y(\beta)}\mathbf{R_x(\alpha)}
-\end{equation}
+  =
+  \begin{bmatrix}
+    r_{11} & r_{12} & r_{13}\\
+    r_{21} & r_{22} & r_{23}\\
+    r_{31} & r_{32} & r_{33}\\
+  \end{bmatrix}
+\end{equation} \label{eq:rot_matrix_derivation}
+
+Then, perform a translation $\mathbf{t} \in \R^{3x1}$:
 
 \begin{equation}
   \mathbf{t} = 
   \begin{bmatrix}
     t_x \\ t_y \\ t_z
   \end{bmatrix}
+\end{equation} \label{eq:translation}
+
+We can also compound the rotation matrix and the translation vector into 
+one matrix:
+
+\begin{equation}
+  \mathbf{T} =
+  \begin{bmatrix}
+    r_{11} & r_{12} & r_{13} & t_x\\
+    r_{21} & r_{22} & r_{23} & t_y\\
+    r_{31} & r_{32} & r_{33} & t_z\\
+  \end{bmatrix}
+\end{equation} \label{eq:transformation_matrix}
+
+The $\mathbf{T} \in \R^{4x3}$ matrix in fact represents 
+a \textit{rigid-body transformation}, which we call 
+\textit{extrinsic camera parameters}.
+
+Finally, we combine intrinsic $\mathbf{K}$ and 
+extrinsic $\mathbf{T}$ matrices to form the following notation: 
+
+\begin{equation}
+  \mathbf{U_{img}} = 
+  \mathbf{H}\mathbf{X_{world}} = 
+  \mathbf{K}\mathbf{T}\mathbf{X_{world}} = 
+  \mathbf{K}[\mathbf{R}|\mathbf{t}]\mathbf{X_{world}}
+\end{equation} \label{eq:simplyfied_proj_func}
+
+\begin{equation}
+  \mathbf{U_{img}} = \mathbf{F_{proj}}(\mathbf{X_{world}})
+\end{equation} \label{eq:simplyfied_proj_func}
+
+where $\mathbf{F_{proj}}(\mathbf{X_{world}})$ is the \textit{projection function}, which takes 
+the 3D points in the World Coordinate System, transforms to 
+the Camera Coordinate Systems and then maps them into the Image 
+Coordinate Systems.
+
+To build any reliable computer vision application with digital cameras, it is 
+to important to find a good $\mathbf{H}$ \textit{projection matrix} 
+(alternatively refered as \textit{Homography matrix} in camera calibration)
+The next section describes one of many numerical methods for estimationg this 
+matrix in literature.
+
+\subsection{Camera Calibration} \label{sb_sc_calibration}
+
+Lens Distortion
+
+\begin{figure}[H]
+	\centering
+  \includegraphics[width=0.3\linewidth,natwidth=640,natheight=640]
+  {fig/ref_imgs/cam_distortion.png}
+  \caption{Camera Distortion}
+  \label{fig:cam_distortion}
+\end{figure}
+
+\begin{equation}
+\begin{split}
+  x' = X/Z\\
+  y' = Y/Z
+\end{split}
+\end{equation}
+
+\begin{equation}
+\begin{split}
+  x'' = x'(1+ k_1 r^2 + k_2 r^4) + 2 p_1 x' y' + p_2 (r^2+2x'^2)\\
+  y'' = y'(1+ k_1 r^2 + k_2 r^4) + p_1 (r^2+2y'^2) + 2p_2 x'y'\\
+\end{split}
 \end{equation}
 
 \begin{equation}
@@ -342,33 +472,42 @@ simplify it by applying the following substitution:
     1
   \end{pmatrix}
   =
-  \begin{bmatrix}
-    \alpha_x & s & c_x & 0\\
-    0 & \alpha_y & c_y & 0\\
-    0 & 0 & 1 & 0\\
-  \end{bmatrix}
-  \begin{bmatrix}
-    r_{11} & r_{12} & r_{13} & t_x\\
-    r_{21} & r_{22} & r_{23} & t_y\\
-    r_{31} & r_{32} & r_{33} & t_z\\
-  \end{bmatrix}
+  \begin{pmatrix}
+    f_x x'' + c_x\\
+    f_y x'' + c_y\\
+    1
+  \end{pmatrix}
+  \sim
+  Z
+  \begin{pmatrix}
+    (f_xX + Z c_x)/Z\\
+    (f_yY + Z c_y)/Z\\
+    1
+  \end{pmatrix}
+    =
+    \mathbf{K} [\mathbf{R}|\mathbf{t}]
   \begin{pmatrix}
     X\\
     Y\\
     Z\\
     1
   \end{pmatrix}
-\end{equation} \label{eq:proj_1}
+\end{equation} \label{eq:proj_func_w_f_c}
 
 
+Calibrating with Checkerboard
 
-where $F(X_{cam})$ is the \textit{projection function}, which takes 
-the 3D points in the Camera Coordinate System and maps them into the Image 
-Coordinate Systems.
+\begin{figure}[H]
+	\centering
+  \includegraphics[width=\linewidth,natwidth=640,natheight=640]
+  {fig/ref_imgs/checkerboard.png}
+  \caption{Checkerboard}
+  \label{fig:checkerboard}
+\end{figure}
 
-
-
-\subsection{Camera Calibration} \label{sb_sc_calibration}
+\begin{equation}
+  \argmin_{\mathbf{K}, k, \mathbf{R}_i, \mathbf{t}_i}
+\end{equation}
 
 \section{Image Features} \label{sc_img_features}
 
