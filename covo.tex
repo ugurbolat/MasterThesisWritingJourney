@@ -327,7 +327,7 @@ can further reformulate the notation \ref{eq:proj_func_w_square_pix_skew} in mor
 compact form:
 
 \begin{equation}
-  \mathbf{U_{img}} = \mathbf{K}[\mathbf{I}|\mathbf{0}]\mathbf{X_{cam}}
+  \mathbf{x_{img}} = \mathbf{K}[\mathbf{I}|\mathbf{0}]\mathbf{X_{cam}}
 \end{equation} \label{eq:simplyfied_proj_func}
 
 \begin{figure}[H]
@@ -418,30 +418,114 @@ Finally, we combine intrinsic $\mathbf{K}$ and
 extrinsic $\mathbf{T}$ matrices to form the following notation: 
 
 \begin{equation}
-  \mathbf{U_{img}} = 
-  \mathbf{H}\mathbf{X_{world}} = 
+  \mathbf{x_{img}} = 
+  \mathbf{P}\mathbf{X_{world}} = 
   \mathbf{K}\mathbf{T}\mathbf{X_{world}} = 
   \mathbf{K}[\mathbf{R}|\mathbf{t}]\mathbf{X_{world}}
 \end{equation} \label{eq:simplyfied_proj_func}
 
 \begin{equation}
-  \mathbf{U_{img}} = \mathbf{F_{proj}}(\mathbf{X_{world}})
+  \mathbf{x_{img}} = \mathbf{F_{proj}}(\mathbf{X_{world}})
 \end{equation} \label{eq:simplyfied_proj_func}
 
-where $\mathbf{F_{proj}}(\mathbf{X_{world}})$ is the \textit{projection function}, which takes 
+where $\mathbf{F_{proj}}(\mathbf{X_{world}})$ is the 
+\textit{projective transformation function}, which takes 
 the 3D points in the World Coordinate System, transforms to 
 the Camera Coordinate Systems and then maps them into the Image 
 Coordinate Systems.
 
 To build any reliable computer vision application with digital cameras, it is 
-to important to find a good $\mathbf{H}$ \textit{projection matrix} 
-(alternatively refered as \textit{Homography matrix} in camera calibration)
+to important to find a good $\mathbf{P}$ \textit{projection matrix}. 
 The next section describes one of many numerical methods for estimationg this 
 matrix in literature.
 
 \subsection{Camera Calibration} \label{sb_sc_calibration}
 
-Lens Distortion
+
+It is important to note that derivations of the formulation of this section
+is not provided. Therefore, I refer readers to \cite{bla} for the detailed 
+formulation. However, the intiution of the calibration process is fairly 
+straightforward. 
+
+\begin{figure}[H]
+	\centering
+  \includegraphics[width=\linewidth,natwidth=640,natheight=640]
+  {fig/ref_imgs/calibration_dlt.png}
+  \caption{Inheret Constraint}
+  \label{fig:calibration_constraint}
+\end{figure}
+
+
+Assuming that we project two 3D points onto our image plane
+like in Figure-\ref{fig:calibration_constraint},
+the visual angle between those pair of 3D points is equal to 
+the angle between its corresponding 2D points. This geometric constraints 
+allow us to build the calibration problem. Remember that the goal is to find 
+the projection matrix and we can build the problem in the following way:
+
+\begin{equation}
+  \mathbf{x_{img}} = 
+  \begin{pmatrix}
+    u_i\\
+    v_i
+  \end{pmatrix}
+  =
+  \mathbf{P}\mathbf{X_{world}} = 
+  \begin{bmatrix}
+    p_{00} & p_{01} & p_{02} & p_{03}\\
+    p_{10} & p_{11} & p_{12} & p_{13}\\
+    p_{20} & p_{21} & p_{22} & p_{23}
+  \end{bmatrix}
+  \begin{pmatrix}
+    X_i\\
+    Y_i\\
+    Z_i\\
+  \end{pmatrix}
+\end{equation} \label{eq:simplyfied_proj_func}
+
+After elaborating notation \ref{eq:simplyfied_proj_func}, let's distribute 
+the projection matrix onto the 3D point measurement to retrieve individual 
+pixel coordinates:
+
+\begin{equation}
+  u_i = 
+  \frac
+  {p_{00}X_i + p_{01}Y_i + p_{02}Z_i + p_{03}}
+  {p_{20}X_i + p_{21}Y_i + p_{22}Z_i + p_{23}}
+\end{equation} \label{eq:u_i}
+
+\begin{equation}
+  v_i = 
+  \frac
+  {p_{10}X_i + p_{11}Y_i + p_{12}Z_i + p_{13}}
+  {p_{20}X_i + p_{21}Y_i + p_{22}Z_i + p_{23}}
+\end{equation} \label{eq:v_i}
+
+
+Since $\mathbf{x_{img}}$ and $\mathbf{X_{world}}$ are known,
+we can find elements of the $\mathbf{p} = (p_{00}, p_{01}, \dots, p_{23})^T$ matrix 
+by solving $\mathbf{Ap=0}$ liner system of equations from \ref{eq:u_i} and \ref{eq:v_i}.
+
+For \textit{minimal solution} of this linear system of equations, 
+we need at least $n \geq 6$ measurement points to solve the problem as 
+the $\mathbf{P}$ matrix has 12 degree of freedom (11 if scale is ignored).
+Note that this accounts for having 
+noise-free measurement which does not hold in reality. Then, the problem 
+becomes \textit{over-determined}.
+
+In noisy measurement case, the problem is usually solved with
+\textit{singular value decomposition (SVD)} with $n \geq 6$ measurement points. 
+This method is called the \textit{Direct Linear Transformation (DLT)}.
+Disadvantange of the DLT methods, it is still sensitive errors since 
+it only considers \textit{algebraic errors}, which are the residuals of 
+$\mathbf{Ap}$. 
+
+While estimating the intrinsic and extrinsic parameters 
+that are in linear form with the DLT, 
+another issue known as \textit{radial distortion} 
+has to take into account as well. This issue is caused by camera lens 
+and Figure-\ref{fig:cam_distortion} depicts this effect and the straight lines 
+appear to be curved. 
 
 \begin{figure}[H]
 	\centering
@@ -451,19 +535,27 @@ Lens Distortion
   \label{fig:cam_distortion}
 \end{figure}
 
-\begin{equation}
-\begin{split}
-  x' = X/Z\\
-  y' = Y/Z
-\end{split}
-\end{equation}
+This distortion has non-linear characteristics and we also 
+need to estimate the coefficients 
+$\kappa = (k_1, k_2, p_1, p_2, k_3)^T$ of the following polynomial:
+
 
 \begin{equation}
 \begin{split}
-  x'' = x'(1+ k_1 r^2 + k_2 r^4) + 2 p_1 x' y' + p_2 (r^2+2x'^2)\\
-  y'' = y'(1+ k_1 r^2 + k_2 r^4) + p_1 (r^2+2y'^2) + 2p_2 x'y'\\
+  x''_i = F_{dist}(x') = 
+  x'(1+ k_1 r^2 + k_2 r^4 + k_3 r^6) + 2 p_1 x' y' + p_2 (r^2+2x'^2)\\
+  y''_i = F_{dist}(y') = 
+  y'(1+ k_1 r^2 + k_2 r^4 + k_3 r^6) + p_1 (r^2+2y'^2) + 2p_2 x'y'\\
 \end{split}
 \end{equation}
+
+where $x' = X_{cam}/Z_{cam}$ and $y' = Y_{cam}/Z_{cam}$. 
+Note that, in \ref{eq:simplyfied_proj_func}, we first transform 
+3D points from World Coordinate to Camera Coordinate Systems with 
+extrinsic matrix and then we project them with the instrinsic matrix. 
+To improve our pinhole camera model, 
+we need to distort 3D points in the Camere Coordinate System before 
+multiplying with the intrinsic matrix:
 
 \begin{equation}
   \begin{pmatrix}
@@ -477,25 +569,31 @@ Lens Distortion
     f_y x'' + c_y\\
     1
   \end{pmatrix}
-  \sim
-  Z
-  \begin{pmatrix}
-    (f_xX + Z c_x)/Z\\
-    (f_yY + Z c_y)/Z\\
-    1
-  \end{pmatrix}
     =
-    \mathbf{K} [\mathbf{R}|\mathbf{t}]
-  \begin{pmatrix}
-    X\\
-    Y\\
-    Z\\
-    1
-  \end{pmatrix}
+    F_{dis}\begin{pmatrix}
+      \mathbf{K}
+      \begin{pmatrix}
+        X_{cam}\\
+        Y_{cam}\\
+        Z_{cam}\\
+        1
+      \end{pmatrix}
+    \end{pmatrix} 
+    =
+    F_{dist}\begin{pmatrix}
+      \mathbf{K} [\mathbf{R}|\mathbf{t}]
+      \begin{pmatrix}
+        X_{world}\\
+        Y_{world}\\
+        Z_{world}\\
+        1
+      \end{pmatrix}
+    \end{pmatrix}
 \end{equation} \label{eq:proj_func_w_f_c}
 
-
-Calibrating with Checkerboard
+Above operations introduce non-linearity, which cannot be solved by DLT.
+To get better accuracy at our projection matrix along with the distortion, 
+\textit{least squares estimation}, i.e., Levenberg-Marquardt, is perfomed.
 
 \begin{figure}[H]
 	\centering
@@ -505,9 +603,25 @@ Calibrating with Checkerboard
   \label{fig:checkerboard}
 \end{figure}
 
+In practice, the checkerboard is used to get many good measurement points 
+as  we easily extract edge features from the image. Now, the DLT comes handy
+as we can use the DLT's result as an initial guess 
+in the least squares optimization problem.
+
 \begin{equation}
-  \argmin_{\mathbf{K}, k, \mathbf{R}_i, \mathbf{t}_i}
+  \argmin_{\mathbf{p} \rightarrow \mathbf{K}, \kappa, \mathbf{R}_i, \mathbf{t}_i}
+  \sum_{i=1:n} || \mathbf{x_{i}} - 
+  \mathbf{P} \mathbf{X_{i}} ||^2
 \end{equation}
+
+where $\mathbf{K}$ is the intrinsic matrix, 
+$\kappa$ is the distortion coefficients, 
+$\mathbf{R_i}$ is the corresponding orientation and 
+$\mathbf{t_i}$ is the corresponding translation.
+The afromentioned calibration process is well-studied problem in literature. 
+Fortunately, there are many software libraries, such as OpenCV, 
+that offers such implementations.
+
 
 \section{Image Features} \label{sc_img_features}
 
@@ -543,6 +657,8 @@ REMEMBER TO DRAW X,Y COORD. WRT CAM. COORD WITH RIGHT HAND FOR KINECT!
 
 % ***************************CP7-EVALUATION***************************
 \chapter{Appendices} \label{cp_appendices}
+
+\section{Rigid-Body Transformations} \label{sc_rigid_body_transformations}
 
 \end{document}
 
