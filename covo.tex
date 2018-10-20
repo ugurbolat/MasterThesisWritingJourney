@@ -129,11 +129,8 @@ Professorship of Process Automation
 \newpage
 
 % ***************************CP2-VO***************************
-\chapter{Visual Odometry} \label{cp_vo}
 
-\section{Related Works} \label{sc_related_works}
-
-\section{Camera Models} \label{sc_cam_models}
+\chapter{Camera Models} \label{cp_cam_models}
 
 A camera maps from a 3D world scene to a 2D image plane. We call this process 
 projection operation. Since the \acrshort{vo} systems process camera image 
@@ -439,7 +436,7 @@ to important to find a good $\mathbf{P}$ \textit{projection matrix}.
 The next section describes one of many numerical methods for estimationg this 
 matrix in literature.
 
-\subsection{Camera Calibration} \label{sb_sc_calibration}
+\section{Camera Calibration} \label{sb_sc_calibration}
 
 
 It is important to note that derivations of the formulation of this section
@@ -623,7 +620,139 @@ Fortunately, there are many software libraries, such as OpenCV,
 that offers such implementations.
 
 
+
+\chapter{Visual Odometry} \label{cp_vo}
+
 \section{Image Features} \label{sc_img_features}
+
+Image features are a collection of regions of interest or of points of interest 
+that describe the image. In this way, we compress the necessary information 
+from images so that we can achieve computationaly expensive task more efficiently.
+Points of interest, also called \textit{keypoints}, 
+are particularly valuable because their location in the image can be 
+measured accurately. This is useful for localization related tasks such as VO. 
+
+\subsection{Feature Extraction} \label{sb_sc_feature_extraction}
+
+Generally, the goal is to find good features in feature-based VO. 
+What defines a good feature is that it must be distinct, 
+repeatable, computationaly cheap and invariant to geometrical changes. 
+Obviously, one has many options to produce such image 
+feautes but two common methods that are widely used in VO systems are 
+blobs and corners. 
+Blobs are image patterns that contain distinct image response comparing to their 
+neighborhood pixels. Blobs take advantage of pixel intensity or color to 
+decide whether it has a distinct response or not.
+In the VO literature, SIFT\cite{}, SURF\cite{} or CENSURE\cite{} are popular 
+choices for detecting blob featurus.
+Corners are the meeting points where two or many edges intersect. Corners 
+take advantage of geometrical structure of an image. FAST\cite{}, Shi-Tomasi or 
+Haris\cite{} are widely used for detecting corners.
+
+Fundemantally, a two-step process is needed to extract good features. 
+First, you take a response function, called \textit{image filter}, 
+shift this filter through the image and save the one that have greater 
+response than your previously defined threshold as Keypoints.
+In blob case, this might a Gaussian filter or a 
+corner detector filter in corner case. Second, you perform non-maxima 
+suppression on the resulting keypoints to find local minima of the function. 
+The second step ensures you get keypoints only with maximum confidence. 
+
+Inheritly, each feature detector has certain limitations and one has to 
+choose whihc detector to use according to task objectives. Therefore, one can ask 
+does the localization envorinment involve more texture oriented objects like 
+floors, walls etc. or geometrical shapes like urban areas where many lines 
+exist?
+However, rule of thumb when choosing feature detector is that blobs 
+are distinct but slow to compute and corners are fast to compute but less 
+distict. 
+
+\subsection{Feature Descriptor} \label{sb_sc_feature_descriptor}
+
+Extracting features is the very first step of VO. The next step is to 
+encode the detected keypoints into a format that we can perform comparison 
+or search operation among them. This is done by taking the neighboring pixels 
+around the keypoints and convert into a more compact form. For example, SIFT 
+creates a patch around a keypoint, divides this patch into smaller grids,
+calculate the gradient of each grid and 
+saves into a histogram form.
+This procedure makes feature descriptor 
+robust agaist scale or rotation changes. Then, one can use these descriptors for 
+various comparison operations such as matching or tracking in VO.
+
+
+\subsection{ORB} \label{sb_sc_orb}
+
+One of the most strict requirements of VO is the real-time contraints since it is 
+expected to work at similari to low-sensors, i.e., accelerometer, gyroscopes etc. 
+As previously discussed, blobs detectors are computationaly expensive. Therefore, 
+corners based feature detector are more prevelant in VO. 
+\textit{ORB (oriented FAST and rotated BRIEF)} studied known issues of 
+FAST detector and BRIEF descriptor. Then, it fixed them into a level that 
+it perform as accurate as SIFT, plus faster. Here are steps on how to extract features 
+and create descriptors with ORB: 
+
+\begin{enumerate}
+  \item Detect corners with FAST
+\begin{equation}
+  M_c = max(
+  \sum_{x \in S_{bright}} |I_{p \rightarrow - x} - I_p|, 
+  \sum_{x \in S_{dark}} |I_{p \rightarrow - x} - I_p|
+  )
+\end{equation}
+  \item Rank detected keypoint with Haris
+    \begin{equation}
+      A = \sum_u\sum_v w(p,q) 
+      \begin{bmatrix}
+        I_x^2 & I_xI_y \\ I_xI_y & I_y^2
+      \end{bmatrix}
+    \end{equation}
+    \begin{equation}
+      M_c = det(A) - k(trace(A))^2
+    \end{equation}
+    where $det(A) = \lambda_1 \lambda_2$ and $trace(A) = \lambda_1 + \lambda_2$.
+  \item Calculate orientation of corners with intesity centroid
+
+\begin{equation}
+  m_{pq} = \sum_{x,y} x^p y^p I(x,y)
+\end{equation}
+\begin{equation}
+  C = (\frac{m_{10}}{m_{00}}, \frac{m_{01}}{m_{00}})
+\end{equation}
+\begin{equation}
+  \theta = atan2(m_{01}, m_{10})
+\end{equation}
+
+  \item Form BRIEF descriptors with their corresponding orientation
+\begin{equation}
+  \mathbf{S} = 
+  \begin{pmatrix}
+  x_1, \dots, x_n\\
+  y_1, \dots, y_n
+  \end{pmatrix}
+\end{equation}
+
+\begin{equation}
+  \mathbf{S}_{\theta} = \mathbf{R}_{\theta}\mathbf{S}
+\end{equation}
+
+    \begin{equation*}
+      \tau(\mathbf{p};\mathbf{x},\mathbf{y}) := 
+      \begin{cases}
+        1  & \mathbf{p}(\mathbf{x}) < \mathbf{p}(\mathbf{y}),\\
+        0  & \mathbf{p}(\mathbf{x}) \geq \mathbf{p}(\mathbf{y})
+      \end{cases}
+    \end{equation*}
+
+    \begin{equation}
+      g_n(\mathbf{p}, \theta) := \sum_{1\leq i \leq n} 2^{i-1}\tau (\mathbf{p;x_i, y_i})
+    \end{equation}
+
+\end{enumerate}
+
+
+
+
 
 \section{Feature Matching} \label{sc_feature_matching}
 
