@@ -693,59 +693,88 @@ it perform as accurate as SIFT, plus faster. Here are steps on how to extract fe
 and create descriptors with ORB: 
 
 \begin{enumerate}
-  \item Detect corners with FAST
+  \item \textbf{Detect corners with FAST}: FAST take each pixel on 
+    the image compare with its adjacent pixels. More specificially, 
+    ORB uses FAST-9, which takes a patch of circular radius of 9. If the 
+    selected pixel is $\pm t$ darker or brighter than adjacent pixels, 
+    we call it a corner, where $t$ is our empiric threshold.
 \begin{equation}
-  M_c = max(
-  \sum_{x \in S_{bright}} |I_{p \rightarrow - x} - I_p|, 
-  \sum_{x \in S_{dark}} |I_{p \rightarrow - x} - I_p|
-  )
+  M^c_{1:n} = 
+  (\sum_{x \in S_{bright}} |I_{p \rightarrow x} - I_p| - t, 
+  \sum_{x \in S_{dark}} |I_p - I_{p \rightarrow x}| - t) \in  \R^{1xn} 
+  Not sure about in part
 \end{equation}
-  \item Rank detected keypoint with Haris
+    We retrieve $M^x_{1:n}$ the set of corner candidates from 
+    comparing $I_{p\rightarrow x}$ the adjacent pixels around $I_p$ the target pixel.
+
+  \item \textbf{Rank detected keypoint with Harris}: After FAST detection, 
+    we get many corner candidates around the interest point. However, 
+    FAST does not measure how good a corner is. Thus, we use Harris corner 
+    detector to rank corner candidates:
     \begin{equation}
-      A = \sum_u\sum_v w(p,q) 
+      \mathbf{A} = \sum_{x,y} w(x,y) 
       \begin{bmatrix}
         I_x^2 & I_xI_y \\ I_xI_y & I_y^2
       \end{bmatrix}
     \end{equation}
+    The $\mathbf{A}$ matrix is calculated by the $I_x$ and $I_y$ partial 
+    derivatives with respect to x and y direction and $w(x,y)$ weighting window.
+
     \begin{equation}
-      M_c = det(A) - k(trace(A))^2
+      R^c = det(\mathbf{A}) - k(trace(\mathbf{A}))^2
     \end{equation}
-    where $det(A) = \lambda_1 \lambda_2$ and $trace(A) = \lambda_1 + \lambda_2$.
-  \item Calculate orientation of corners with intesity centroid
+    where $det(\mathbf{A}) = \lambda_1 \lambda_2$ and 
+    $trace(\mathbf{A}) = \lambda_1 + \lambda_2$.
+    Then, we use the resulting $\mathbf{A}$ to find a ranking score for each 
+    corner. Now, it is possible to take top N corners if desired.
 
-\begin{equation}
-  m_{pq} = \sum_{x,y} x^p y^p I(x,y)
-\end{equation}
-\begin{equation}
-  C = (\frac{m_{10}}{m_{00}}, \frac{m_{01}}{m_{00}})
-\end{equation}
-\begin{equation}
-  \theta = atan2(m_{01}, m_{10})
-\end{equation}
+  \item \textbf{Calculate orientation of corners with intesity centroid}: 
+    ORB uses BRIEF to create feature descriptors; however, BRIEF fails in 
+    rotated images. Therefore, ORB modifies the BRIEF by adding orientation 
+    information. To do so, \textit{Image moments} are calculated:
 
-  \item Form BRIEF descriptors with their corresponding orientation
-\begin{equation}
-  \mathbf{S} = 
-  \begin{pmatrix}
-  x_1, \dots, x_n\\
-  y_1, \dots, y_n
-  \end{pmatrix}
-\end{equation}
+    \begin{equation}
+      m_{pq} = \sum_{x,y} x^p y^q I(x,y)
+    \end{equation}
+    Coordinates of the centroid is retrieved by this:
+    \begin{equation}
+      C = (\frac{m_{10}}{m_{00}}, \frac{m_{01}}{m_{00}})
+    \end{equation}
+    Then, a $\overrightarrow{OC} $ vector is formed from 
+    center of the corner $O$ to centroid $C$. Then, we get the orientation:
+    \begin{equation}
+      \theta = atan2(m_{01}, m_{10})
+    \end{equation}
 
-\begin{equation}
-  \mathbf{S}_{\theta} = \mathbf{R}_{\theta}\mathbf{S}
-\end{equation}
-
+  \item \textbf{Form BRIEF descriptors with their corresponding orientation}:
+    Once the top N corners and their orientations are detected, descriptions 
+    can be formed with BRIEF. For doing so, we first need to take a SxS patch around 
+    the corner and flatten the coordinates of the selected path into a matrix:
+    \# BELOW seems not correct!
+    \begin{equation}
+      \mathbf{S} = 
+      \begin{bmatrix}
+      x_1, \dots, x_n\\
+      y_1, \dots, y_n
+      \end{bmatrix} \in \R^{2xn}
+    \end{equation}
+    Next, we rotate each $(x_i,y_i)$ points in $\mathbf{S}$ matrix with the 
+    corresponding corner's orientation:
+    \begin{equation}
+      \mathbf{S}_{\theta} = \mathbf{R}_{\theta}\mathbf{S}
+    \end{equation}
+    Here comes the part at which we form the bit strings from 
+    $\mathbf{S}_{\theta}$. 
     \begin{equation*}
-      \tau(\mathbf{p};\mathbf{x},\mathbf{y}) := 
+      \tau(\mathbf{x},\mathbf{y}) := 
       \begin{cases}
-        1  & \mathbf{p}(\mathbf{x}) < \mathbf{p}(\mathbf{y}),\\
-        0  & \mathbf{p}(\mathbf{x}) \geq \mathbf{p}(\mathbf{y})
+        1  & I(\mathbf{x}) < I(\mathbf{y}),\\
+        0  & I(\mathbf{x}) \geq I(\mathbf{y})
       \end{cases}
     \end{equation*}
 
     \begin{equation}
-      g_n(\mathbf{p}, \theta) := \sum_{1\leq i \leq n} 2^{i-1}\tau (\mathbf{p;x_i, y_i})
+      g_n(\mathbf{p}) := \sum_{1\leq i \leq n} 2^{i-1}\tau (\mathbf{x_i, y_i})
     \end{equation}
 
 \end{enumerate}
