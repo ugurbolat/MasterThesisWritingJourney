@@ -177,6 +177,8 @@ To be more specific,
 we can write the projection operation as a linear mapping function 
 in the following way if we utilize the homogenous coordinates:
 
+NOTE: NAME x,y,z indices for world and camera coords all below
+
 \begin{equation}
   \begin{pmatrix}
     U\\
@@ -423,12 +425,13 @@ extrinsic $\mathbf{T}$ matrices to form the following notation:
   \mathbf{x_{img}} = 
   \mathbf{P}\mathbf{X_{world}} = 
   \mathbf{K}\mathbf{T}\mathbf{X_{world}} = 
-  \mathbf{K}[\mathbf{R}|\mathbf{t}]\mathbf{X_{world}}
-\end{equation} \label{eq:simplyfied_proj_func}
+  \mathbf{K}[\mathbf{R}|\mathbf{t}]\mathbf{X_{world}} =
+  \mathbf{K}\mathbf{X_{cam}}
+\end{equation} \label{eq:simplyfied_proj_func_1}
 
 \begin{equation}
   \mathbf{x_{img}} = \mathbf{F_{proj}}(\mathbf{X_{world}})
-\end{equation} \label{eq:simplyfied_proj_func}
+\end{equation} \label{eq:simplyfied_proj_func_2}
 
 where $\mathbf{F_{proj}}(\mathbf{X_{world}})$ is the 
 \textit{projective transformation function}, which takes 
@@ -483,9 +486,9 @@ the projection matrix and we can build the problem in the following way:
     Y_i\\
     Z_i\\
   \end{pmatrix}
-\end{equation} \label{eq:simplyfied_proj_func}
+\end{equation} \label{eq:proj_matrix}
 
-After elaborating notation \ref{eq:simplyfied_proj_func}, let's distribute 
+Let's now distribute 
 the projection matrix onto the 3D point measurement to retrieve individual 
 pixel coordinates:
 
@@ -556,7 +559,7 @@ Note that, in \ref{eq:simplyfied_proj_func}, we first transform
 3D points from World Coordinate to Camera Coordinate Systems with 
 extrinsic matrix and then we project them with the instrinsic matrix. 
 To improve our pinhole camera model, 
-we need to distort 3D points in the Camere Coordinate System before 
+we need to distort 3D points in the Camera Coordinate System before 
 multiplying with the intrinsic matrix:
 
 \begin{equation}
@@ -614,7 +617,7 @@ in the least squares optimization problem.
   \argmin_{\mathbf{p} \rightarrow \mathbf{K}, \kappa, \mathbf{R}_i, \mathbf{t}_i}
   \sum_{i=1:n} || \mathbf{x_{i}} - 
   \mathbf{P} \mathbf{X_{i}} ||^2
-\end{equation}
+\end{equation}\label{eq:proj_lsq}
 
 where $\mathbf{K}$ is the intrinsic matrix, 
 $\kappa$ is the distortion coefficients, 
@@ -826,6 +829,15 @@ and create descriptors with ORB:
 
 \section{Feature Matching} \label{sc_feature_matching}
 
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
+  {fig/ref_imgs/feature_matchings.png}
+  \caption{Feature Mathces}
+	\label{fig:feature_matchings}
+\end{figure}
+
+
 \subsection{Brute-Force or FLANN} \label{sb_sc_}
 
 \subsection{RANSAC} \label{sb_sc_ransac}
@@ -846,7 +858,7 @@ well if at least half of the dataset contains inliers.
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
-  {fig/ref_imgs/outlier_matches.png}
+  {fig/ref_imgs/line_ransac_outlier.png}
   \caption{Outlier Mathces}
 	\label{fig:outlier_matches}
 \end{figure}
@@ -856,11 +868,10 @@ behavior along with the intrinsic matrix. Parameteres that we aim to
 identify are elements of projection matrix in \ref{eq:proj_func_w_square_pix_skew}. 
 Similarly, the model being fitted in RANSAC case is elements of a 
 \textit{homography matrix}, 
-which translates and rotates a point.
+which transforms a 2D image point to another 2D image point.
 Remember that we have feature matches from image pairs. One of the pair is 
-the translated and the rotated version of the other pair. 
-We can 
-model this relationship in the following way:
+the transformed version of the other pair. 
+We can model this relationship in the following way:
 
 \begin{equation}
   k
@@ -908,10 +919,15 @@ more obvious, we form linear system of equations:
 First step of RANSAC is to select a subset that contains 
 minimum number of matching points to 
 determine parameters of the model. In homography $\mathbf{H}$ case, we need at least 
-4 point pairs $(\mathbf{p}=(u_i,v_i),\mathbf{q}=(u_i',v_i'))$ to solve least squares problem:
+4 point pairs $(\mathbf{p}=(u_i,v_i),\mathbf{q}=(u_i',v_i'))$ to solve 
+this linear system of equation. However, due to the noise, we require more than 
+4 point pairs but this makes the problem over-determined. Therefore, 
+we can only find an approximate solution by solving least squares problem:
 It is also good idea to optimize with all matching points and use 
 the estimated parameters as a initial guess for the optimization 
-which we perform for the subset.
+which we perform for the subset. With all that being said, we minimize the 
+\textit{algebraic distance error}:
+
 \begin{equation}
 \argmin_h || \mathbf{Ah-0}||^2.
 \end{equation}
@@ -984,11 +1000,11 @@ minimum number of iteration that
 probability of choosing a subset with only outliers 
 and $\epsilon$ is the probability that a matching is an outlier.
 
-For $d$, it is chosen empirically if distribution of outliers is unknown. If 
+For $\mathbf{d}$, it is chosen empirically if distribution of outliers is unknown. If 
 it is known, i.e, Gaussian with mean $\mu$ and $\sigma$, threshold should 
 be $d=5.99\sigma^2$ so that there is a 95\% probability that the point is an inlier.
 
-For $T$, we might have a case that we reach expected ratio of inliers; thus 
+For $\mathbf{T}$, we might have a case that we reach expected ratio of inliers; thus 
 we don't have to iterate through $N$ number of times. We can terminate it 
 ealier if the following condition is satisfied:
 
@@ -1009,6 +1025,215 @@ optimization in the next section.
 
 \section{Motion Estimation} \label{sc_motion_estim}
 
+Motion estimation is the core part of the VO system. After 
+feature extraction, feature matching and outlier rejection,
+we finally are ready to compute $\mathbf{T}_{k, k+1}$ transformation matrix. 
+This transformation matrix corresponds to relative camera motion between 
+two images that is recorded in different poses (figure-\ref{fig:transformation_ij}).
+Let's assume; we have 
+consecutive camere poses $\mathbf{x}_k^c = [\mathbf{p}_k^c, \mathbf{q}_k^c]$ and 
+$\mathbf{x}_{k+1}^c = [\mathbf{p}_{k+1}^c, \mathbf{q}_{k+1}^c]$ where 
+$\mathbf{p}^c = [p_x, p_y, p_z]^T$ is the position of the camera in $\R^3$
+and $\mathbf{q}^c = [q_w, q_x, q_y, q_z]^T$ is 
+the orientation of the camera in quaternion form in $SO(3)$. 
+Notice that, in camera model chapter 
+\ref{cp_cam_models}, we used rotation matrix to represent orientations, 
+which made it covenient to combine intrinsic matrix and extrinsic matrix 
+(rotation and translation) into a single projection matrix 
+(refer to notation \ref{eq:simplyfied_proj_func})
+so that 
+we optimize for paramaters of the single matrix. On the other hand, when 
+estimating relative motion, we use quaternions to represent orientations, 
+which is less intuitive way but 
+has certain advantage over rotation matrix such as requiring less storage.
+Additionally, we can represent the transformation 
+$\mathbf{T}_{k,k+1}$ $(= [\mathbf{t}_{k,k+1},\mathbf{q}_{k,k+1}])$ between two camera poses 
+$(\mathbf{x}_k,\mathbf{x}_{k+1})$ with the rotation $\mathbf{q}_{k,k+1}$ in $SO(3)$  
+and the translation $\mathbf{t}_{k,k+1}$ in $\R^3$.
+
+\begin{figure}[H]
+	\centering
+  \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
+  {fig/ref_imgs/transformation_ij.png}
+  \caption{GIVE EX FOR TRANSFORMATION TWO CAM POSES Transformation between Two Images}
+	\label{fig:transformation_ij}
+\end{figure}
+
+That being said, one can formulate the transformation $\mathbf{T}$ 
+between two camera pose. Let's first find the camera position:
+
+\begin{equation}
+  \mathbf{p}_{k+1} = 
+  \mathbf{q}_{k,k+1} \otimes \mathbf{p}_k^c \otimes \mathbf{q_{k,k+1}}^* + 
+  \mathbf{t}_{k,k+1}
+\end{equation}
+
+where $\mathbf{q}_{k,k+1} \otimes \mathbf{p}_k \otimes \mathbf{q_{k,k+1}}^*$ is the 
+\textit{hamilton product} that is used to rotate the camera position at the $k^{th}$ pose 
+and $\mathbf{t}_{k,k+1}$ is 
+the simple vector addition that is used to translate the camera position. Next, 
+the camera orientation can be found as follows:
+
+\begin{equation}
+  \mathbf{q}_{k+1} = 
+  \mathbf{q}_{k,k+1} \otimes \mathbf{q}_{k}^c double-check product order
+\end{equation}
+
+where $\mathbf{q}_{k,k+1} \otimes \mathbf{q}_{k}$ is the product of two 
+quaternions that the former is the rotation and that the latter is the orientation 
+of the camera at the $k^{th}$ pose.
+
+\begin{figure}[H]
+	\centering
+  \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
+  {fig/ref_imgs/cam_trajectory.png}
+  \caption{Camera Trajectory}
+	\label{fig:cam_trajectory}
+\end{figure}
+
+
+The ultimate goal in VO is to compute transformation
+$\mathbf{T}_{k,k+1}=[\mathbf{t}_{k,k+1},\mathbf{q}_{k,k+1}]$ in multiple consecutive 
+images and concatenate them to build a trajectory of the camera.
+As a consequence, we can track any agent on which the camera is placed rigidly. 
+For example, concatenated transformation $\mathbf{T}_{0:n}$ 
+can be used to calculate $n^{th}$ camera pose that is relative to the initial pose:
+
+
+\begin{equation}
+  \mathbf{p}_{n}^c = 
+  \mathbf{q}_{n, n-1} \otimes (\dots
+  (\mathbf{q}_{2,1} \otimes
+  (\mathbf{q}_{1,0} \otimes \mathbf{p}_0^c \otimes \mathbf{q_{1,0}}^* + \mathbf{t}_{1,0})
+  \otimes \mathbf{q}_{2,1}^* + \mathbf{t}_{2,1})
+  \dots) \otimes \mathbf{q}_{n, n-1}^* +\mathbf{t}_{n, n-1} 
+\end{equation}
+
+\begin{equation}
+  \mathbf{q}_{n}^c = 
+  \mathbf{q}_{n,n-1} \otimes \dots \otimes \mathbf{q}_{2,1} \otimes \mathbf{q}_{1,0} \otimes \mathbf{q}_{0}^c 
+\end{equation}
+
+To find transformation, we take advantage of the feature points as they can 
+inform us how the camera moves if we detect them in multiple image frames.
+All the feature extraction and feature matchings are performed so that we 
+can compute relative motion.
+Similar to projection matrix \ref{eq:proj_lsq} in camere calibration, we utilize 
+the least squares method for estimating the best approximate transformation information
+due to the noise. Several methods available in literature create 
+relationship between feature points that we detect across different image frames and 
+we will discuss it in the next section.
+
+\subsection{Relative Camera Pose Estimation Techniques}
+\label{sb_sc_relative_camera_pose_estimation_techniques}
+
+The reason we have different kinds of way to compute transformation arises from 
+the cost function we define in least squres problem. In the end, all we wish to 
+find a good model for our optimization problem so that we minimize the error.
+The design choice for cost function comes from the fact that we either use 
+2D keypoints, 3D point clouds (if we back-project 2D keypoints using 
+calibrated projection matrix), or both.
+Therefore, in VO literature, 
+there are 3 different cost functions for modeling the least problem:
+\begin{itemize}
+  \item 2D-to-2D correspondences,
+  \item 3D-to-2D correspondences,
+  \item 3D-to-3D correspondences.
+\end{itemize}
+The 2D term refers to 2D points that are in the image plane and that we call 
+them keypoints in section-\ref{sb_sc_feature_descriptor}. 
+Whereas the 3D term refers to 3D points that are in the Camera Coordinate 
+System and that we call them point clouds in section-\ref{sb_sc_feature_descriptor}.
+
+NOTE: define keypoints and point clouds term if it is not defined in the feature extraction section.
+
+Note that this thesis does not engage with 2D-to-2D correspondences method since it is 
+used in monocular camera; thus it will not be discussed here. On the other hand, 
+we will discuss and compare 3D-to-2D correspondences and 3D-to-3D correspondences. 
+In the motivation chapter \ref{cp_motivation}, 
+I state the reasons why I chose 3D-to-3D even though it is not a common choice 
+in VO literature.
+
+
+\subsubsection{3D-to-2D Correspondences}
+
+Rememeber that,
+after feature matching step for the consecutive image frames, we have only
+2D-to-2D keypoint correspondences information and 
+the transformation which we wish to compute is in $\R^3$. Therefore, we require 
+transformation behavior on 3D feature points.
+That being said, we can estimate transformation 3D-to-2D Correspondences in four steps:
+
+\begin{enumerate}
+  \item back-project $k+1^{th}$ 2D keypoint to a 3D feature point
+  \item back-transform the back-projected 3D feature point
+  \item reproject the back-transformed 3D feature point onto $k^{th}$ keypoint
+  \item minimize the \textit{reprojection error}
+\end{enumerate}
+
+\begin{figure}[H]
+	\centering
+  \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
+  {fig/ref_imgs/min_euclidean_error.png}
+  \caption{Minimize Reprojection Error}
+	\label{fig:min_geometric_error}
+\end{figure}
+
+
+To illustrate the 
+situation more clearly, let's assume we have a 3D feature point 
+$\mathbf{X}_i=[x, y, z]^T$ in Camera Coordinate System and we measure 
+the projections of this exact feature point as 2D keypoint features, respectively 
+$\mathbf{x}_i^k=[u_i^k,v_i^k]^T$ and $\mathbf{x}_i^{k+1}=[u_i^{k+1}, v_i^{k+1}]^T$ 
+on subsequent camera poses $k^{th}$ and $k+1^{th}$. What we also know is that 
+we can back-project measured 2D keypoints to 3D feature points using projection 
+matrix \ref{eq:simplyfied_proj_func_1} that we estimated in calibration process. 
+Note that, since we measure 3D feature points with respect to Camera coordinate system, 
+we are not interested in extrinsic matrix but only intrinsic. Now, 
+let's write again projection function that converts 3D feature 
+points to 2D image keypoints:
+$
+\mathbf{x}_i = 
+  \mathbf{K}\mathbf{X}_i
+  $.
+One can also back-project 2D image keypoints to 3D feature points:
+$
+  \mathbf{K}^T\mathbf{x}_{i} = 
+  \mathbf{X}_{i} 
+  $.
+
+Now, we can formulate the four steps of 3D-to-2D correspondences as follows:
+
+\begin{enumerate}
+  \item $\mathbf{X}_{i}^{k+1} = \mathbf{K}^T\mathbf{x}_{i}^{k+1}$
+  \item $\mathbf{X}_i^{k'} = 
+    \mathbf{q}_{k,k+1}^* \otimes (\mathbf{x}_i^{k+1} - \mathbf{t}_{k,k+1}) \otimes \mathbf{q}_{k,k+1}$
+  \item $\mathbf{x}_i^{k'} = \mathbf{K}\mathbf{X}_i^{k'}$
+  \item minimize $||\mathbf{x}_i^k - \mathbf{x}_i^{k'}||_2^2$
+\end{enumerate}
+
+From second step to forth steps can be written as a cost function 
+that we minimize to find $\mathbf{T}$ transformation:
+
+\begin{equation}
+  \argmin_{\mathbf{T} = [\mathbf{t}_{k,k+1}, \mathbf{q}_{k,k+1}]} = 
+  ||\mathbf{x}_i^k - f(\mathbf{T}, \mathbf{X}_i^{k'})||^2_2
+\end{equation}
+
+This method works considerably well in practice. In VO literature \cite{}, 
+it is also reported that it performs better than 3D-to-3D correspondences.
+
+\subsubsection{3D-to-3D Correspondences}
+
+\begin{figure}[H]
+	\centering
+  \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
+  {fig/ref_imgs/min_euclidean_error.png}
+  \caption{Minimize Euclidean Error}
+	\label{fig:min_euclidean_error}
+\end{figure}
+
+
 % ***************************CP3-MOTIVATION***************************
 \chapter{Motivation} \label{cp_motivation}
 
@@ -1018,6 +1243,17 @@ optimization in the next section.
 REMEMBER TO DRAW X,Y COORD. WRT CAM. COORD WITH RIGHT HAND FOR KINECT!
 
 \section{Modeling Spatial Uncertainty} \label{sc_spatial_uncertainty}
+
+\begin{figure}[H]
+	\centering
+  \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
+  {fig/ref_imgs/uncertainty_matching.png}
+  \caption{Uncertainty of Feature Matchings}
+	\label{fig:uncertainty_matching}
+\end{figure}
+
+
+
 
 \subsection{Kinect Calibration} \label{sb_sc_kinect_calibration}
 
@@ -1039,6 +1275,14 @@ REMEMBER TO DRAW X,Y COORD. WRT CAM. COORD WITH RIGHT HAND FOR KINECT!
 \chapter{Appendices} \label{cp_appendices}
 
 \section{Rigid-Body Transformations} \label{sc_rigid_body_transformations}
+
+
+\section{Least Squares}\label{sc_least_squares}
+
+Throughout this thesis, least squares method empowered many different components 
+of out VO system, 
+such as camera calibration, RANSAC and most importantly motion estimation, 
+Therefore, we will discuss underlying principles of least squares method in this section.
 
 \end{document}
 
