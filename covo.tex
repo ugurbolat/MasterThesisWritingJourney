@@ -23,6 +23,7 @@
 \usepackage{bookmark}
 \usepackage{algorithm}
 \usepackage[noend]{algpseudocode}
+\usepackage{array}
 
 
 % ***************************CONFIGS***************************
@@ -63,6 +64,10 @@
 
 \algnewcommand\algorithmicforeach{\textbf{for each}}
 \algdef{S}[FOR]{ForEach}[1]{\algorithmicforeach\ #1\ \algorithmicdo}
+
+\newcommand*{\vertbar}{\rule[-1ex]{0.5pt}{2.5ex}}
+\newcommand*{\horzbar}{\rule[.5ex]{2.5ex}{0.5pt}}
+
 
 % ***************************ACRONYMS***************************
 \usepackage[toc, shortcuts]{glossaries}
@@ -143,7 +148,7 @@ sequences, one has to model this projection operation accurately. One of the
 basic camera modeling technique is the \textit{Pinhole Model} where the projection of 
 the 3D points are mapped on a 2D image plane (also called focal plane). 
 
-\subsection{The Pinhole Model} \label{sbsc_pinhole}
+\section{The Pinhole Model} \label{sbsc_pinhole}
 
 In this model, the camera centre sits behind the image plane.
 The Z-axis, 
@@ -864,7 +869,7 @@ well if at least half of the dataset contains inliers.
 \end{figure}
 
 In \ref{sb_sc_calibration}, we discussed how to model rotation and translation 
-behavior along with the intrinsic matrix. Parameteres that we aim to 
+motion along with the intrinsic matrix. Parameteres that we aim to 
 identify are elements of projection matrix in \ref{eq:proj_func_w_square_pix_skew}. 
 Similarly, the model being fitted in RANSAC case is elements of a 
 \textit{homography matrix}, 
@@ -1161,14 +1166,14 @@ Rememeber that,
 after feature matching step for the consecutive image frames, we have only
 2D-to-2D keypoint correspondences information and 
 the transformation which we wish to compute is in $\R^3$. Therefore, we require 
-transformation behavior on 3D feature points.
+transformation involving in 3D feature points.
 That being said, we can estimate transformation 3D-to-2D Correspondences in four steps:
 
 \begin{enumerate}
   \item back-project $k+1^{th}$ 2D keypoint to a 3D feature point
   \item back-transform the back-projected 3D feature point
   \item reproject the back-transformed 3D feature point onto $k^{th}$ keypoint
-  \item minimize the \textit{reprojection error}
+  \item minimize 2D \textit{reprojection error} along with all feature matches
 \end{enumerate}
 
 \begin{figure}[H]
@@ -1183,9 +1188,9 @@ That being said, we can estimate transformation 3D-to-2D Correspondences in four
 To illustrate the 
 situation more clearly, let's assume we have a 3D feature point 
 $\mathbf{X}_i=[x, y, z]^T$ in Camera Coordinate System and we measure 
-the projections of this exact feature point as 2D keypoint features, respectively 
+the projections of this exact feature point as 2D keypoint features, 
 $\mathbf{x}_i^k=[u_i^k,v_i^k]^T$ and $\mathbf{x}_i^{k+1}=[u_i^{k+1}, v_i^{k+1}]^T$ 
-on subsequent camera poses $k^{th}$ and $k+1^{th}$. What we also know is that 
+on subsequent camera poses $k^{th}$ and $k+1^{th}$ respectively. What we also know is that 
 we can back-project measured 2D keypoints to 3D feature points using projection 
 matrix \ref{eq:simplyfied_proj_func_1} that we estimated in calibration process. 
 Note that, since we measure 3D feature points with respect to Camera coordinate system, 
@@ -1207,23 +1212,32 @@ Now, we can formulate the four steps of 3D-to-2D correspondences as follows:
 \begin{enumerate}
   \item $\mathbf{X}_{i}^{k+1} = \mathbf{K}^T\mathbf{x}_{i}^{k+1}$
   \item $\mathbf{X}_i^{k'} = 
-    \mathbf{q}_{k,k+1}^* \otimes (\mathbf{x}_i^{k+1} - \mathbf{t}_{k,k+1}) \otimes \mathbf{q}_{k,k+1}$
+    \mathbf{q}_{k,k+1}^* \otimes (\mathbf{X}_i^{k+1} - \mathbf{t}_{k,k+1}) \otimes \mathbf{q}_{k,k+1}$
   \item $\mathbf{x}_i^{k'} = \mathbf{K}\mathbf{X}_i^{k'}$
-  \item minimize $||\mathbf{x}_i^k - \mathbf{x}_i^{k'}||_2^2$
+  \item minimize $\sum_i||\mathbf{x}_i^k - \mathbf{x}_i^{k'}||_2^2$
 \end{enumerate}
 
-From second step to forth steps can be written as a cost function 
-that we minimize to find $\mathbf{T}$ transformation:
+The second and third steps can be encapsulated to a function $f$ so that 
+we formulate the whole optimization problem in the following form:
 
 \begin{equation}
   \argmin_{\mathbf{T} = [\mathbf{t}_{k,k+1}, \mathbf{q}_{k,k+1}]} = 
-  ||\mathbf{x}_i^k - f(\mathbf{T}, \mathbf{X}_i^{k'})||^2_2
+  \sum_i||\mathbf{x}_i^k - f(\mathbf{T}, \mathbf{X}_i^{k+1})||^2_2
 \end{equation}
 
 This method works considerably well in practice. In VO literature \cite{}, 
 it is also reported that it performs better than 3D-to-3D correspondences.
 
 \subsubsection{3D-to-3D Correspondences}
+
+Another way of modeling the cost function is to utilize only 3D feature point 
+correspondences and one can estimate transformation with 3D-to-3D correspondences in three steps:
+
+\begin{enumerate}
+  \item back-project both $k^{th}$ and $k+1^{th}$ 2D keypoints to 3D feature points
+  \item back-transform back-projected $k+1^{th}$ 3D feature point
+  \item minimize 3D \textit{euclidean distance} along with all feature matches
+\end{enumerate}
 
 \begin{figure}[H]
 	\centering
@@ -1233,6 +1247,35 @@ it is also reported that it performs better than 3D-to-3D correspondences.
 	\label{fig:min_euclidean_error}
 \end{figure}
 
+
+Similar illustrations that we previously did for 3D-to-2D correspondences applies 
+for the 3D-to-3D correspondences as well but only with few changes. 
+Let's again assume that we have two corresponding 2D keypoint features,
+$\mathbf{x}_i^k$ and $\mathbf{x}_i^{k+1}$. However, rather minimizing error on 
+2D image plane, we want to minimize them on 3D Camera coordinate system. Therefore, 
+we need to back-project both keypoint features. With that in mind, 
+we can formulate the three steps of 3D-to-3D correspondences as follows:
+
+\begin{enumerate}
+  \item $\mathbf{X}_{i}^{k+1} = \mathbf{K}^T\mathbf{x}_{i}^{k+1}$ and 
+    $\mathbf{X}_{i}^{k} = \mathbf{K}^T\mathbf{x}_{i}^{k}$ 
+  \item $\mathbf{X}_i^{k'} = 
+    \mathbf{q}_{k,k+1}^* \otimes (\mathbf{X}_i^{k+1} - \mathbf{t}_{k,k+1}) \otimes \mathbf{q}_{k,k+1}$
+  \item minimize $\sum_i||\mathbf{X}_i^k - \mathbf{X}_i^{k'}||_3^2$
+\end{enumerate}
+
+The second step can be encapsulated to a function $g$ to form the optimization 
+problem:
+
+\begin{equation}
+  \argmin_{\mathbf{T} = [\mathbf{t}_{k,k+1}, \mathbf{q}_{k,k+1}]} = 
+  \sum_i||\mathbf{X}_i^k - g(\mathbf{T}, \mathbf{X}_i^{k+1})||^2_3
+\end{equation}
+
+In VO literature, this method is usually discarded since 
+it performs poorly comparing to 3D-to-2D correspondences.
+
+NOTE: State why it works poorly? Is it bc back-projected 3D feature point more noisy?
 
 % ***************************CP3-MOTIVATION***************************
 \chapter{Motivation} \label{cp_motivation}
@@ -1283,6 +1326,284 @@ Throughout this thesis, least squares method empowered many different components
 of out VO system, 
 such as camera calibration, RANSAC and most importantly motion estimation, 
 Therefore, we will discuss underlying principles of least squares method in this section.
+
+Ultimately, error minimization is an 
+operation which wish to get the maximum likelihood of the function. To do so,
+we search the most
+likely state configuration as close as possible to its exact and ideal solution. 
+In the case of any optimization problems,
+the goal is to find interesting points, such as local/global
+maximum or local/global minimum, on the \textit{objective}
+\textit{function}. However, due to the
+non-linearity and noise in measurements, one can only approximate a solution.
+One way to solve such problems is to generate a quadratic model of 
+the objective function and iterate
+through the function using \textit{Newton's methods}. 
+For example,
+an optimal solution (or an interest point)
+Figure-\ref{fig:lsq_multivariable_function_example} is at the local
+minimum of the function that is highlighted as a red point cloud.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
+	{fig/lsq_multivariable_function_example.jpg}
+	\caption{Local Minimum at a Quadratic Function}
+	\label{fig:lsq_multivariable_function_example}
+\end{figure}
+
+
+In optimization literature,
+there are many versions of Newton's method 
+and they all try to find the
+local maximum/minimum in the most efficient and accurate way.
+However, in the end, they all solve the problem
+with the \textit{gradient descent} manner.
+%the approximated Hessian function, is one of them and we will be using
+%it in our slam algorithm.
+To elaborate the problem, we provide a regression example 
+which can be infact solved with linear least squares techniques but it can serve 
+as a simple toy example throughout our explainations.
+
+Suppose that we have a model function $g(x;a)$. However,
+we don't know what the $x=(x_1,x_2)$ coefficients (so-called
+\textit{optimization} \textit{parameters}) are and we can only
+plug $a$, which is the \textit{independent} variable, into the
+\textit{model} $S$ to see
+how the output of the model changes given the independent variable. 
+
+\begin{figure}[H]
+	\includegraphics[width=0.8\linewidth,natwidth=640,natheight=640]
+	{fig/lsq_model.jpg}
+	\centering
+	\caption{Least Square Model}
+	\label{fig:lsq_model}
+\end{figure}
+
+
+
+\begin{gather}
+\xi = a \text{ (independent variable)} \in \R \\
+\eta = S \text{ (dependent variable)} \in \R
+\label{eq:lsq_model_variables}
+\end{gather}
+
+\begin{equation}
+S = g(x;a) := x_1 + x_2a \quad 
+\text{where} \quad 
+x=(x_1,x_2) \in \R^2
+\label{eq}
+\end{equation}
+
+
+To see this effect, 
+we draw a graph that is shown in
+Figure-\ref{fig:lsq_curve_fit_measurements}.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
+	{fig/lsq_curve_fit_measurements_v2.jpg}
+	\caption{Least Squares Measurements}
+	\label{fig:lsq_curve_fit_measurements}
+\end{figure}
+
+
+Our goal is now to find a function, which will fit this
+dataset. This is a typical least squares curve fitting problem.
+In this problem, we construct a \textit{residuals function} $r_i(x)$ by providing
+error values between model estimation $g(x;a_i)$ and dependent
+variable $S_i$. In this case, the dependent variable 
+represent the real world
+measurements and the residuals function represents the error between the estimated value and measurement value. 
+
+\begin{equation}
+r_i(x) := g(x;a_i) - S_i \qquad \text{ for }  i = 1,\dots,m.
+\label{eq:}
+\end{equation}
+
+The residuals function is usually squared to magnify larger error effect:
+
+\begin{equation}
+\begin{aligned}
+F(x) & := \sum_{i=1}^{m} \vert r_i(x) \vert^2 = 
+\sum_{i=1}^{m} \vert g(x;a_i) - S_i \vert^2 =
+\sum_{i=1}^{m} (g(x;a_i) - S_i)^2 \\
+\label{eq}
+\end{aligned}
+\end{equation}
+
+Now, one can use the sum of squared error function to calculate the most likely
+configuration that can minimize the errors. 
+
+\begin{equation}
+X^* = \argmin_x F(x) = 
+\sum_{i=1}^{m} (g(x;a_i) - S_i)^2, 
+\quad x \in \R^2
+\label{eq}
+\end{equation}
+
+At this point, the objective function is ready to be handed over to 
+to any gradient decent based least squares solver. The method will try to find the
+\textit{optimal} solution $X^*$ by minimizing the objective function.
+
+\begin{equation}
+\text{Minimize} \quad \sum_{i=1}^{m} (g(x;a_i) - S_i)^2, 
+\quad x \in \R^2
+\label{eq}
+\end{equation}
+
+To help our understanding, the objective function is drawn in
+Figure-\ref{fig:lsq_sum_of_squared_error_function}.
+As we can see, the based on the given $x=(x_1,x_2)$ values, 
+the objective
+function $F(x)$ behave as follows:
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
+	{fig/lsq_sum_of_squared_error_function_v2.jpg}
+	\caption{Local Minimum at Sum of Squared Error Function}
+	\label{fig:lsq_sum_of_squared_error_function}
+\end{figure}
+
+The initial guess for the optimization parameters at $x=(4,4)$, which
+is highlighted as a blue color point cloud and 
+the local minimum point, which is the interest point of ours, 
+is highlighted with the red cloud. What the gradient descent method essentially 
+does is to travel from the initial guess point to the nearest local minimum 
+on the objective function. As we can see
+that the descent is successfully performed and the optimization
+operation results at $x=(1.9,2.1)$. 
+
+
+If we now place the optimization variables into our model function, we
+get the $g(x;a)=1.9+2.1a$ and a fitted line based on the given
+dataset in
+Figure-\ref{fig:lsq_curve_fit_operation}.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
+	{fig/lsq_curve_fit_operation_v2.jpg}
+	\caption{Least Squares Curve Fitting Operation}
+	\label{fig:lsq_curve_fit_operation}
+\end{figure}
+
+Now that we have an intiution how least squares problems are solved 
+by gradient descent methods, let's further discuss one of them.
+
+\subsection{Gradient Descent}
+
+In order to understand non-linear least square algorithms, 
+we first need to look at how a gradient descent algorithm works. For instance; 
+assuming that the objective function $F(x)$ is differentiable and its 
+derivative has the following form:
+
+\begin{equation}
+  \nabla F(x) = F'(x) = \frac{\partial F(x)}{\partial x}
+\end{equation}
+
+Another fact about $F(x)$, considering above formula, is that its value will decrease 
+in the direction of its negative derivative:
+
+\begin{equation}
+  \Delta x = - \frac{\partial F(x)}{\partial x}
+\end{equation}
+
+That being in mind, one can 
+claim that if we iteratively travel through the function in the direction of its negative 
+derivative, we would eventually reach to a nearest local minima with respect to the starting 
+point. This is the fundamental idea behind gradient descent algorithm.
+On the other hand, using its derivative directly does not ensure that 
+we would reach to any local minima in some cases. Thus, a tuning factor so-called 
+\textit{step length} $\alpha$ is used to adjust the size of length:
+
+\begin{equation}
+  \Delta x = -\alpha \frac{\partial F(x)}{\partial x}
+\end{equation}
+
+
+
+Assuming that we have an educated initial guess $x_0$ from which we start to search 
+for a local minimum, we can describe the gradient descent algorithm as follows:
+
+\begin{enumerate}
+  \item take the derivative of $F(x)$ at the current $x_k$
+  \item find the sufficient step length $\alpha$
+  \item iterate $x_{k+1} = x_k - \alpha \frac{\partial F(x_k)}{\partial x}$ until it converges
+\end{enumerate}
+
+As we see, the gradient descent is a simple algorithm but it is an iterative 
+approach that might require an exhaustive search operation if the initial 
+guess is not given intellegently. Therefore, it can get very complicated 
+if convergence speed and convergence success is considered. For this reason, 
+there are many version of the algoritm that aims to solve in the most efficient 
+manner.
+
+\subsection{Levenberg-Marquardt}
+Levenberg-Marquardt (LM) is one of most popular gradient descent based algoritm 
+to solve least squares problem.
+
+
+Assume that we have a $r(x)$ residuals function:
+
+\begin{equation}
+  r(x) := \begin{pmatrix} r_1(x) \\ \vdots \\ r_m(x) \end{pmatrix} \in \R^m
+\end{equation}
+
+To find a local maximum/minimum of the residuals function, we need to 
+determine the first derivative and it 
+$r'(x)$ appears in a special form, e.g., Jacobian:
+
+\begin{equation}
+  J(x) := \begin{bmatrix} \frac{\partial}{\partial x_j }r_i(x) \end{bmatrix}_{ij} 
+  = 
+  \begin{bmatrix} 
+    \vertbar & & \vertbar \\
+    \frac{\partial}{\partial x_1} & \dots & \frac{\partial}{\partial x_1} \\
+    \vertbar & & \vertbar
+  \end{bmatrix}
+  = 
+  \begin{bmatrix}
+    \horzbar & \nabla r_1(x)^T & \horzbar \\
+     & \vdots & \\
+    \horzbar & \nabla r_m(x)^T & \horzbar 
+  \end{bmatrix}
+  \in \R^{mxn}
+\end{equation}
+
+We re-write the objective function of optimization problem from our residuals 
+function:
+
+\begin{equation}
+  F(x) = \frac{1}{2} ||r(x)||^2 = \frac{1}{2} r(x)^T r(x)
+\end{equation}
+
+Note that multiplication with $\frac{1}{2}$ above equation is for cosmetic 
+reason since it does not effect local mimimum's position in the function. 
+
+
+Keep mind that there are
+crucial factors whether lm will descent the local minimum to the
+interest point or not:
+\begin{itemize}
+  \item \textit{outliers} in the dataset,
+  \item good \textit{initial point guess}. 
+\end{itemize}
+
+If these two criteria do not meet, lm might converge to the
+another local minimum or might not even converge to
+an optimal solution. It is important that we provide a good initial
+guess and minimum amount of outliers into any gradient descent
+optimization algorithm. Otherwise, we will not be able to converge to
+a local minimum that we are interested in since we will be stuck at
+another local minimum point. 
+Not being able to find an optimal solution 
+in slam context will result in 
+an estimated state configuration is largely
+different from the ground truth.
+
 
 \end{document}
 
