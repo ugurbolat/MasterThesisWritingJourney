@@ -1403,7 +1403,7 @@ Figure-\ref{fig:lsq_curve_fit_measurements}.
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
-	{fig/lsq_curve_fit_measurements_v2.jpg}
+{fig/lsq_curve_fit_measurements_v2.jpg}
 	\caption{Least Squares Measurements}
 	\label{fig:lsq_curve_fit_measurements}
 \end{figure}
@@ -1498,18 +1498,24 @@ by gradient descent methods, let's further discuss one of them.
 In order to understand non-linear least square algorithms, 
 we first need to look at how a gradient descent algorithm works. For instance; 
 assuming that the objective function $F(x)$ is differentiable and its 
-derivative has the following form:
+derivatives has the following form:
 
 \begin{equation}
   \nabla F(x) = F'(x) = \frac{\partial F(x)}{\partial x}
+\end{equation}
+
+\begin{equation}
+  \nabla^2 F(x) = F''(x) = \frac{\partial^2 F(x)}{\partial x^2}
 \end{equation}
 
 Another fact about $F(x)$, considering above formula, is that its value will decrease 
 in the direction of its negative derivative:
 
 \begin{equation}
-  \Delta x = - \frac{\partial F(x)}{\partial x}
-\end{equation}
+  \Delta x = - 
+  \frac{\partial^2 F(x)}{\partial x^2}^{-1}
+  \frac{\partial F(x)}{\partial x}
+\end{equation}\label{eq:delta_x_descent_direction}
 
 That being in mind, one can 
 claim that if we iteratively travel through the function in the direction of its negative 
@@ -1520,9 +1526,10 @@ we would reach to any local minima in some cases. Thus, a tuning factor so-calle
 \textit{step length} $\alpha$ is used to adjust the size of length:
 
 \begin{equation}
-  \Delta x = -\alpha \frac{\partial F(x)}{\partial x}
-\end{equation}
-
+  \Delta x = -\alpha 
+  \frac{\partial^2 F(x)}{\partial x^2}^{-1}
+  \frac{\partial F(x)}{\partial x}
+\end{equation}\label{eq:delta_x_step_length}
 
 
 Assuming that we have an educated initial guess $x_0$ from which we start to search 
@@ -1531,7 +1538,7 @@ for a local minimum, we can describe the gradient descent algorithm as follows:
 \begin{enumerate}
   \item take the derivative of $F(x)$ at the current $x_k$
   \item find the sufficient step length $\alpha$
-  \item iterate $x_{k+1} = x_k - \alpha \frac{\partial F(x_k)}{\partial x}$ until it converges
+  \item iterate $x_{k+1} := x_k - \alpha \frac{\partial F(x_k)}{\partial x}$ until it converges
 \end{enumerate}
 
 As we see, the gradient descent is a simple algorithm but it is an iterative 
@@ -1543,13 +1550,11 @@ manner.
 
 \subsection{Levenberg-Marquardt}
 Levenberg-Marquardt (LM) is one of most popular gradient descent based algoritm 
-to solve least squares problem.
-
-
-Assume that we have a $r(x)$ residuals function:
+to solve least squares problem. In this section, we describe the idea behind 
+the LM algorithm. Assume that we have a $r(x)$ residuals function:
 
 \begin{equation}
-  r(x) := \begin{pmatrix} r_1(x) \\ \vdots \\ r_m(x) \end{pmatrix} \in \R^m
+  r(x) = \begin{pmatrix} r_1(x) \\ \vdots \\ r_m(x) \end{pmatrix} \in \R^m
 \end{equation}
 
 To find a local maximum/minimum of the residuals function, we need to 
@@ -1557,7 +1562,7 @@ determine the first derivative and it
 $r'(x)$ appears in a special form, e.g., Jacobian:
 
 \begin{equation}
-  J(x) := \begin{bmatrix} \frac{\partial}{\partial x_j }r_i(x) \end{bmatrix}_{ij} 
+  J(x) = \begin{bmatrix} \frac{\partial}{\partial x_j }r_i(x) \end{bmatrix}_{ij} 
   = 
   \begin{bmatrix} 
     \vertbar & & \vertbar \\
@@ -1573,36 +1578,131 @@ $r'(x)$ appears in a special form, e.g., Jacobian:
   \in \R^{mxn}
 \end{equation}
 
-We re-write the objective function of optimization problem from our residuals 
-function:
+Least squares problem has special forms which can be exploitted. 
+Here, the residuals function function and its derivatives is given:
+%(Keep in mind that multiplication with $\frac{1}{2}$ in front of objective function
+%is for cosmetic reason since it does not effect local mimimum's position in the function)
 
 \begin{equation}
-  F(x) = \frac{1}{2} ||r(x)||^2 = \frac{1}{2} r(x)^T r(x)
+  F(x) = \frac{1}{2} ||r(x)||^2 = \frac{1}{2} r(x)^T r(x) \text{  (Objective function)}
+\end{equation}\label{eq:residuals_objective}
+\begin{equation}
+  \nabla F(x) = J(x)^T r(x) = \sum_{i=1}^{m} r_i(x) \nabla r_i(x) \text{  (First-order derivative)}
+\end{equation}\label{eq:residuals_objective_first_der}
+\begin{equation}
+\nabla^2 F(x) = J(x)^TJ(x) + \sum_{i=1}^m r_i(x) \nabla^2 r_i(x) \text{ (Second-order derivative)}
+\end{equation}\label{eq:residuals_objective_second_der}
+
+NOTE: Move this part to gradient descent ->
+The objective function is usually assumed to be highly non-linear; therefore, 
+one cannot perform computation such as derivatives. Therefore, we build 
+a $q_{LM}$ quadratic model of the objective function using Taylor expansion:
+
+\begin{equation}
+  q_{LM}^k(d) = f(x^k) + \nabla f(x^k)^T d + \frac{1}{2} d^T B_{LM}^kd
 \end{equation}
 
-Note that multiplication with $\frac{1}{2}$ above equation is for cosmetic 
-reason since it does not effect local mimimum's position in the function. 
+Given \ref{eq:residuals_objective} and \ref{eq:residuals_objective_first_der}, we elaborate the quadratic model:
 
+\begin{equation}
+  q_{LM}^k(d) = \frac{1}{2}r(x^k)^Tr(x^k) + r(x^k)^TJ(x^k)d + \frac{1}{2}d^TB_{LM}^kd
+\end{equation}
 
-Keep mind that there are
-crucial factors whether lm will descent the local minimum to the
-interest point or not:
+It is critical to note that LM does not use $\nabla^2F(x)$ 
+the exact second-order derivative (\ref{eq:residuals_objective_second_der})
+(also appears in the special form called \textit{Hessian}) in its quadratic model. 
+This is because it is computationaly expensive. Instead, we use an approximated 
+Hessian model by removing $\sum_{i=1}^mr_i(x)\nabla^2r_i(x)$ and replacing with 
+term $\lambda^k I$. Finally, the final approximated Hessian function would be:
+
+\begin{equation}
+  B_{LM}^k = J(x^k)^T J(x^k) + \lambda^k I
+\end{equation}
+
+where $\lambda^k>0$ is a positive number and $I\in \R^{nxn}$ is the identity matrix.
+Similar to \ref{eq:delta_x_descent_direction}, one can calculate the descent direction 
+in the context of LM method as follows:
+
+\begin{equation}
+  B_{LM}^kd^k = - \nabla f(x^k) \text{ or } d^k = - (B_{LM}^k)^{-1}\nabla f(x^k)
+\end{equation}\label{eq:lm_descent_direction}
+
+If we can write above equation using the content of Hessian model more explicitly: 
+
+\begin{equation}
+  [J(x^k)^TJ(x^k) + \lambda^kI]d^k = -J(x^k)^Tr(x^k)
+\end{equation}\label{eq:damping_full}
+
+it gives a clearer picture why $\lambda^kI$ term is used. In other gradient-descent 
+based algorithm performs line search to determine the step length of the current 
+iteration. In LM, this is done by tuning $\lambda$ parameter, also known as 
+\textit{damping parameter}. For example, suppose that we assign $\lambda$ 
+a significantly small value. Then, \ref{eq:damping_full} becomes:
+
+\begin{equation}
+  \lambda^kd^k \approx -J(x^k)^Tr(x^k) \text{ or } 
+  d^k \approx -\frac{1}{\lambda^k}J(x^k)^Tr(x^k)\text{ or } 
+  d^k \approx -\frac{1}{\lambda^k}\nabla F(x^k)
+\end{equation}
+
+Whereas, if we assign $\lambda$ a significantly large value, then it becomes:
+
+\begin{equation}
+  J(x^k)^TJ(x^k)d^k = -J(x^k)^Tr(x^k)
+\end{equation}
+
+which is a regular \textit{Newton step} (corresponds to $\alpha=1$ in \ref{eq:delta_x_step_length}).
+
+On the other hand, another question arises about damping parameter about how to tune the parameter 
+so that it will allow the algorithm to converge to a local minimum efficiently 
+and accurately. This is done by the \textit{progress ratio} test:
+
+\begin{equation}
+  \rho^k = \frac{F(x^k) - F(x^k+d^k)}{q_{LM}^k(0)-q_{LM}^k(d^k)} =
+  \frac{\text{actual decrease in objective } F(x)}
+  {\text{predicted decrease by model } q_{LM}^k(d)}
+\end{equation}\label{eq:lm_progress_ration}
+
+Based on the $p^k$, we can create an empiric strategy:
+
+\begin{enumerate}
+  \item If $p^k \geq t_2$, then it is considered as a very successful step; 
+    therefore, we can even choose smaller value for damping facor in the next iteration 
+    so that 
+    we increase the descent speed.
+  \item If $t_1 \leq p^k < t_2$, then it is still a successfull step but we 
+    can keep the damping factor same in the next iteration so that we don't 
+    miss out the local minimum.
+  \item If $p^k < t_1$, then it is a bad step; therefore, we can reject this 
+    damping factor choice and choose a larger value.
+\end{enumerate}
+
+Fundemantally, this is how LM algoritm works. 
+One must keep in mind that even the sophisticated LM algorithm might fail to 
+converge a desired interest point on the objective function.
+There are two crucial factors on which any gradient descent based algorithm depends:
 \begin{itemize}
-  \item \textit{outliers} in the dataset,
-  \item good \textit{initial point guess}. 
+  \item \textit{outliers} in measurement dataset,
+  \item good \textit{initial guess}. 
 \end{itemize}
 
-If these two criteria do not meet, lm might converge to the
+It is important that we provide a good initial
+guess and remove outliers from dataset. 
+If these two criteria do not meet, LM might converge to the
 another local minimum or might not even converge to
-an optimal solution. It is important that we provide a good initial
-guess and minimum amount of outliers into any gradient descent
-optimization algorithm. Otherwise, we will not be able to converge to
-a local minimum that we are interested in since we will be stuck at
-another local minimum point. 
-Not being able to find an optimal solution 
-in slam context will result in 
-an estimated state configuration is largely
-different from the ground truth.
+an optimal solution. 
+That being said, we can now summarize the algorithm into five steps:
+
+\begin{enumerate}
+  \item build the quadratic model $q_{LM}^k(d)$ of the objective function,
+  \item compute the descent direction $d^k$ by solving the linear system of 
+    equations in \ref{eq:lm_descent_direction},
+  \item calculate the progress ratio $\rho^k$ in \ref{eq:lm_progress_ration}.
+  \item choose the next damping factor $\lambda^{k+1}$ according to progress ratio test,
+  \item set the next iteration based on progress ratio test:
+    $\\ \text{  if } \rho^k > t_1 \rightarrow x^{k+1}:=x^k +d^k \text{ (step accepted) }\\ 
+    \text{  if }\rho^k > t_1 \rightarrow x^{k+1}:=x^k \text{ (step rejected)}$
+\end{enumerate}
 
 
 \end{document}
