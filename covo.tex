@@ -636,6 +636,9 @@ that offers such implementations.
 
 \chapter{Visual Odometry} \label{cp_vo}
 
+\section{Related Works} \label{sc_visual_odometry_related_works}
+
+
 \section{Image Features} \label{sc_img_features}
 
 Image features are a collection of regions of interest or of points of interest 
@@ -647,7 +650,7 @@ measured accurately. This is useful for localization related tasks such as VO.
 
 \subsection{Feature Extraction} \label{sb_sc_feature_extraction}
 
-Generally, the goal is to find good features in feature-based VO. 
+The main goal is to find good features in feature-based VO. 
 What defines a good feature is that it must be distinct, 
 repeatable, computationaly cheap and invariant to geometrical changes. 
 Obviously, one has many options to produce such image 
@@ -658,22 +661,26 @@ neighborhood pixels. Blobs take advantage of pixel intensity or color to
 decide whether it has a distinct response or not.
 In the VO literature, SIFT\cite{}, SURF\cite{} or CENSURE\cite{} are popular 
 choices for detecting blob featurus.
-Corners are the meeting points where two or many edges intersect. Corners 
+Corners are the meeting points where two or many edges intersect. Corners, 
+on the other hand, 
 take advantage of geometrical structure of an image. FAST\cite{}, Shi-Tomasi or 
 Haris\cite{} are widely used for detecting corners.
 
 Fundemantally, a two-step process is needed to extract good features. 
-First, you take a response function, called \textit{image filter}, 
+First, you take a response function called \textit{image filter}, 
 shift this filter through the image and save the one that have greater 
-response than your previously defined threshold as Keypoints.
-In blob case, this might a Gaussian filter or a 
-corner detector filter in corner case. Second, you perform non-maxima 
+response than your previously defined threshold as Keypoints. 
+This might a Gaussian filter for blobs or a 
+corner detector filter for corners. In the second step (optional), 
+you perform non-maxima 
 suppression on the resulting keypoints to find local minima of the function. 
-The second step ensures you get keypoints only with maximum confidence. 
+This step will help to remove similar keypoints and to choose the ones having 
+maximum confidence so that distinctiveness of the features are ensured.
 
 Inheritly, each feature detector has certain limitations and one has to 
-choose whihc detector to use according to task objectives. Therefore, one can ask 
-does the localization envorinment involve more texture oriented objects like 
+choose whihc detector to use according to task objectives. Therefore, we may ask 
+the following question: 
+Does the localization envorinment involve more texture oriented objects like 
 floors, walls etc. or geometrical shapes like urban areas where many lines 
 exist?
 However, rule of thumb when choosing feature detector is that blobs 
@@ -686,22 +693,25 @@ Extracting features is the very first step of VO. The next step is to
 encode the detected keypoints into a format that we can perform comparison 
 or search operation among them. This is done by taking the neighboring pixels 
 around the keypoints and convert into a more compact form. For example, SIFT 
+, most well-known feature decsriptor, 
 creates a patch around a keypoint, divides this patch into smaller grids,
 calculate the gradient of each grid and 
-saves into a histogram form.
+saves them as a histogram.
 This procedure makes feature descriptor 
 robust agaist scale or rotation changes. Then, one can use these descriptors for 
-various comparison operations such as matching or tracking in VO.
+various comparison operations such as matching or tracking in VO. However, we 
+utilize the ORB in our VO and will discuss its properties.
 
 
-\subsection{ORB} \label{sb_sc_orb}
+\subsubsection{ORB} \label{sb_sc_orb}
 
 One of the most strict requirements of VO is the real-time contraints since it is 
-expected to work at similari to low-sensors, i.e., accelerometer, gyroscopes etc. 
+expected to work at similari to low-level inertial sensors, i.e., accelerometer, gyroscopes etc. 
 As previously discussed, blobs detectors are computationaly expensive. Therefore, 
 corners based feature detector are more prevelant in VO. 
 \textit{ORB (oriented FAST and rotated BRIEF)} studied known issues of 
-FAST detector and BRIEF descriptor. Then, it fixed them into a level that 
+FAST detector and BRIEF descriptor. Then, it combines them to compansate each 
+other's drawbacks. In the end,
 it perform as accurate as SIFT, plus faster. Here are steps on how to extract features 
 and create descriptors with ORB: 
 
@@ -756,22 +766,22 @@ and create descriptors with ORB:
     ORB uses BRIEF to create feature descriptors; however, BRIEF fails in 
     rotated images. Therefore, ORB modifies the BRIEF by adding orientation 
     information. To get orientation, an \textit{image moment} are calculated
-    for each patch $S$:
+    for each patch $\mathbf{S_n}$:
 
     \begin{equation}
-      m_{a,b}(S) = \sum_{x,y \in S} x^a y^b I(x,y)
+      m_{a,b}(\mathbf{S_n}) = \sum_{x,y \in \mathbf{S_n}} x^a y^b I(x,y)
     \end{equation}
     where $a + b$ defines the order of the moment and we need 
     the moments of order one:
 
     \begin{equation}
-      m_{1,0}(S) = \sum_{x,y \in S} x \cdot I(x,y) \text{  ,  }
-      m_{0,1}(S) = \sum_{x,y \in S} y \cdot I(x,y)
+      m_{1,0}(\mathbf{S_n}) = \sum_{x,y \in \mathbf{S_n}} x \cdot I(x,y) \text{  ,  }
+      m_{0,1}(\mathbf{S_n}) = \sum_{x,y \in \mathbf{S_n}} y \cdot I(x,y)
     \end{equation}
 
-    Then, we get the orientation of the patch S:
+    Then, we get the orientation of the patch $\mathbf{S_n}$:
     \begin{equation}
-      \theta(S) = atan2(m_{01}, m_{10})
+      \theta(\mathbf{S_n}) = atan2(m_{01}, m_{10})
     \end{equation}
 
   \item \textbf{Form BRIEF descriptors with their corresponding orientation}:
@@ -787,18 +797,18 @@ and create descriptors with ORB:
 \end{figure}
 
 
-    To do so, we randomly (generated by normal distribution) 
+    To do so, we randomly (normal distribution) 
     selected 256 pairs $(p_i,q_i)$ 
-    inside the patch $S$:
+    inside the patch $\mathbf{S_n}$:
     \begin{equation}
-      \mathbf{S} = 
+      \mathbf{S_n} = 
       \begin{pmatrix}
       p_0, \dots, p_n\\
       q_0, \dots, q_n
       \end{pmatrix}
     \end{equation}
     Next, we rotate each $(\mathbf{p_i, q_i})$ pair points in 
-    $\mathbf{S}$ with the 
+    $\mathbf{S_n}$ with the 
     corresponding corner's orientation:
     \begin{equation}
       \mathbf{p}_{i,\theta} = \mathbf{R}_{\theta}\mathbf{p_i} \text{ and } 
@@ -821,9 +831,9 @@ and create descriptors with ORB:
     \end{equation*}
 
     Finally, we sum comparison results with binary form to get the desctriptor 
-    of the patch $S$:
+    of the patch $\mathbf{S_n}$:
     \begin{equation}
-      f(S) := \sum_{1\leq i \leq n} 2^{i-1}\tau (\mathbf{p_{i,\theta}, q_{i,\theta}})
+      \mathbf{D_n} = f(\mathbf{S_n}) := \sum_{1\leq i \leq n} 2^{i-1}\tau (\mathbf{p_{i,\theta}, q_{i,\theta}})
     \end{equation}
 
 \end{enumerate}
@@ -832,24 +842,64 @@ and create descriptors with ORB:
 
 
 
-\section{Feature Matching} \label{sc_feature_matching}
+\subsection{Feature Matching} \label{sc_feature_matching}
+
+Now that we know how to extract a distinct feature and to form a descriptor, 
+we can start building a relationship across images to estimate how the camera 
+moves. Remember that 
+the camera can procedure
+a video stream consisting of usually ranging from 30 to 60 frames per second. 
+The first task is to form a group of image pairs and to compute translation and rotation 
+information between each image pair, continuously. In literature, there are two ways to 
+select image pairs: 
+frame to frame or key frame to frame. In the former case, one pairs consecutive 
+frames across video stream. In the latter case, one selects a reference 
+frame and keep matching it with subsequent frames as long as the pair has 
+sufficient amount of feature matchings. The latter has certain advantages over 
+the former; however, we choose the former as we wish to model uncertainty 
+of our motion estimation algorithm as accurate as possible. 
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
-  {fig/ref_imgs/feature_matchings.png}
+  {fig/ref_imgs/feature_matching.png}
   \caption{Feature Mathces}
 	\label{fig:feature_matchings}
 \end{figure}
 
 
-\subsection{Brute-Force or FLANN} \label{sb_sc_}
+All being said, 
+let's assume we pair consecutive images
+$(\mathbf{I}_k, \mathbf{I}_{k+1})$. 
+In each image, we gather feature descriptors 
+$(\mathbf{D}_k^{1:n}, \mathbf{D}_{k+1}^{1:m})$ that pass through our ORB 
+filter. The goal is to find the feature correspondences based on their 
+rotated BRIEF descriptor values. Again, there are many efficient ways to 
+perform this matching task such as FLANN 
+(Fast Library for Approximate Nearest Neighbors). 
+Instead, in this thesis, we choose Brute-Force matching algorithm, which
+produces less outliers but it is less efficient in terms of time complexity.
+The Brute-Force, as its name states, is a straightforward technique
+that compares each $\mathbf{D}_{k}^{1:n}$ descriptors in $k^{th}$ image 
+with $\mathbf{D}_{k+1}^{1:m}$ descriptors in $k+1^{th}$ image by calculating 
+\textit{Hamming} distance:
+
+\begin{equation}
+  d_h(\mathbf{D}_{k}^i,\mathbf{D}_{k+1}^j) = \mathbf{D}_{k}^i \oplus \mathbf{D}_{k+1}^j
+\end{equation}
+
+where $\oplus$ corresponds to an 'exclusive or' logic operation. After calculating 
+Hamming distances, the minimum distance are kept as best matches. On top of that, 
+we perform cross-check validation by ensuring that
+matches with value $(i,j)$ such that $i^{th}$ descriptor in image $k$ 
+has $j^{th}$ descriptor in image $k+1$ as the best match and vice-versa.
+
 
 \subsection{RANSAC} \label{sb_sc_ransac}
 
 In reality, not all feature matches are correct and it is critical that we 
-detect wrong ones as Least-Squares optimization that estimates the camera 
-motion is sensitive to even small number of wrong matches. More technically,
+detect wrong ones as the optimization algorithm that estimates the camera 
+motion is sensitive to even small number of wrong matches. In technical terms,
 we call these 
 wrong matches \textit{outliers} (or \textit{false positives}). Hence, 
 we need an algorithm to reject those outliers from \textit{inliers}. 
@@ -927,10 +977,8 @@ determine parameters of the model. In homography $\mathbf{H}$ case, we need at l
 4 point pairs $(\mathbf{p}=(u_i,v_i),\mathbf{q}=(u_i',v_i'))$ to solve 
 this linear system of equation. However, due to the noise, we require more than 
 4 point pairs but this makes the problem over-determined. Therefore, 
-we can only find an approximate solution by solving least squares problem:
-It is also good idea to optimize with all matching points and use 
-the estimated parameters as a initial guess for the optimization 
-which we perform for the subset. With all that being said, we minimize the 
+we might find an approximated solution by solving least squares problem:
+With all that being said, we minimize the 
 \textit{algebraic distance error}:
 
 \begin{equation}
@@ -1019,22 +1067,23 @@ ealier if the following condition is satisfied:
 
 where $n$ is the total number of matching points.
 
-It is also important 
-to note that estimated homography matrix corresponds the rotation and the 
-translation that we want to calculate camera's trajectory. However, 
-estimated homography matrix with the presence of outliers is not sufficient 
-enough. Therefore, further optimization with is required to get more 
-accurate rotation and translation with only inliers. We will discuss this 
-optimization in the next section.
+It is crucial 
+to note that we may still have outliers within $\mathbf{d}$ threshold after 
+RANSAC.
+However, 
+our motion estimation will be greatly improved since 
+majority of the outliers are removed.
+Finally, we will discuss how we can utilize the carefully selected features 
+and its matches to estimate the camera motion.
 
 
 \section{Motion Estimation} \label{sc_motion_estim}
 
 Motion estimation is the core part of the VO system. After 
-feature extraction, feature matching and outlier rejection,
+extracting and matching features,
 we finally are ready to compute $\mathbf{T}_{k, k+1}$ transformation matrix. 
-This transformation matrix corresponds to relative camera motion between 
-two images that is recorded in different poses (figure-\ref{fig:transformation_ij}).
+The \textit{transformation matrix} corresponds to relative camera motion information between 
+two images that is recorded in different poses (see figure-\ref{fig:transformation_ij}).
 Let's assume; we have 
 consecutive camere poses $\mathbf{x}_k^c = [\mathbf{p}_k^c, \mathbf{q}_k^c]$ and 
 $\mathbf{x}_{k+1}^c = [\mathbf{p}_{k+1}^c, \mathbf{q}_{k+1}^c]$ where 
@@ -1212,7 +1261,7 @@ Now, we can formulate the four steps of 3D-to-2D correspondences as follows:
 \begin{enumerate}
   \item $\mathbf{X}_{i}^{k+1} = \mathbf{K}^T\mathbf{x}_{i}^{k+1}$
   \item $\mathbf{X}_i^{k'} = 
-    \mathbf{q}_{k,k+1}^* \otimes (\mathbf{X}_i^{k+1} - \mathbf{t}_{k,k+1}) \otimes \mathbf{q}_{k,k+1}$
+    \mathbf{q}_{k,k+1} \otimes \mathbf{X}_i^{k+1} \otimes \mathbf{q}_{k,k+1}^* + \mathbf{t}_{k,k+1} $
   \item $\mathbf{x}_i^{k'} = \mathbf{K}\mathbf{X}_i^{k'}$
   \item minimize $\sum_i||\mathbf{x}_i^k - \mathbf{x}_i^{k'}||_2^2$
 \end{enumerate}
@@ -1260,7 +1309,7 @@ we can formulate the three steps of 3D-to-3D correspondences as follows:
   \item $\mathbf{X}_{i}^{k+1} = \mathbf{K}^T\mathbf{x}_{i}^{k+1}$ and 
     $\mathbf{X}_{i}^{k} = \mathbf{K}^T\mathbf{x}_{i}^{k}$ 
   \item $\mathbf{X}_i^{k'} = 
-    \mathbf{q}_{k,k+1}^* \otimes (\mathbf{X}_i^{k+1} - \mathbf{t}_{k,k+1}) \otimes \mathbf{q}_{k,k+1}$
+    \mathbf{q}_{k,k+1} \otimes \mathbf{X}_i^{k+1} \otimes \mathbf{q}_{k,k+1}^* + \mathbf{t}_{k,k+1}$
   \item minimize $\sum_i||\mathbf{X}_i^k - \mathbf{X}_i^{k'}||_3^2$
 \end{enumerate}
 
@@ -1283,9 +1332,11 @@ NOTE: State why it works poorly? Is it bc back-projected 3D feature point more n
 % ***************************CP4-CoVO***************************
 \chapter{An Error-Aware RGB-D Visual Odometry} \label{cp_covo}
 
+\section{Related Works} \label{sc_error_aware_visual_odometry_related_works}
+
 REMEMBER TO DRAW X,Y COORD. WRT CAM. COORD WITH RIGHT HAND FOR KINECT!
 
-\section{Modeling Spatial Uncertainty} \label{sc_spatial_uncertainty}
+\section{Modeling Uncertainty of a RGBD Camera} \label{sc_spatial_uncertainty}
 
 \begin{figure}[H]
 	\centering
@@ -1296,9 +1347,8 @@ REMEMBER TO DRAW X,Y COORD. WRT CAM. COORD WITH RIGHT HAND FOR KINECT!
 \end{figure}
 
 
-
-
-\subsection{Kinect Calibration} \label{sb_sc_kinect_calibration}
+\section{Modeling Uncertainty of Feature Matchings} \label{sc_modeling_feature_matching_uncertainty}
+%\subsection{Kinect Calibration} \label{sb_sc_kinect_calibration}
 
 \section{Weighted Least-Squares Optimization} \label{sc_weighted_lsq}
 
@@ -1319,6 +1369,50 @@ REMEMBER TO DRAW X,Y COORD. WRT CAM. COORD WITH RIGHT HAND FOR KINECT!
 
 \section{Rigid-Body Transformations} \label{sc_rigid_body_transformations}
 
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
+	{fig/ref_imgs/2d_local_coords_in_world_coords.png}
+  \caption{A Local Coordinate System in World Coordinate System}
+	\label{fig:2d_local_coords_in_world_coords}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
+	{fig/ref_imgs/2d_rotation.png}
+  \caption{Rotating the Local Coordinate System in World Coordinate System}
+	\label{fig:2d_rotation}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
+	{fig/ref_imgs/2d_translation.png}
+  \caption{Translating the Local Coordinate System in World Coordinate System}
+	\label{fig:2d_rotation}
+\end{figure}
+
+
+
+
+\subsection{3D Rotation with Quaternions}
+
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
+	{fig/ref_imgs/2d_translation.png}
+  \caption{Translating the Local Coordinate System in World Coordinate System}
+	\label{fig:2d_rotation}
+\end{figure}
+
+
+
+\subsection{3D Translation}
+
+
+\subsection{3D Transformation}
 
 \section{Least Squares}\label{sc_least_squares}
 
@@ -1504,9 +1598,28 @@ derivatives has the following form:
   \nabla F(x) = F'(x) = \frac{\partial F(x)}{\partial x}
 \end{equation}
 
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
+	{fig/ref_imgs/taylor_1st_derivative.png}
+	\caption{First-order Derivative of Taylor Expansion}
+  \label{fig:taylor_1st_derivative}
+\end{figure}
+
+
+
 \begin{equation}
   \nabla^2 F(x) = F''(x) = \frac{\partial^2 F(x)}{\partial x^2}
 \end{equation}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
+	{fig/ref_imgs/taylor_2nd_derivative.png}
+	\caption{Second-order Derivative of Taylor Expansion}
+  \label{fig:taylor_2nd_derivative}
+\end{figure}
+
 
 Another fact about $F(x)$, considering above formula, is that its value will decrease 
 in the direction of its negative derivative:
@@ -1620,6 +1733,18 @@ term $\lambda^k I$. Finally, the final approximated Hessian function would be:
 \end{equation}
 
 where $\lambda^k>0$ is a positive number and $I\in \R^{nxn}$ is the identity matrix.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
+	{fig/ref_imgs/taylor_approx_2nd_derivative.png}
+	\caption{Approximated Second-order Derivative of Taylor Expansion}
+  \label{fig:taylor_approx_2nd_derivative}
+\end{figure}
+
+
+
+
 Similar to \ref{eq:delta_x_descent_direction}, one can calculate the descent direction 
 in the context of LM method as follows:
 
@@ -1703,6 +1828,18 @@ That being said, we can now summarize the algorithm into five steps:
     $\\ \text{  if } \rho^k > t_1 \rightarrow x^{k+1}:=x^k +d^k \text{ (step accepted) }\\ 
     \text{  if }\rho^k > t_1 \rightarrow x^{k+1}:=x^k \text{ (step rejected)}$
 \end{enumerate}
+
+
+\section{Error Propagation Law}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
+	{fig/ref_imgs/error_propagation.png}
+	\caption{Error Propagation}
+  \label{fig:error_propagation}
+\end{figure}
+
 
 
 \end{document}
