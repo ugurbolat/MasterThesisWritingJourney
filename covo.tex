@@ -148,7 +148,7 @@ sequences, one has to model this projection operation accurately. One of the
 basic camera modeling technique is the \textit{Pinhole Model} where the projection of 
 the 3D points are mapped on a 2D image plane (also called focal plane). 
 
-\section{The Pinhole Model} \label{sbsc_pinhole}
+\section{The Pinhole Model for RGB Camera} \label{sbsc_pinhole}
 
 In this model, the camera centre sits behind the image plane.
 The Z-axis, 
@@ -449,7 +449,7 @@ to important to find a good $\mathbf{P}$ \textit{projection matrix}.
 The next section describes one of many numerical methods for estimationg this 
 matrix in literature.
 
-\section{Camera Calibration} \label{sb_sc_calibration}
+\section{RGB Camera Calibration} \label{sb_sc_calibration}
 
 
 It is important to note that derivations of the formulation of this section
@@ -576,11 +576,11 @@ multiplying with the intrinsic matrix:
   =
   \begin{pmatrix}
     f_x x'' + c_x\\
-    f_y x'' + c_y\\
+    f_y y'' + c_y\\
     1
   \end{pmatrix}
     =
-    F_{dis}\begin{pmatrix}
+    F_{dist}\begin{pmatrix}
       \mathbf{K}
       \begin{pmatrix}
         X_{cam}\\
@@ -634,9 +634,51 @@ that offers such implementations.
 
 
 
-\chapter{Visual Odometry} \label{cp_vo}
+\section{The Triangulation Model for Depth Camera} \label{sc_depth_model}
+
+\begin{figure}[H]
+	\centering
+  \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
+  {fig/ref_imgs/kinect_sensors.png}
+  \caption{Kinect Sensors}
+	\label{fig:kinect_sensors}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+  \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
+  {fig/ref_imgs/kinect_depth_img.png}
+  \caption{Kinect Depth Image Construction}
+	\label{fig:kinect_depth_img}
+\end{figure}
+
+
+\begin{figure}[H]
+	\centering
+  \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
+  {fig/ref_imgs/kinect_depth_measurement.png}
+  \caption{Kinect's Depth Measurement}
+	\label{fig:uncertainty_matching}
+\end{figure}
+
+\section{Depth Camera Calibration} \label{sc_depth_camera_calibration}
+
+\chapter{Fundamentals of Visual Odometry} \label{cp_vo}
 
 \section{Related Works} \label{sc_visual_odometry_related_works}
+
+
+
+\section{Visual Odometry Pipeline} \label{sc_visual_odometry_pipeline}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
+  {fig/ref_imgs/vo_pipeline.png}
+  \caption{Visual Odometry Pipeline}
+	\label{fig:visual_odometry_pipeline}
+\end{figure}
+
 
 
 \section{Image Features} \label{sc_img_features}
@@ -1168,29 +1210,42 @@ can be used to calculate $n^{th}$ camera pose that is relative to the initial po
   \mathbf{q}_{n,n-1} \otimes \dots \otimes \mathbf{q}_{2,1} \otimes \mathbf{q}_{1,0} \otimes \mathbf{q}_{0}^c 
 \end{equation}
 
-To find transformation, we take advantage of the feature points as they can 
-inform us how the camera moves if we detect them in multiple image frames.
-All the feature extraction and feature matchings are performed so that we 
+To find transformation, we take advantage of image features as they can 
+inform us how the camera moves if we detect them across multiple frames.
+All the afromentioned step such as feature extraction and feature matchings 
+are performed so that we 
 can compute relative motion.
 Similar to projection matrix \ref{eq:proj_lsq} in camere calibration, we utilize 
 the least squares method for estimating the best approximate transformation information
-due to the noise. Several methods available in literature create 
+due to the noise. Several methods available in literature to create 
 relationship between feature points that we detect across different image frames and 
 we will discuss it in the next section.
 
 \subsection{Relative Camera Pose Estimation Techniques}
 \label{sb_sc_relative_camera_pose_estimation_techniques}
 
-The reason we have different kinds of way to compute transformation arises from 
-the cost function we define in least squres problem. In the end, all we wish to 
-find a good model for our optimization problem so that we minimize the error.
-The design choice for cost function comes from the fact that we either use 
-2D keypoints, 3D point clouds (if we back-project 2D keypoints using 
-calibrated projection matrix), or both.
+So far, we discussed how we can process images so that we have adequate 
+information to compute camera pose. However, we only mentioned 2D image 
+features. To esimate the pose in 3D world, we require corresponding 
+depth information for features. Note that there are methods that 
+retrieve relative scale information using only 2D image features and its epipolar 
+constraints with monocular cameras, 
+but we are interested in having a metric depth information rather 
+than relative scale in this thesis. Therefore, we have two common choices in terms 
+of camera types: Stereo Camera or RGBD Camera. In our experiments, we experimented 
+on RGBD Camera to retrieve the depth information.
+
+At this point, one generally has two ways to compute relative camere poses.
+and the reason we have different kinds of way to compute transformation arises from 
+the cost function we define for the least squres problem. In the end, all we wish to 
+find a good model for our optimization problem so that we settle on the 
+best possible local minimum.
+The design choice for cost function comes from the fact that we build 
+our cost function either on $\R^2$ space (image plane) or $\R^3$ space 
+(Camere Coordinate system).
 Therefore, in VO literature, 
-there are 3 different cost functions for modeling the least problem:
+there are 2 different cost functions for modeling the least problem:
 \begin{itemize}
-  \item 2D-to-2D correspondences,
   \item 3D-to-2D correspondences,
   \item 3D-to-3D correspondences.
 \end{itemize}
@@ -1334,21 +1389,160 @@ NOTE: State why it works poorly? Is it bc back-projected 3D feature point more n
 
 \section{Related Works} \label{sc_error_aware_visual_odometry_related_works}
 
-REMEMBER TO DRAW X,Y COORD. WRT CAM. COORD WITH RIGHT HAND FOR KINECT!
+\section{Modeling Errors in VO} \label{sc_spatial_uncertainty}
 
-\section{Modeling Uncertainty of a RGBD Camera} \label{sc_spatial_uncertainty}
+The main reason why conventional VO applications do not provide any uncertainty 
+information (namely covariance matrix) is that it is hard to model 
+error characteristics of the whole VO pipeline as we perform many preprocessing, 
+each of which eventually introduces different types of error. What we aim 
+, in this chapter, is to define potential error source of the VO and 
+and to model them. To do so, we need to investigate sensors in RGB-D camera. 
+Kinect, for instance, has two sensors: RGB sensor 
+and ifrared (IR) sensor. We assume that both sensors are calibrated such that 
+there are no registrations error when mapping RGB pixels to disparsity pixels. 
+Therefore, 
+we further assume that these sensors are independent. Under this asssumption, 
+we split source of errors into two categories: feature related uncertainties 
+caused by RGB sensor and feature matching, and depth related uncertainties caused by 
+IR sensor. In the following sections, we will discuss how we can model these 
+two types of error source and how to form an uncertainty model 
+for the Kinect so that we estimate meaningful covariance matrices for each 
+relative pose.
+
+\subsection{Feature Related Uncertainties} \label{sb_sc_pixel_uncertainty}
+
+Remember that 3D points in world are projected to 2D points on an image plane with 
+Pinhole Model from section-\ref{sbsc_pinhole}. When the aperture of a digital 
+camera opens, it captures incoming light rays using its light detector sensor 
+(typically CMOS image sensors) and turns them into electrical signals. That 
+is an over-simplfied definition of a color camera. In addition to pinhole 
+model, one can build a model for light ray coming from a 3D point.
+. We call this model 
+a \textit{conic ray} model which is a geometrical representation of 
+single projection operation. i
+Before we describe the conic ray model, let's consider a simple example where we 
+project 2D $\mathbf{x}$ position of a point cloud onto 1D $\mathbf{y}$ position
+as it is seen in figure-\ref{fig:conic_ray_2d_error_model}.
+
 
 \begin{figure}[H]
 	\centering
   \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
-  {fig/ref_imgs/uncertainty_matching.png}
-  \caption{Uncertainty of Feature Matchings}
-	\label{fig:uncertainty_matching}
+  {fig/ref_imgs/conic_ray_2d_model.png}
+  \caption{Conic Ray 2D Error Model}
+	\label{fig:conic_ray_2d_error_model}
+\end{figure}
+
+Due to the noise in camera sensor and discretization of pixel coordindates, 
+we measure the position $\mathbf{x}$ noisy. To describe how noisy $\mathbf{x}$ 
+measurement results in erroneous $\mathbf{y}$ position, 
+we start formulazing it with Bayes rule:
+
+\begin{equation}
+  p(\mathbf{x}_0|\mathbf{y}_0) = \frac{p(\mathbf{x}_0) \cdot p(\mathbf{y}_0|\mathbf{x}_0)}{p(\mathbf{y}_0)}
+\end{equation}
+
+where $p(\mathbf{y}_0) = \int p(\mathbf{x}_0) \cdot p(\mathbf{y}_0|\mathbf{x}_0) d\mathbf{x}_0$
+is independent of $\mathbf{x}_0$. Assuming that we don't have any previous 
+knowledge where $\mathbf{x}$ is, the image plane is infinitely 
+large, and both $p(\mathbf{x}_0)$ and $p(\mathbf{y}_0)$ are uniform, we can transform 
+the conditional probability to pure inversion of conditionings:
+
+\begin{equation}
+  p(\mathbf{x}_0|\mathbf{y}_0) = p(\mathbf{y}_0|\mathbf{x}_0)
+\end{equation}
+
+In real-world, we measure projected points which is $\mathbf{y}$ and then 
+back-project these measures to $\mathbf{x}$. Therefore, we are interested in 
+knowing $p(\mathbf{x}_0|\mathbf{y}_0)$. For doing so, we make a further 
+assumption that the camera measurment noise is Gaussian. Note that, to generalize our 
+problem to all time states, we drop $k=0$ and compute for $p(\mathbf{x}|y)$. 
+First, to remind the projection functions from $\mathbf{x}=(X_{cam},Z_{cam}) \in \R^2$ to 
+$\mathbf{u}=U \in \R^1$, we write the following equation by assuming that 
+images pixel coordinates are already back-distorted and 
+intrinsic and extrinsic parameters of the RGB camera is known after calibration
+(see notation \ref{eq:proj_func_w_square_pix_skew}):
+
+\begin{equation}
+  U = f_x \frac{X_{cam}}{Z_{cam}} + c_x + \epsilon
+\end{equation}
+
+where $\epsilon$ is Gaussian additive noise. Considering what we measure 
+$y=U+\epsilon$, we can write the probability density functions
+to represent the uncertainty since we have inversion of conditioning property:
+
+\begin{equation}
+  p(\mathbf{x}|y) = \mathcal{N}(y-f_x \frac{X_{cam}}{Z_{cam}} + c_x, \sigma_u^2) \text{ or }
+  p(y|\mathbf{x}) = \mathcal{N}(f_x \frac{X_{cam}}{Z_{cam}} + c_x-y, \sigma_u^2)
+\end{equation}
+
+Due to the noisy we just discussed, the back-projection axis would not pass 
+through the real $\mathbf{x}$ position. However, if we estimate the Gaussian 
+parameters sufficiently, we will have a strong idea where the measured
+point lies on XZ axis in the worst case. In statistics, one generally represent the 
+worst case scenarios with $3\sigma_u$ boundaries as the following figure shows:
+
+\begin{figure}[H]
+	\centering
+  \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
+  {fig/ref_imgs/conic_ray_2d_model_stds.png}
+  \caption{Conic Ray 2D Error Model with Different $\sigma$ Values}
+	\label{fig:conic_ray_2d_error_model_stds}
+\end{figure}
+
+So far, we only consider projections from 2D points in world onto 1D plane. 
+However, extension of this model into a model where 3D points in world are 
+projected onto 2D plane is a trivial operation: 
+
+\begin{figure}[H]
+	\centering
+  \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
+  {fig/ref_imgs/conic_ray_3d_model.png}
+  \caption{Conic Ray 3D Error Model with $3\sigma$ Values}
+	\label{fig:conic_ray_3d_error_model}
+\end{figure}
+
+The rays that emanate from optical centre through the elliptic region form 
+uncertainty region (represented with the dashed lines) 
+based on distance of the measured point cloud to the image plane. This 
+corresponds to the conic ray model we discussed earlier. To formulate this model, we need to 
+find parameters ellipse (more specifially called confidence ellipses) 
+based the noise for each axis on image plane.
+To do so, we utilize the multi-dimensional Gaussian distributions under the 
+same assumption of our simplified case:
+
+\begin{equation}
+  p(\mathbf{x}|\mathbf{y}) = \mathcal{N}(\mathbf{y}-\mathbf{x, \mathbf{Q}}) = 
+  \frac{1}{\sqrt{(2\pi)^n|\mathbf{Q}|}} 
+  \exp(-\frac{1}{2} (\mathbf{y}-\mathbf{x})^\intercal \mathbf{Q}^{-1} (\mathbf{y}-\mathbf{x}))
+\end{equation}
+
+where $n=2$ for a confidence ellipse,
+
+\begin{equation}
+  \mathbf{y} = \begin{bmatrix}u \\ v \end{bmatrix} \text{, } 
+  \mathbf{x} = \begin{bmatrix} f_x \frac{X_{cam}}{Z_{cam}} + c_x \\ f_y \frac{Y_{cam}}{Z_{cam}} + c_y \end{bmatrix} \text{,and }
+  \mathbf{Q} = \begin{bmatrix} \sigma_u^2 & 0 \\ 0 & \sigma_v^2 \end{bmatrix}
+\end{equation}
+
+On the other hand, the conic ray model still misses one more component; 
+that is, the depth noise which cause an uncertainty 
+along the axis that is perpendicular to image plane. 
+This is, however, caused by a IR depth camera in Kinect. 
+In the following section, we will discuss about how to extend the current conic ray 
+model with depth uncertainty.
+
+\subsection{Depth Related Uncertainties} \label{sb_sc_depth_uncertainty}
+
+\begin{figure}[H]
+	\centering
+  \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
+  {fig/ref_imgs/kinect_noise_model.png}
+  \caption{Depth Noise}
+	\label{fig:depth_noise}
 \end{figure}
 
 
-\section{Modeling Uncertainty of Feature Matchings} \label{sc_modeling_feature_matching_uncertainty}
-%\subsection{Kinect Calibration} \label{sb_sc_kinect_calibration}
 
 \section{Weighted Least-Squares Optimization} \label{sc_weighted_lsq}
 
@@ -1356,6 +1550,11 @@ REMEMBER TO DRAW X,Y COORD. WRT CAM. COORD WITH RIGHT HAND FOR KINECT!
 
 % ***************************CP5-EVALUATION***************************
 \chapter{Evaluation} \label{cp_evaluation}
+
+\subsubsection{Ideal Case} \label{sb_sb_sc_ideal_case}
+
+\subsubsection{Outliers in Feature Matches} \label{sb_sb_sc_outliers}
+
 
 % ***************************CP6-CONCLUSION***************************
 \chapter{Conclusion} \label{cp_conc}
@@ -1828,6 +2027,7 @@ That being said, we can now summarize the algorithm into five steps:
     $\\ \text{  if } \rho^k > t_1 \rightarrow x^{k+1}:=x^k +d^k \text{ (step accepted) }\\ 
     \text{  if }\rho^k > t_1 \rightarrow x^{k+1}:=x^k \text{ (step rejected)}$
 \end{enumerate}
+
 
 
 \section{Error Propagation Law}
