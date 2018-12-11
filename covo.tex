@@ -142,6 +142,9 @@ Professorship of Process Automation
 
 \chapter{Camera Models} \label{cp_cam_models}
 
+RE-WRITE THE FOLLOWING PARAGRAPH - COVER WHAT CAMERA DOES RATHER THAN 
+TALKING ABOUT PINHOLE - TALK ABOUT GEOMETRICAL MODELS OF CAMERAS
+
 A camera maps from a 3D world scene to a 2D image plane. We call this process 
 projection operation. Since the \acrshort{vo} systems process camera image 
 sequences, one has to model this projection operation accurately. One of the 
@@ -150,12 +153,17 @@ the 3D points are mapped on a 2D image plane (also called focal plane).
 
 \section{The Pinhole Model for RGB Camera} \label{sbsc_pinhole}
 
+Normally, the light rays 
+are captured through the camera's lens onto an electronic plane (could be CCD or CMOS) 
+that convert light intensity to electrical signals. 
+The pinhole model is, on the other hand, an approximation which simplifies 
+our calculations.
 In this model, the camera centre sits behind the image plane.
 The Z-axis, 
-also called \textit{principal axis}, of this 
+so called \textit{principal axis}, of this 
 coordinate system points out through the origin of the image plane and the 
-point where pierce through image plane is called the \textit{pricipal point}. 
-We can also see how other two axes are located in Figure-\ref{fig:pinhole} 
+point where pierce through image plane is called the \textit{principal point}. 
+We can also see how other two axes; i.e., X and Y, are located in Figure-\ref{fig:pinhole} 
 and this is known as the \textit{Camera Coordinate System} $(x_{cam}, y_{cam}, z_{cam})$.
 
 
@@ -449,7 +457,7 @@ to important to find a good $\mathbf{P}$ \textit{projection matrix}.
 The next section describes one of many numerical methods for estimationg this 
 matrix in literature.
 
-\section{RGB Camera Calibration} \label{sb_sc_calibration}
+\section{RGB Camera Calibration} \label{sb_sc_rgb_calibration}
 
 
 It is important to note that derivations of the formulation of this section
@@ -624,7 +632,10 @@ in the least squares optimization problem.
   \mathbf{P} \mathbf{X_{i}} ||^2
 \end{equation}\label{eq:proj_lsq}
 
-where $\mathbf{K}$ is the intrinsic matrix, 
+where 
+$\mathbf{x}_i$ is the pixel coordinates of the feature on image plane,
+$\mathbf{X}_i$ is the coordinates of the feature in World Coordinate system,
+$\mathbf{K}$ is the intrinsic matrix, 
 $\kappa$ is the distortion coefficients, 
 $\mathbf{R_i}$ is the corresponding orientation and 
 $\mathbf{t_i}$ is the corresponding translation.
@@ -636,13 +647,17 @@ that offers such implementations.
 
 \section{The Triangulation Model for Depth Camera} \label{sc_depth_model}
 
-\begin{figure}[H]
-	\centering
-  \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
-  {fig/ref_imgs/kinect_sensors.png}
-  \caption{Kinect Sensors}
-	\label{fig:kinect_sensors}
-\end{figure}
+Projected images captured by RGB cameras lack depth and angle 
+information. To acquire these information, two main techniques are developed; 
+e.g., passive stereo cameras and active stereo cameras. For passive stereo cameras, 
+typically two synchronized cameras are placed horizontally with a known distance to each other. 
+Hence, one usually exploits the triangulation technique to calculate the depth. 
+Whereas, for active stereo camera, one typically has one light projector and 
+one camera sensor. For example, in Kinect, a Infrared (IR) laser projects 
+fixed structured light pattern on a object, and then 
+the deformed light pattern due to 3D geotmerty of the object are 
+captured with a monochrome IR camera from different 
+position (see figure-\ref{fig:kinect_depth_img}). 
 
 \begin{figure}[H]
 	\centering
@@ -652,7 +667,11 @@ that offers such implementations.
 	\label{fig:kinect_depth_img}
 \end{figure}
 
-
+Since we use Kinect in order to retrive depth information for our experiments, 
+we will be modeling active stereo vision principle even though the 
+basic principle behind them is the same mathematical model, which is 
+the \textit{triangulation model}. This model is another geometrical model that 
+takes advantages of similarity triangles to calculate the depth. 
 \begin{figure}[H]
 	\centering
   \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
@@ -661,7 +680,56 @@ that offers such implementations.
 	\label{fig:uncertainty_matching}
 \end{figure}
 
+In this setup, 
+we again utilize the Camera Coordinate system similar to RGB camera
+and IR camera with $f$ focal length is placed by facing perpendicular to 
+the (principle axis) Z-axis at the origin. Then, IR laser projector is 
+also placed along the X-axis parallel to the IR camera with $b$ distance. 
+Additionally, we measure $d$ as a \textit{disparity} data and 
+the maximum range that can be measured refers to $Z_r$. Ultimately, we are 
+interested in finding $Z_k$ distance if depth information of point $k$ 
+is desired. For doing so, we build two useful relationships using similarity of triangles:
+
+
+\begin{equation}
+  \frac{D}{b} = \frac{Z_r - Z_k}{Z_r} \text{ and } \frac{d}{f} = \frac{D}{Z_k}
+\end{equation}
+
+If the depth camera paramters such as $(f, b, Z_r)$ is 
+calibrated and we measure $d$ disparity data, 
+we can easily extract $Z_k$ depth information with the following formula:
+
+\begin{equation}
+  Z_k = \frac{Z_r}{1+\frac{Z_r}{fb}d}
+\end{equation}
+
+
+
+\begin{equation}
+  Z_k = \frac{Z_r}{1+\frac{Z_r}{fb}d}
+\end{equation}
+
+
+One can also retrive remaining $X_k$ and $Y_k$ coordinates of point $k$ in the Camera 
+Coordinate system if coordinates of the principal point $(c_x, c_y)$ of the 
+IR camera and its distortion paramaters $(\delta x, \delta y)$ are calibrated, and 
+$u_k$ and $v_k$ coordinates of the point $k$ in the image plane is measured:
+
+\begin{equation}
+\begin{aligned}
+  X_k = -\frac{Z_k}{f} (u_k - c_x + \delta x)\\
+  Y_k = -\frac{Z_k}{f} (v_k - c_y + \delta y)
+\end{aligned}
+\end{equation}
+
+To find related intrinsic parameters for depth camera, we will perform 
+a calibration process similar to RGB camera that we discussed in 
+\ref{sb_sc_rgb_calibration}.
+
+
 \section{Depth Camera Calibration} \label{sc_depth_camera_calibration}
+
+
 
 \chapter{Fundamentals of Visual Odometry} \label{cp_vo}
 
@@ -1399,7 +1467,7 @@ each of which eventually introduces different types of error. What we aim
 and to model them. To do so, we need to investigate sensors in RGB-D camera. 
 Kinect, for instance, has two sensors: RGB sensor 
 and ifrared (IR) sensor. We assume that both sensors are calibrated such that 
-there are no registrations error when mapping RGB pixels to disparsity pixels. 
+there are no registrations error when mapping RGB pixels to disparity pixels. 
 Therefore, 
 we further assume that these sensors are independent. Under this asssumption, 
 we split source of errors into two categories: feature related uncertainties 
@@ -1540,6 +1608,14 @@ model with depth uncertainty.
   {fig/ref_imgs/kinect_noise_model.png}
   \caption{Depth Noise}
 	\label{fig:depth_noise}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+  \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
+  {fig/ref_imgs/kinect_noise_experiment.png}
+  \caption{Kinect Noise Experiment}
+	\label{fig:kinect_noise_experiment}
 \end{figure}
 
 
