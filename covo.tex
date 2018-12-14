@@ -1543,6 +1543,14 @@ NOTE: State why it works poorly? Is it bc back-projected 3D feature point more n
 % ***************************CP3-MOTIVATION***************************
 \chapter{Motivation} \label{cp_motivation}
 
+COPIED:
+
+The papers dealing with uncertainty in RGB-D sensors focus mostly on 
+applications outside of VO/SLAM, but Park et al. 
+[36] proposed a mathematical uncertainty model for Kinect v1 sensor and RGB-D 
+sparse point features. However, the approach of [36] was 
+demonstrated without an application in real SLAM or VO. 
+
 % ***************************CP4-CoVO***************************
 \chapter{An Error-Aware RGB-D Visual Odometry} \label{cp_covo}
 
@@ -1555,19 +1563,20 @@ information (namely covariance matrix) is that it is hard to model
 error characteristics of the whole VO pipeline as we perform many preprocessing, 
 each of which eventually introduces different types of error. What we aim 
 , in this chapter, is to define potential error source of the VO and 
-and to model them. To do so, we will investigate noise characteristic of 
+to model them. To do so, we will investigate noise characteristic of 
 sensors in RGB-D camera. 
-Kinect, for instance, has two sensors: RGB sensor 
-and ifrared (IR) sensor as we discussed in chapter \ref{cp_cam_models}. 
+Kinect, having three sensors: RGB camera, IR camera
+and Ifrared (IR) laser projector as we discussed in chapter \ref{cp_cam_models}. 
 In our experiments and evaluations,
-we assume that both sensors are calibrated such that 
+we assume that these sensors are calibrated such that 
 there are no registrations error when mapping RGB pixels to disparity pixels. 
 Furthermore, 
-we assume that these sensors are independent. Under this asssumption, 
-we split source of errors into two categories: feature related uncertainties 
-caused by RGB camera sensor and feature matching, 
-and depth related uncertainties caused by 
-IR camera sensor and IR laser sensor. 
+we assume that measurements with these sensors are independent of each other. 
+Under this asssumption, 
+we split source of errors into two categories: feature related 
+and depth related uncertainties.
+The former is caused by feature extraction and matching algorithms. 
+The latter is caused by depth camera sensor. 
 In the following sections, we will discuss how we can model these 
 two error sources and how to form an uncertainty model 
 for the Kinect so that we estimate meaningful covariance matrices for each 
@@ -1575,7 +1584,47 @@ relative camera pose.
 
 \subsection{Feature Related Uncertainties} \label{sb_sc_pixel_uncertainty}
 
-Remember that 3D points in world are projected to 2D points on an image plane with 
+Our VO pipeline heavily relies on the detected features 
+(also called landmarks). When building such a VO system, 
+it is expected that you will have a video stream that has small translation 
+and rotation differences at the consecutive images. Thus, when pairing images 
+to find common feature, we expect not to have high-degree rotation or large 
+amount of scaling on image features so that matching algorithm would not suffer 
+from high number of outliers. Under this circumstances, we identify two 
+main error sources related to features; i.e., interest point location uncertainty 
+and outliers in feature matching.
+
+
+To understand theese two types of errors, we need to remind ourselves 
+how we detect and describe features section \ref{sb_sc_orb} in the first place. 
+In ORB, FAST corner filter is performed by selecting pixel coordinates of an 
+interest point and comparing it with its surrounding pixels. In ideal case 
+where we match features in consecutive image perfectly, we would assume that 
+the average error is half pixel due to the dicretization process of the RGB camera. 
+However, in reality, we still have outliers even after applying RANSAC. 
+What we also know that we can set a certain RANSAC threshold keep the outliers 
+within certain error boundaries. If RANSAC holds its promise, we could 
+assume the outliers will be within the RANSAC threshold. Then, outliers 
+become \textit{fake} inliers that has bigger interest point location uncertainty than 
+the \textit{real} inliers. At this point, we have make an approximation over 
+feature related uncertainty. In practice, RANSAC threshold would be set 
+between 1-10 pixel which already greater than uncertainty of the interest point 
+location uncertainty (which was half pixel). Therefore, we might neglect 
+interest point location uncertainty and use RANSAC threshold value for 
+calculating uncertainty of each feature.
+
+\begin{figure}[H]
+	\centering
+  \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
+  {fig/ref_imgs/feature_related_uncertainty.png}
+  \caption{Feature Related Uncertainty}
+	\label{fig:feature_related_uncertainty}
+\end{figure}
+
+
+
+Having all these in mind, let's model uncertainty related to features.
+First of all, remember that 3D points in world are projected to 2D points on an image plane with 
 Pinhole Model from section-\ref{sb_sc_pinhole}. When the aperture of a digital 
 camera opens, it captures incoming light rays using its light detector sensor 
 (typically CMOS image sensors) and turns them into electrical signals. That 
@@ -1597,9 +1646,9 @@ as it is seen in figure-\ref{fig:conic_ray_2d_error_model}.
 	\label{fig:conic_ray_2d_error_model}
 \end{figure}
 
-Due to the noise in camera sensor and discretization of pixel coordindates, 
-we measure the position $\mathbf{x}$ noisy. To describe how noisy $\mathbf{x}$ 
-measurement results in erroneous $\mathbf{y}$ position, 
+Due to the errors in detected and matched features, 
+we measure the position $\mathbf{x}$ falsy. To describe how erroneous $\mathbf{x}$ 
+measurement results in false $\mathbf{y}$ positions, 
 we start formulazing it with Bayes rule:
 
 \begin{equation}
@@ -1619,7 +1668,7 @@ the conditional probability to pure inversion of conditionings:
 In real-world, we measure projected points which is $\mathbf{y}$ and then 
 back-project these measures to $\mathbf{x}$. Therefore, we are interested in 
 knowing $p(\mathbf{x}_0|\mathbf{y}_0)$. For doing so, we make a further 
-assumption that the camera measurment noise is Gaussian. Note that, to generalize our 
+assumption that the measurement noise is Gaussian. Note that, to generalize our 
 problem to all time states, we drop $k=0$ and compute for $p(\mathbf{x}|y)$. 
 First, to remind the projection functions from $\mathbf{x}=(X_{cam},Z_{cam}) \in \R^2$ to 
 $\mathbf{u}=U \in \R^1$, we write the following equation by assuming that 
@@ -1640,11 +1689,13 @@ to represent the uncertainty since we have inversion of conditioning property:
   p(y|\mathbf{x}) = \mathcal{N}(f_x \frac{X_{cam}}{Z_{cam}} + c_x-y, \sigma_u^2)
 \end{equation}
 
-Due to the noisy we just discussed, the back-projection axis would not pass 
-through the real $\mathbf{x}$ position. However, if we estimate the Gaussian 
+Notice that the back-projection axis would not pass 
+through the real $\mathbf{x}$ position because of error in features. 
+However, if we estimate the Gaussian 
 parameters sufficiently, we will have a strong idea where the measured
 point lies on XZ axis in the worst case. In statistics, one generally represent the 
-worst case scenarios with $3\sigma_u$ boundaries as the following figure shows:
+worst case scenarios with $3\sigma$ boundaries that covers  99.7\% of probability
+for one-dimensional Gaussian distribution as the following figure shows:
 
 \begin{figure}[H]
 	\centering
@@ -1698,7 +1749,19 @@ model with depth uncertainty.
 
 \subsection{Depth Related Uncertainties} \label{sb_sc_depth_uncertainty}
 
-
+Modeling noise in depth measurements is more complicated than RGB camera. We 
+already discussed how structured IR light speckles are projected onto an object 
+so that IR camera can capture its disformed patterns. During this process, 
+many things can go wrong. For example, (1) certain ambient background would make 
+Kinect suffer from over-saturated disparity image, (2) having multiple Kinect 
+in the same environment can lead to interference issue, (3) multi-path 
+propagation of the light might change the expected illumination, or (4) measuring 
+in dynamic scene might result in improper IR light patterns. All of these 
+non-deterministic events makes it harder to model. However, 
+we assume that operating conditions and evironment are chosen carefully 
+in order to avoid these event as much as possible. What we aim to model in this 
+section is mostly systematic errors in Kinect. For doing so, we rely on 
+the experiments that is done by this GUY \cite{}. 
 
 \begin{figure}[H]
 	\centering
