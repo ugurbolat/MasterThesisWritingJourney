@@ -466,8 +466,8 @@ typically two synchronized cameras are placed horizontally with a known distance
 Hence, one usually exploits the triangulation technique to calculate the depth. 
 Whereas, for active stereo camera, one typically has one light projector and 
 one camera sensor. For example, in Kinect, a Infrared (IR) laser projects 
-fixed structured light pattern on a object, and then 
-the deformed light pattern due to 3D geotmerty of the object are 
+structured IR speckle light pattern on a object, and then 
+the deformed light due to 3D geotmerty of the object are 
 captured with a monochrome IR camera from different 
 position (see figure-\ref{fig:kinect_depth_img}). 
 
@@ -1595,7 +1595,7 @@ main error sources related to features; i.e., interest point location uncertaint
 and outliers in feature matching.
 
 
-To understand theese two types of errors, we need to remind ourselves 
+To understand these two types of errors, we need to remind ourselves 
 how we detect and describe features section \ref{sb_sc_orb} in the first place. 
 In ORB, FAST corner filter is performed by selecting pixel coordinates of an 
 interest point and comparing it with its surrounding pixels. In ideal case 
@@ -1616,9 +1616,18 @@ calculating uncertainty of each feature.
 \begin{figure}[H]
 	\centering
   \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
-  {fig/ref_imgs/feature_related_uncertainty.png}
+  {fig/ref_imgs/feature_related_uncertainty_one.png}
   \caption{Feature Related Uncertainty}
-	\label{fig:feature_related_uncertainty}
+	\label{fig:feature_related_uncertainty_one}
+\end{figure}
+
+
+\begin{figure}[H]
+	\centering
+  \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
+  {fig/ref_imgs/feature_related_uncertainty_many.png}
+  \caption{Feature Related Uncertainty with Many Features}
+	\label{fig:feature_related_uncertainty_many}
 \end{figure}
 
 
@@ -1730,7 +1739,7 @@ same assumption of our simplified case:
   p(\mathbf{x}|\mathbf{y}) = \mathcal{N}(\mathbf{y}-\mathbf{x, \mathbf{Q}}) = 
   \frac{1}{\sqrt{(2\pi)^n|\mathbf{Q}|}} 
   \exp(-\frac{1}{2} (\mathbf{y}-\mathbf{x})^\intercal \mathbf{Q}^{-1} (\mathbf{y}-\mathbf{x}))
-\end{equation}
+\end{equation} \label{eq:cov_ellipse}
 
 where $n=2$ for a confidence ellipse,
 
@@ -1757,57 +1766,188 @@ Kinect suffer from over-saturated disparity image, (2) having multiple Kinect
 in the same environment can lead to interference issue, (3) multi-path 
 propagation of the light might change the expected illumination, or (4) measuring 
 in dynamic scene might result in improper IR light patterns. All of these 
-non-deterministic events makes it harder to model. However, 
+non-deterministic events makes it harder to model the uncertainty. However, 
 we assume that operating conditions and evironment are chosen carefully 
 in order to avoid these event as much as possible. What we aim to model in this 
 section is mostly systematic errors in Kinect. For doing so, we rely on 
-the experiments that is done by this GUY \cite{}. 
+the experiments that is done by THIS GUY \cite{}. 
+
+\subsubsection{Kinect's Systematic Depth Noise}
+
+An experimental analysis is conducted to measure Kinect's depth noise by 
+THIS GUY \cite{}. To do so, 
+they calculated the difference between ground truth and Kinect measurements. 
+They found out that there are two types of systematic noise occuring in Kinect's depth 
+measurements: \textit{axial} noise and \textit{lateral} noise.
+
 
 \begin{figure}[H]
 	\centering
   \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
   {fig/ref_imgs/kinect_noise_model.png}
   \caption{Depth Noise}
-	\label{fig:depth_noise}
+	\label{fig:kinect_noise_model}
 \end{figure}
+
+To detect the lateral and axial noise, they built an experimental setup with a 
+Kinect that projects its IR speckle patterns onto a planar surface 
+(see figure \ref{fig:kinect_noise_model}). Then, they collect 
+depth measurements at different distance to the planar surface 
+positioning at different angles. 
+For calculating the axial noise, they (1) remove the lateral noise cropping 
+edges, (2) then remaining depth region is fitted a plane that has minimum 
+error to the ground truth and (3) they finally calculated 
+distance difference between measured depth and ground truth.
+On the other hand, 
+the lateral noise is simply calculated by taking pixel difference between 
+fitted straight edge passing through center of distribution and 
+measured (zigzag-like shape) pixels.
 
 
 \begin{figure}[H]
 	\centering
   \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
   {fig/ref_imgs/kinect_noise_experiment.png}
-  \caption{Kinect Noise Experiment}
+  \caption{Kinect Depth Noise Experiment}
 	\label{fig:kinect_noise_experiment}
 \end{figure}
 
+After calculating regarding errors between measurements and ground truth, 
+they realized that the axial and lateral noise have different noise 
+characteristics. The lateral noise error distribution stays constant with 
+the distance as seen in figure \ref{fig:kinect_noise_hist}. Whereas, 
+the axial noise distribution gets wider with the 
+increased distance.
 
-\begin{figure}[H]
-	\centering
-  \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
-  {fig/ref_imgs/kinect_depth_lateral_noise.png}
-  \caption{Kinect Depth Lateral Noise}
-	\label{fig:kinect_depth_lateral_noise}
-\end{figure}
 
 \begin{figure}[H]
 	\centering
   \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
   {fig/ref_imgs/kinect_noise_hist.png}
   \caption{Kinect Depth Error Histogram at Different Distances}
-	\label{fig:kinect_depth_lateral_noise}
+	\label{fig:kinect_noise_hist}
 \end{figure}
+
+However, the axial noise has another property, which is the response to the 
+different angles. Notice the following figure that shows this issue. The
+standard deviation of the axial noise are increased drastically after 
+60 degrees. 
+
 
 \begin{figure}[H]
 	\centering
   \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
-  {fig/ref_imgs/kinect_noise_std_diff_distances.png}
-  \caption{Kinect Depth Error Mean and Standard Deviation at Different Distances}
-	\label{fig:kinect_depth_lateral_noise}
+  {fig/ref_imgs/kinect_noise_fitted_model.png}
+  \caption{Kinect Noise Fitted Model}
+	\label{fig:kinect_noise_fitted_model}
 \end{figure}
 
+In the light of these experiments, they proposed two empirical 
+models that fit corresponding measurements for the axial and lateral noise.
+For axial noise, they define a 
+quadratic relationship between standard deviation of the error and distance 
+along z-axis. 
 
+\begin{equation}
+  \sigma_z (z,\theta) = 0.0012 + 0.0019 \cdot (z-0.4)^2 \text{, }
+  \ang{10}\leq \theta \leq \ang{60}
+\end{equation}
 
+where $z$ is the measured depth metric. 
+Plus, they added a hyperbolic parameter to represent the 
+behavior measurement error beyond 60 degrees:
 
+\begin{equation}
+  \sigma_z (z,\theta) = 0.0012 + 0.0019 \cdot (z-0.4)^2 + 
+  \frac{0.0001}{\sqrt{z}} + 
+  \frac{\theta^2}{(\pi/2 - \theta)^2}
+  \text{, }
+  \theta \geq \ang{60}
+\end{equation} \label{eq:axial_noise_w_hyperbolic}
+
+For lateral noise, remember that its noise was almost constant with respect to 
+distance along z-axis and had the similar hyperbolic effect after 60 degrees of 
+angle. Hence, they defined lateral noise with the following equations:
+
+\begin{equation}
+  \sigma_L(\theta) = 0.8 + 0.035 \cdot \theta/(\pi/2-\theta) \text{ (in pixels)}
+\end{equation}
+
+This is how Kinect's depth noise is characterized experimentally by 
+THIS GUY \cite{}. To validate these noise models' correctness, they implemented a 3D 
+reconstruction and a camera pose tracking scenario and the noise models 
+improved the overall accuracy of both application. It is important to 
+note that they cooperated the iterative closest point (ICP) to estimate 
+the camera poses. The ICP is one of many algorithms to solve VO problem. 
+With the ICP, one utilizes all or most of the 3D point clouds instead of 
+selecting distinct feature in each frame. Therefore, we need to find a way 
+to integrate the depth noise model into our feature-based VO pipeline.
+
+\subsubsection{How To Update the Conic Ray Model with Depth Noise?}
+
+The missing component of our conic ray model is depth uncertainty since 
+we only defined confidence ellipses caused by feature related uncertainties so far.
+We mean the depth uncertainty that causes errors along z-axis direction. 
+This infact refers to the axial noise, which is one of Kinect's noise models 
+we discussed earlier in this section.
+Thus, we can now extend our conic ray model with the axial noise 
+(see notation \ref{eq:axial_noise_w_hyperbolic}).
+
+\begin{figure}[H]
+	\centering
+  \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
+  {fig/ref_imgs/conic_ray_3d_model.png}
+  \caption{Conic Ray 3D Error Model with Depth Uncertainty}
+	\label{fig:conic_ray_3d_error_model}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+  \includegraphics[width=0.3\linewidth,natwidth=640,natheight=640]
+  {fig/ref_imgs/ellipsoid.png}
+  \caption{REPLACE CONFIDENCE ELLIPSE WITH ELLIPSOID}
+	\label{fig:conic_ray_3d_error_model}
+\end{figure}
+
+Then, let's update our confidence ellipse (see \ref{eq:cov_ellipse}) formulation 
+to confidece ellipsoid so that we can represent the uncertainty of a point cloud 
+in 3D world.
+
+\begin{equation}
+  p(\mathbf{x}|\mathbf{y}) = \mathcal{N}(\mathbf{y}-\mathbf{x, \mathbf{Q}}) = 
+  \frac{1}{\sqrt{(2\pi)^n|\mathbf{Q}|}} 
+  \exp(-\frac{1}{2} (\mathbf{y}-\mathbf{x})^\intercal \mathbf{Q}^{-1} (\mathbf{y}-\mathbf{x}))
+\end{equation}
+
+where $n=3$ now for a confidence ellipsoid,
+
+ADD i th INDECES. for ex. $u_i$. VERIFY THE EQUATION
+
+\begin{equation}
+  \mathbf{y} = \begin{bmatrix} u_i \\ v_i \\ z_i \end{bmatrix} \text{, } 
+  \mathbf{x} = 
+  \begin{bmatrix} 
+    f_x \frac{X_{cam}}{Z_{cam}} + c_x \\ 
+    f_y \frac{Y_{cam}}{Z_{cam}} + c_y \\
+    \frac{1}{(\frac{m}{fb})d' + (Z_r^{-1} + \frac{n}{fb})}
+  \end{bmatrix} \text{,and }
+  \mathbf{Q} = 
+  \begin{bmatrix} 
+    \sigma_u^2 & 0 & 0 \\ 
+    0 & \sigma_v^2 & 0 \\
+    0 & 0 & \sigma_z(z, \theta)^2
+  \end{bmatrix}
+\end{equation}
+
+HOW ABOUT ANGLE AND HYPERBOLIC?
+
+As seen, the axial noise can be embedded as the third dimension along the z-axis. 
+The lateral noise, on the other hand, has an indirect relationship to overall 
+uncertainty of a point cloud. This indirect relationship occurs when associating 
+depth pixel coordinates with the color pixel coordinates. Therefore, one can 
+avoid this data association error by applying a smoothing filter on depth images. 
+Also, remember that lateral noise of the Kinect was mostly around one pixel. 
+Thus, a 3x3 smoothing filter can be used on features or edges to compensate the error.
 
 \section{Weighted Least-Squares Optimization} \label{sc_weighted_lsq}
 
