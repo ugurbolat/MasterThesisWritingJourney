@@ -536,7 +536,7 @@ introducing denormalization factor replacing with $d$ with $md'+n$:
 
 \begin{equation}
   Z_i^{-1} = (\frac{m}{fb})d' + (Z_r^{-1} + \frac{n}{fb})
-\end{equation}
+\end{equation}\label{eq:depth_w_disparity_reverse}
 
 To make it convenient to calculate, we can take its inverse again:
 
@@ -1276,7 +1276,7 @@ Finally, we will discuss how we can utilize the carefully selected features
 and its matches to estimate the camera motion.
 
 
-\section{Motion Estimation} \label{sc_motion_estim}
+\section{Camera Motion} \label{sc_motion_estim}
 
 SWITCH K AND C INDICES ON TRANSLATION AND ROTATION RESERVE!
 
@@ -1380,7 +1380,7 @@ due to the noise. Several methods available in literature to create
 relationship between feature points that we detect across different image frames and 
 we will discuss it in the next section.
 
-\subsection{Relative Camera Pose Estimation Techniques}
+\subsection{Relative Pose Estimation Techniques}
 \label{sb_sc_relative_camera_pose_estimation_techniques}
 
 So far, we discussed how we can process images so that we have adequate 
@@ -1485,7 +1485,7 @@ we formulate the whole optimization problem in the following form:
 
 \begin{equation}
   \argmin_{\mathbf{T} = [\mathbf{t}_{k,k+1}, \mathbf{q}_{k,k+1}]} = 
-  \sum_i||\mathbf{x}_i^k - f(\mathbf{T}, \mathbf{X}_i^{k+1})||^2_2
+  \sum_i||\mathbf{x}_i^k - f(\mathbf{T}, \mathbf{X}_i^{k+1})||^2
 \end{equation}
 
 This method works considerably well in practice. In VO literature \cite{}, 
@@ -1532,8 +1532,8 @@ problem:
 
 \begin{equation}
   \argmin_{\mathbf{T} = [\mathbf{t}_{k,k+1}, \mathbf{q}_{k,k+1}]} = 
-  \sum_i||\mathbf{X}_i^k - g(\mathbf{T}, \mathbf{X}_i^{k+1})||^2_3
-\end{equation}
+  \sum_i||\mathbf{X}_i^k - g(\mathbf{T}, \mathbf{X}_i^{k+1})||^2
+\end{equation}\label{eq:3d_to_3d_rel_pose_est}
 
 In VO literature, this method is usually discarded since 
 it performs poorly comparing to 3D-to-2D correspondences.
@@ -1742,12 +1742,21 @@ same assumption of our simplified case:
 \end{equation} \label{eq:cov_ellipse}
 
 where $n=2$ for a confidence ellipse,
+measured pixel coordinates form 
+$\mathbf{y} = \begin{bmatrix} u^{(i)} \\ v^{(i)} \end{bmatrix}$, 
+pixel coordinates gathered by back-projecting 3D point form 
+$\mathbf{x} = \begin{bmatrix} f_x \frac{X_{cam}^{(i)}}{Z_{cam}^{(i)}} + c_x \\ 
+f_y \frac{Y_{cam}^{(i)}}{Z_{cam}^{(i)}} + c_y \end{bmatrix}$, and
+covariance matrix of pixels noise 
+$\mathbf{Q} = \begin{bmatrix} \sigma_u^2 & 0 \\ 0 & \sigma_v^2 \end{bmatrix}$.
 
-\begin{equation}
-  \mathbf{y} = \begin{bmatrix}u \\ v \end{bmatrix} \text{, } 
-  \mathbf{x} = \begin{bmatrix} f_x \frac{X_{cam}}{Z_{cam}} + c_x \\ f_y \frac{Y_{cam}}{Z_{cam}} + c_y \end{bmatrix} \text{,and }
-  \mathbf{Q} = \begin{bmatrix} \sigma_u^2 & 0 \\ 0 & \sigma_v^2 \end{bmatrix}
-\end{equation}
+%\begin{equation}
+%  \mathbf{y} = \begin{bmatrix}u \\ v \end{bmatrix} \text{, } 
+%  \mathbf{x} = \begin{bmatrix} f_x \frac{X_{cam}}{Z_{cam}} + c_x \\ f_y \frac{Y_{cam}}{Z_{cam}} + c_y \end{bmatrix} \text{,and }
+%  \mathbf{Q} = \begin{bmatrix} \sigma_u^2 & 0 \\ 0 & \sigma_v^2 \end{bmatrix}
+%\end{equation}
+
+
 
 On the other hand, the conic ray model still misses one more component; 
 that is, the depth noise which causes an uncertainty 
@@ -1911,7 +1920,7 @@ Thus, we can now extend our conic ray model with the axial noise
 
 Then, let's update our confidence ellipse (see \ref{eq:cov_ellipse}) formulation 
 to confidece ellipsoid so that we can represent the uncertainty of a point cloud 
-in 3D world.
+in 3D world:
 
 \begin{equation}
   p(\mathbf{x}|\mathbf{y}) = \mathcal{N}(\mathbf{y}-\mathbf{x, \mathbf{Q}}) = 
@@ -1919,29 +1928,48 @@ in 3D world.
   \exp(-\frac{1}{2} (\mathbf{y}-\mathbf{x})^\intercal \mathbf{Q}^{-1} (\mathbf{y}-\mathbf{x}))
 \end{equation}
 
-where $n=3$ now for a confidence ellipsoid,
-
-ADD i th INDECES. for ex. $u_i$. VERIFY THE EQUATION
-
-\begin{equation}
-  \mathbf{y} = \begin{bmatrix} u_i \\ v_i \\ z_i \end{bmatrix} \text{, } 
-  \mathbf{x} = 
+where $n=3$ for a confidence ellipsoid,
+measured $(u^{(i)}, v^{(i)})$ pixel coordinates and $z^{(i)}$ measured depth gathered by 
+measured disparity data and IR camera's intrinsic parameter 
+(see notation \ref{eq:depth_w_disparity})
+form $\mathbf{y} = \begin{bmatrix} u^{(i)} \\ v^{(i)} \\ 
+\frac{1}{(\frac{m}{fb})d^{(i)'} + (Z_r^{-1} + \frac{n}{fb})} \end{bmatrix}$, 
+pixel coordinates gathered by back-projecting 3D point and depth information form
+$\mathbf{x} = 
   \begin{bmatrix} 
-    f_x \frac{X_{cam}}{Z_{cam}} + c_x \\ 
-    f_y \frac{Y_{cam}}{Z_{cam}} + c_y \\
-    \frac{1}{(\frac{m}{fb})d' + (Z_r^{-1} + \frac{n}{fb})}
-  \end{bmatrix} \text{,and }
-  \mathbf{Q} = 
+    f_x \frac{X_{cam}^{(i)}}{Z_{cam}^{(i)}} + c_x \\ 
+    f_y \frac{Y_{cam}^{(i)}}{Z_{cam}^{(i)}} + c_y \\
+    Z_{cam}^{(i)}  
+  \end{bmatrix}$, and 
+covariance matrix of $(\sigma_u,\sigma_v)$ depth pixels noise and 
+of $\sigma_z^{(i)}$ axial noise form 
+$\mathbf{Q} = 
   \begin{bmatrix} 
     \sigma_u^2 & 0 & 0 \\ 
     0 & \sigma_v^2 & 0 \\
-    0 & 0 & \sigma_z(z, \theta)^2
-  \end{bmatrix}
-\end{equation}
+    0 & 0 & (\sigma_z^{(i)}(z, \theta))^2
+  \end{bmatrix}$.
+
+
+%\begin{equation}
+%  \mathbf{y} = \begin{bmatrix} u_i \\ v_i \\ z_i \end{bmatrix} \text{, } 
+%  \mathbf{x} = 
+%  \begin{bmatrix} 
+%    f_x \frac{X_{cam}}{Z_{cam}} + c_x \\ 
+%    f_y \frac{Y_{cam}}{Z_{cam}} + c_y \\
+%    \frac{1}{(\frac{m}{fb})d' + (Z_r^{-1} + \frac{n}{fb})}
+%  \end{bmatrix} \text{,and }
+%  \mathbf{Q} = 
+%  \begin{bmatrix} 
+%    \sigma_u^2 & 0 & 0 \\ 
+%    0 & \sigma_v^2 & 0 \\
+%    0 & 0 & \sigma_z(z, \theta)^2
+%  \end{bmatrix}
+%\end{equation}
 
 HOW ABOUT ANGLE AND HYPERBOLIC?
 
-As seen, the axial noise can be embedded as the third dimension along the z-axis. 
+It is important to note that the axial noise can be embedded as the third dimension along the z-axis. 
 The lateral noise, on the other hand, has an indirect relationship to overall 
 uncertainty of a point cloud. This indirect relationship occurs when associating 
 depth pixel coordinates with the color pixel coordinates. Therefore, one can 
@@ -1949,9 +1977,41 @@ avoid this data association error by applying a smoothing filter on depth images
 Also, remember that lateral noise of the Kinect was mostly around one pixel. 
 Thus, a 3x3 smoothing filter can be used on features or edges to compensate the error.
 
-\section{Weighted Least-Squares Optimization} \label{sc_weighted_lsq}
+In real-world, we (1) measure $(u^{(i)},v^{(i)})$ pixel coordinates and 
+$d^{(i)'}$ disparity value, (2) get have regarding intrinsic camera parameters after 
+calibrating and (3) estimate pixels noise and depth axial noise by 
+conducting experimental analysis. If we also knows 
+$(X_{cam}^{(i)}, Y_{cam}^{(i)}, Z_{cam}^{(i)})$ exact coordinates of the 
+3D point cloud in Camera Coordinate system
+(infact they are unknown in reality), we can simply calculate the 
+probability. In the end, our goal in VO is to estimate relative camera poses. 
+Hence, measured pixels, measured disparity data, calibrated intrinsic camera parameter and 
+most importantly covariance matrix of the measurements are sufficient enough to 
+construct a cost function for the least squares problem.
 
-\section{Covariance Estimation} \label{sc_covariance_estim}
+
+\section{Relative Pose Estimation with Uncertainties} \label{sc_weighted_lsq}
+
+\begin{equation}
+  \argmin_{\mathbf{T} = [\mathbf{t}_{k,k+1}, \mathbf{q}_{k,k+1}]} = 
+  \sum_i||\mathbf{X}_i^k - g(\mathbf{T}, \mathbf{X}_i^{k+1})||^2_{\mathbf{Q}_i}
+\end{equation}
+
+\begin{equation}
+  F(x) = \frac{1}{2} ||r(x)||^2_\Omega = \frac{1}{2} r(x)^T \Omega r(x)
+\end{equation}\label{eq:residuals_objective}
+
+where $\Omega = Q^{-1}$, 
+HOW TO BUILD A RELATIONSHIP BTW rx and x-g(t,x)
+
+\begin{equation}
+q_{LM}^k(d) = \frac{1}{2}r_s(x^k)^Tr_s(x^k) + r_s(x^k)^TJ_s(x^k)d + \frac{1}{2}d^TB_{LM}^kd
+\end{equation}
+
+where $r_s(x^k) = L^Tr(x^k)$, $J_s(x^k) = L^T J(x^k)$ and $LL^T = \Omega$
+
+
+\section{Covariance Estimation of the Estimated Pose} \label{sc_covariance_estim}
 
 % ***************************CP5-EVALUATION***************************
 \chapter{Evaluation} \label{cp_evaluation}
@@ -2124,9 +2184,12 @@ The residuals function is usually squared to magnify larger error effect:
 
 \begin{equation}
 \begin{aligned}
-F(x) & := \sum_{i=1}^{m} \vert r_i(x) \vert^2 = 
+F(x) & = \sum_{i=1}^{m} \vert r_i(x) \vert^2 = 
 \sum_{i=1}^{m} \vert g(x;a_i) - S_i \vert^2 =
 \sum_{i=1}^{m} (g(x;a_i) - S_i)^2 \\
+& = \begin{Vmatrix}
+\begin{pmatrix} g(x;a_1) - S_1 \\ \vdots \\ g(x;a_m) - S_m \end{pmatrix} 
+\end{Vmatrix}_2^2
 \label{eq}
 \end{aligned}
 \end{equation}
@@ -2268,7 +2331,8 @@ manner.
 \subsection{Levenberg-Marquardt}
 Levenberg-Marquardt (LM) is one of most popular gradient descent based algoritm 
 to solve least squares problem. In this section, we describe the idea behind 
-the LM algorithm. Assume that we have a $r(x)$ residuals function:
+the LM algorithm. Assume that we have a $r(x)$ residuals function which we 
+wish to model:
 
 \begin{equation}
   r(x) = \begin{pmatrix} r_1(x) \\ \vdots \\ r_m(x) \end{pmatrix} \in \R^m
@@ -2276,7 +2340,7 @@ the LM algorithm. Assume that we have a $r(x)$ residuals function:
 
 To find a local maximum/minimum of the residuals function, we need to 
 determine the first derivative and it 
-$r'(x)$ appears in a special form, e.g., Jacobian:
+$r'(x)$ appears in a special form, i.e., Jacobian:
 
 \begin{equation}
   J(x) = \begin{bmatrix} \frac{\partial}{\partial x_j }r_i(x) \end{bmatrix}_{ij} 
