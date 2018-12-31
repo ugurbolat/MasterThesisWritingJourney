@@ -2025,23 +2025,12 @@ Here we define the back-projection function as follows:
 \mathbf{t}_{k,k+1}
 \end{equation}
 
-In traditional VO problem, the cost function of the optimization problem 
-is defined by the difference only between back-projected point clouds from $k+1^{th}$ and 
-point clouds from $k^{th}$. 
-
-\begin{equation}
-  \mathbf{t}_{k,k+1}^*, \mathbf{q}_{k,k+1}^* = 
-  \argmin_{\mathbf{t}_{k,k+1}, \mathbf{q}_{k,k+1}}
-  \sum_i|| \mathbf{X}_i^k - 
-  f(\mathbf{t}_{k,k+1}, \mathbf{q}_{k,k+1}, \mathbf{X}_i^{k+1})||^2
-\end{equation}
-
 The important part of the error-aware VO that we propose in this thesis 
 lies on having estimated uncertainty of the features and then to propogate it 
 through uncertainty of estimated relative pose. 
 If we utilized our 
 conic ray model for the measured feature, we would have different 
-covariance matrices for each feature.
+$(\mathbf{Q}_{1:m}^{k}, \mathbf{Q}_{1:m}^{k+1})$ covariance matrices for each feature.
 Let's include covarince matrices into the optimization problem:
 
 \begin{equation}
@@ -2053,16 +2042,9 @@ Let's include covarince matrices into the optimization problem:
 ||^2_{\mathbf{Q}_i^{k+1}} 
 \end{equation}
 
-
-However, this cost function builds on an assumption that 
-features from the $k^{th}$ frame are noise-free and 
-features from the $k+1^{th}$ frame are noisy. 
-Thus, we cloud only weight with $\mathbf{Q}_{1:m}^{k+1}$ as seen in the above equation.
-In reality, we know that features from both frames are noisy. We can consider 
-including forward-projection function such that we also take all covariance 
-matrices $(\mathbf{Q}_{1:m}^{k}, \mathbf{Q}_{1:m}^{k+1})$ for all features 
-into account during optimization.
-
+In traditional VO problem, one assumes that features from the $k^{th}$ frame 
+are noise-free and features from the $k+1^{th}$ frame are noisy. Thus, 
+we can only weight with $\mathbf{Q}_{1:m}^{k+1}$ as seen in the above equation.
 
 \begin{figure}[H]
 	\centering
@@ -2072,7 +2054,7 @@ into account during optimization.
 	\label{fig:min_euclidean_error}
 \end{figure}
 
-With being said, we can now extend the 
+Infact, features from both frames are noisy. Therefore, we will extend the 
 cost function of our optimization problem by adding forward-projection.
 Let's define the auxilary cost function in the following form:
 
@@ -2089,7 +2071,7 @@ where the forward-projection function is defined as:
   \mathbf{q}_{k,k+1}^* \otimes (\mathbf{X}_i^{k} - \mathbf{t}_{k,k+1}) \otimes \mathbf{q}_{k,k+1} 
 \end{equation}
 
-Now we can reformulate our optimization problem by adding forward and back-projection 
+Now we can extend our optimization problem by adding forward and back-projection 
 to each other along with corresponding covariance matrices:
 
 \begin{equation}
@@ -2102,14 +2084,13 @@ to each other along with corresponding covariance matrices:
     _{\mathbf{r_f}^{(i)}(\mathbf{x}_{k,k+1})}
 \end{equation}
 
-With the new cost function, we are able to 
-minimize the error on both forward- and back-projection.
+With the new cost function, we can minimize the error on both forward- and back-projection.
 To take advantage of the sparsity of the matrix manipulation, we further 
 modify the cost function. Let's define, a single back-projection operation for a single 
 feature match is a $\mathbf{r_b}^{(i)}$ single residual block function. 
 The same definition applies for the forward-projection with $\mathbf{r_f}^{(i)}$.
 Note that we only use $\frac{1}{2}$ in front of the cost function for cosmetics 
-reasons as it does not effect convergence of the optimization process.
+reasons but it does not effect convergence of the optimization process.
 Then, let's reorginize the cost function with the residual blocks:
 
 \begin{equation}
@@ -2136,239 +2117,37 @@ The LM algorithm can be used for the optimization. I refer readers for
 further details of the LM algorithm to appendices \ref{sc_least_squares}.
 However, we also need to extend regular least squares problem to 
 weighted least squares problem since we multiply residual blocks with 
-inverse covariance matrices. 
-Let's omit $(k,k+1)$ part and generalize the problem for convenience:
+covariance matrices. Let's omit $(k,k+1)$ part and generalize the problem 
+for convenience:
 
 \begin{equation}
   \begin{aligned}
-    \mathbf{x}^* & = \argmin_{\mathbf{x}} 
-  \frac{1}{2} ||\mathbf{r}(\mathbf{x})||^2_{\mathbf{Q}} \\
-  & = \frac{1}{2} \mathbf{r}(\mathbf{x})^T \mathbf{Q_{uvz}}^{-1} \mathbf{r}(\mathbf{x}) \\
-  & = \frac{1}{2} \mathbf{r}(\mathbf{x})^T \mathbf{\Omega}_{\mathbf{uvz}} \mathbf{r}(\mathbf{x})
+  \mathbf{x^*} & = \argmin_{\mathbf{x}} 
+  \frac{1}{2} ||\mathbf{r(x)}||^2_{\mathbf{Q}} \\
+  & = \frac{1}{2} \mathbf{r(x)^T Q^{-1} r(x)} \\
+  & = \frac{1}{2} \mathbf{r(x)^T \Omega r(x)}
 \end{aligned}
 \end{equation}\label{eq:residuals_objective}
 
-where $\mathbf{\Omega_{uvz} = Q^{-1}_{uvz}}$ is the \textit{information matrix}, 
-repsesent a relationship between covariance matrices and weighting process. 
-That is, the smaller covariance (smaller the uncertainty in other words) for 
-features, the greater weight will have in the optimization.
-
-That being said, remember the main principle of the LM algorithm 
-that is to build quadratic models 
+where $\mathbf{\Omega = Q^{-1}}$ is the \textit{information matrix}.
+The main principle of the LM algorithm is to build quadratic models 
 around the initial guess and to descent to the nearest local minimum iteratively.
 Thus, the new quadratic model for the weighted least squares can be written 
 as follows:
 
 \begin{equation}
-  F(\mathbf{x}+\Delta \mathbf{x}) \approx q_{LM}(\Delta \mathbf{x}) = \frac{1}{2}
-\mathbf{r_s}(\mathbf{x})^T\mathbf{r_s}(\mathbf{x}) + 
-\mathbf{r_s}(\mathbf{x})^T\mathbf{J_s}(\mathbf{x})\Delta \mathbf{x} + 
-\frac{1}{2} \Delta \mathbf{x}^T\mathbf{B_{LM}}\Delta \mathbf{x}
+  \mathbf{q_{LM}^k(d) = \frac{1}{2}r_s(x^k)^Tr_s(x^k) + r_s(x^k)^TJ_s(x^k)d + \frac{1}{2}d^TB_{LM}^kd}
 \end{equation}
 
-where $\mathbf{r_s}(\mathbf{x}) = \mathbf{L}^T\mathbf{r}(\mathbf{x})$ is the residuals blocks, 
-$\mathbf{J_s}(\mathbf{x}) = \mathbf{L}^T \mathbf{J}(\mathbf{x})$ is the Jacobion matrix and 
-$\mathbf{B_{LM}} = \mathbf{J_s}(\mathbf{x})^T \mathbf{J_s}(\mathbf{x}) + 
-\lambda \mathbf{I}$ is the approximated Hessian 
-matrix.
+where $\mathbf{r_s(x^k) = L^Tr(x^k)}$ and $\mathbf{J_s(x^k) = L^T J(x^k)}$. 
 We can get the $\mathbf{L}$ matrix by the Cholesky factorization of
-$\mathbf{\Omega = LL}^T$. Aftewards, we can proceed with the same calculation 
+$\mathbf{\Omega = LL^T}$. Aftewards, we can proceed with the same calculation 
 of the regular LM algorithm that we defined in the appendices.
 In the end, we expect to converge to a local minimum where the translation 
 and the rotation results are sufficient.
 
-\begin{equation}
-  \mathbf{x}^{n+1} = \mathbf{x}^{n} + \Delta \mathbf{x}
-\end{equation}
 
-\subsubsection{Least Squares on Manifold}
-
-\begin{equation}
-  \mathbf{x}^{n+1} = \mathbf{x}^{n} \boxplus \Delta \mathbf{x}
-\end{equation}
-
-\begin{equation}
-  \mathbf{t}^n \boxplus \Delta \mathbf{t} = 
-  \mathbf{t}^n + \Delta \mathbf{t} =
-  \begin{bmatrix} x^{n} \\ y^{n} \\ z^{n} \end{bmatrix} + 
-  \begin{bmatrix} \Delta x \\ \Delta y \\ \Delta z \end{bmatrix}
-\end{equation}
-
-\begin{equation}
-  \mathbf{q}^n \boxplus \Delta \mathbf{q} = 
-  \mathbf{q}^n \otimes \Delta \mathbf{q} = 
-  \mathbf{q}^n \otimes 
-  \begin{bmatrix} \sqrt{1-||\Delta \phi||^2} \\ \Delta \phi \end{bmatrix}
-\end{equation}
-
-\begin{equation}
-  \mathbf{x}^n = \begin{bmatrix} \mathbf{t}^n \\ \mathbf{q}^n \end{bmatrix} \in \R^7
-  \text{ ,   } 
-  \Delta \mathbf{x} = \begin{bmatrix} \Delta \mathbf{t} \\ \Delta \mathbf{q} \end{bmatrix} \in \R^6
-\end{equation}
-
-%\begin{equation}
-%  \begin{aligned}
-%  \mathbf{t}^{n+1} &= \mathbf{t}^n + \Delta \mathbf{t} \\
-%  \mathbf{q}^{n+1} & = \mathbf{q}^n \otimes 
-%  \begin{bmatrix} \sqrt{1-||\Delta \phi||^2} \\ \Delta \phi \end{bmatrix}
-%  \end{aligned}
-%\end{equation}
-
-
-\begin{equation}
-  F(\mathbf{x}^n \boxplus \Delta \mathbf{x}) \approx 
-  q_{LM}(\Delta \mathbf{x}) = \frac{1}{2}
-\mathbf{r_s}(\mathbf{x}^n)^T\mathbf{r_s}(\mathbf{x}^n) + 
-\mathbf{r_s}(\mathbf{x}^n)^T\mathbf{J'_s}(\mathbf{x}^n)\Delta \mathbf{x} + 
-\frac{1}{2} \Delta \mathbf{x}^T\mathbf{B'_{LM}}\Delta \mathbf{x}
-\end{equation}
-
-\begin{equation}
-  \mathbf{J'_s} = 
-  \mathbf{L} \frac{\partial \mathbf{r_s}(\mathbf{x}^n)}
-  {\partial \Delta \mathbf{x}} \bigg|_{\mathbf{x}^n} = 
-  \mathbf{L} \frac{\partial \mathbf{r_s}(\mathbf{x}^n)}
-{\partial (\mathbf{x}^n \boxplus \Delta \mathbf{x})} \bigg|_{\mathbf{x}^n}
-  \frac{\partial (\mathbf{x}^n \boxplus \Delta \mathbf{x})}
-  {\partial \Delta \mathbf{x}} \bigg|_{\mathbf{x}^n,\Delta \mathbf{x}=0} = 
-  \mathbf{L}\mathbf{J}(\mathbf{x}^n) \mathbf{M}(\mathbf{\mathbf{x}^n 
-  \boxplus \Delta \mathbf{x}})
-\end{equation}
-
-\begin{equation}
-  \mathbf{L} 
-  =
-  \begin{bmatrix}
-    \mathbf{L_b}^{(1)} \\
-    \mathbf{L_f}^{(1)} \\
-    \vdots \\
-    \mathbf{L_b}^{(m)} \\
-    \mathbf{L_f}^{(m)}
-  \end{bmatrix}
-\end{equation}
-
-where $\mathbf{L_b}^{(i)} \text{, } \mathbf{L_f}^{(i)} \in \R^{3x3}$ 
-
-\begin{equation}
-  \mathbf{J}(\mathbf{x}^n) = \frac{\partial 
-  \mathbf{r}(\mathbf{x}^n)}{\partial \mathbf{x}^n } \bigg|_{\mathbf{x}^n}
-  = 
-  \begin{bmatrix}
-    \horzbar & \nabla r_1(\mathbf{x}^n)^T & \horzbar \\
-     & \vdots & \\
-     \horzbar & \nabla r_m(\mathbf{x}^n)^T & \horzbar 
-  \end{bmatrix}
-  =
-  \begin{bmatrix}
-    \mathbf{J_b}^{(1)}(\mathbf{x}^n) \\
-    \mathbf{J_f}^{(1)}(\mathbf{x}^n) \\
-    \vdots \\
-    \mathbf{J_b}^{(m)}(\mathbf{x}^n) \\
-    \mathbf{J_f}^{(m)}(\mathbf{x}^n)
-  \end{bmatrix}^T
-\end{equation}
-
-where $\mathbf{J_b}^{(i)}(\mathbf{x}^n) \text{, } 
-\mathbf{J_f}^{(i)}(\mathbf{x}^n) \in \R^{3x7}$ 
-
-\begin{equation}
-  \mathbf{M} (\mathbf{x}^n\boxplus \Delta \mathbf{x})
-  =
-  \begin{bmatrix}
-    \mathbf{M_b}^{(1)}(\mathbf{x}^n\boxplus \Delta \mathbf{x}) \\
-    \mathbf{M_f}^{(1)}(\mathbf{x}^n\boxplus \Delta \mathbf{x}) \\
-    \vdots \\
-    \mathbf{M_b}^{(m)}(\mathbf{x}^n\boxplus \Delta \mathbf{x}) \\
-    \mathbf{M_f}^{(m)}(\mathbf{x}^n\boxplus \Delta \mathbf{x})
-  \end{bmatrix}
-\end{equation}
-
-where $\mathbf{M_b}^{(i)}(\mathbf{x}^n\boxplus \Delta \mathbf{x}) \text{, } 
-\mathbf{M_f}^{(i)}(\mathbf{x}^n\boxplus \Delta \mathbf{x}) \in \R^{7x6}$ 
-
-\begin{equation}
-  \begin{aligned}
-  \mathbf{M}^{(i)}_{\mathbf{b}}(\mathbf{t}^n \boxplus \Delta \mathbf{t}) = 
-    \frac{\partial (\mathbf{t}^{n} \boxplus \Delta \mathbf{t})}{\partial \Delta \mathbf{t}} 
-    \bigg|_{\Delta \mathbf{t} = 0} & =
-  \frac{\partial (\mathbf{t}^{n} + \Delta \mathbf{t})}{\partial \Delta \mathbf{t}}
-    \bigg|_{\Delta \mathbf{t} = 0} \\
-    & =
-      \begin{bmatrix} 
-        1 & 0 & 0 \\  
-        0 & 1 & 0 \\  
-        0 & 0 & 1
-      \end{bmatrix} = \mathbf{I}_3
-  \end{aligned}
-\end{equation}
-
-
-\begin{equation}
-  \begin{aligned}
-  \mathbf{M}^{(i)}_{\mathbf{b}}(\mathbf{q}^n \boxplus \Delta \mathbf{q}) = 
-    \frac{\partial (\mathbf{q}^{n} \boxplus \Delta \phi)}{\partial \Delta \phi} 
-    \bigg|_{\Delta \phi = 0} & =
-\frac{\partial (\mathbf{q}^{n} \otimes \Delta \mathbf{q})}{\partial \Delta \mathbf{q}}
-    \bigg|_{\Delta \phi = 0} 
-    \frac{\partial \Delta \mathbf{q}}{\partial \Delta \phi} \\
-    & =
-    \frac{\partial (\mathbf{Q}^{+}(\mathbf{q}^{n}) \Delta \mathbf{q})}{\partial \Delta \mathbf{q}}
-    \bigg|_{\Delta \phi = 0}
-    \frac{\partial \begin{bmatrix} \sqrt{1-||\Delta \phi||^2} \\ \Delta \phi \end{bmatrix}}{\partial \Delta \phi}
-    \bigg|_{\Delta \phi = 0} \\
-    & =
-\mathbf{Q}^{+}(\mathbf{q}^{n})
-      \begin{bmatrix} 
-        0 & 0 & 0 \\  
-        1 & 0 & 0 \\  
-        0 & 1 & 0 \\  
-        0 & 0 & 1
-      \end{bmatrix} \\
-    & =
-      \begin{bmatrix} 
-        q_w^{n} & -q_x^{n} & -q_y^{n} & -q_z^{n}\\  
-        q_x^{n} & q_w^{n} & -q_z^{n} & q_y^{n}\\  
-        q_y^{n} & q_z^{n} & q_w^{n} & -q_x^{n}\\
-        q_z^{n} & -q_y^{n} & q_x^{n} & q_w^{n}
-      \end{bmatrix}
-      \begin{bmatrix} 
-        0 & 0 & 0 \\  
-        1 & 0 & 0 \\  
-        0 & 1 & 0 \\  
-        0 & 0 & 1
-      \end{bmatrix} \\ 
-      & = 
-      \begin{bmatrix} 
-        -q_x^{n} & -q_y^{n} & -q_z^{n}\\  
-        q_w^{n} & -q_z^{n} & q_y^{n}\\  
-        q_z^{n} & q_w^{n} & -q_x^{n}\\
-        -q_y^{n} & q_x^{n} & q_w^{n}
-      \end{bmatrix} \in \R^{4x3}
-  \end{aligned}
-\end{equation}
-
-\begin{equation}
-\mathbf{M}_{\mathbf{b}}^{(i)}(\mathbf{x}^n \boxplus \Delta \mathbf{x}) = 
-    \frac{\partial (\mathbf{x}^n \boxplus \Delta \mathbf{x})}
-  {\partial \Delta \mathbf{x}} \bigg|_{\mathbf{x}^n,\Delta \mathbf{x}=0} = 
-  \begin{bmatrix} 
-  \mathbf{I}_3 & \mathbf{0}_{3x3} \\ 
-  \mathbf{0}_{4x4} & \mathbf{M}_{\Delta \phi}   
-  \end{bmatrix}
-  \in \R^{7x6}
-\end{equation}
-
-
-\section{Covariance of the Estimated Pose} \label{sc_covariance_estim}
-
-Another important question one can ask in any kind of odometry applications is that 
-what is the uncertainty, namely covariance, of the odometry measurements?
-Generally, traditional VO does not provide an answer to this question 
-since it does not take uncertainty of the features into account. 
-However, we are now able to estimate a covariance matrix of the estimated 
-translation and rotation parameter since we use the conic ray model to 
-estimate feature uncertainties. 
+\section{Covariance Estimation of the Estimated Pose} \label{sc_covariance_estim}
 
 \begin{figure}[H]
 	\centering
@@ -2380,41 +2159,37 @@ estimate feature uncertainties.
 
 
 \begin{equation}
-  \mathbf{Q_{\mathbf{t},\mathbf{q}}^k} = 2^2 \cdot \mathbf{J(x^*)^T Q_{uvz}^k J(x^*)}
+\mathbf{Q_{xyz}} = 2^2 \dot \mathbf{J(x^*)^T Q_{uvz} J(x^*)}
 \end{equation}
 
 where 
 \begin{equation}
 \begin{aligned}
-& \mathbf{Q_{uvz}^k} = \begin{bmatrix} 
-  \mathbf{Q_{uvz}}^{(k,1)} & \dots & & &\mathbf{0} \\
-  \mathbf{0} & \mathbf{Q_{uvz}}^{(k,1)} & &\dots & \vdots  \\
+& \mathbf{Q_{uvz}} = \begin{bmatrix} 
+  \mathbf{Q_{uvz}}^{(k)}_{1} & \dots & & &\mathbf{0} \\
+  \mathbf{0} & \mathbf{Q_{uvz}}^{(k+1)}_{1} & &\dots & \vdots  \\
    \vdots & & \vdots &  &\\
-   &  & & \mathbf{Q_{uvz}}^{(k,m)} & \mathbf{0} \\
-   \mathbf{0} &  & & & \mathbf{Q_{uvz}}^{(k,m)}
+   &  & & \mathbf{Q_{uvz}}^{(k)}_{m} & \mathbf{0} \\
+   \mathbf{0} &  & & & \mathbf{Q_{uvz}}^{(k+1)}_{m}
   \end{bmatrix} \in \R^{6mx6m}
   \\
-  & \mathbf{Q_{uvz}}^{(k,i)} = \begin{bmatrix} 
+  & \mathbf{Q_{uvz}}^{(k)}_{i} = \begin{bmatrix} 
     \sigma_u^2 & 0 & 0 \\ 
     0 & \sigma_v^2 & 0 \\
     0 & 0 & (\sigma_z^{(i)}(z, \theta))^2
   \end{bmatrix} \in \R^{3x3}
   \\
-& \mathbf{Q_{\mathbf{t},\mathbf{q}}^k}  = \begin{bmatrix} 
-  \sigma_{t_x}^2 & 0 & 0 & 0 & 0 & 0 \\ 
-  0 & \sigma_{t_y}^2 & 0 & 0 & 0 & 0 \\
-  0 & 0 & \sigma_{t_z}^2 & 0 & 0 & 0 \\
-  0 & 0 & 0 & \sigma_{q_x}^2 & 0 & 0 \\
-  0 & 0 & 0 & 0 & \sigma_{q_y}^2 & 0 \\
-  0 & 0 & 0 & 0 & 0 & \sigma_{q_z}^2
-  \end{bmatrix} \in \R^{6x6}
+& \mathbf{Q_{xyz}}  = \begin{bmatrix} 
+    \sigma_x^2 & 0 & 0 \\ 
+    0 & \sigma_y^2 & 0 \\
+    0 & 0 & \sigma_z^2
+  \end{bmatrix} \in \R^{3x3}
   \\
-  & \mathbf{J(x^*)} \in \R^{6mx6} = \text{Jacobian of residuals function}
+  & \mathbf{J(x^*)} \in \R^{6mx3} = \text{Jacobian of residuals function}
   \\
 &  m  = \text{the number of measured feature matches}
 \end{aligned}
 \end{equation}
-
 % ***************************CP5-EVALUATION***************************
 \chapter{Evaluation} \label{cp_evaluation}
 
@@ -2427,14 +2202,11 @@ where
 \chapter{Conclusion} \label{cp_conc}
 
 % ***************************CP7-EVALUATION***************************
-\chapter{Bibliography} \label{cp_bib}
+\chapter{Reference} \label{cp_ref}
 
 
 % ***************************CP7-EVALUATION***************************
 \chapter{Appendices} \label{cp_appendices}
-
-\section{Cholesky Factorization}\label{sc_cholesky}
-
 
 \section{Rigid-Body Transformations} \label{sc_rigid_body_transformations}
 
@@ -2499,14 +2271,11 @@ likely state configuration as close as possible to its exact and ideal solution.
 In the case of any optimization problems,
 the goal is to find interesting points, such as local/global
 maximum or local/global minimum, on the \textit{objective}
-\textit{function}. However, the exact model $F(\mathbf{x})$ of a system 
-mostly unknown due to the high-degree for non-linearty or lack of knowledge.
-Additionally, one needs to model the noise characteristics of measurements 
-in real-world. This noise modeling also requires an approximation. 
-Thus, one can only (hopefully) find a good enough solution by iteratively searching.
-One way to solve effectively such problems is to generate a quadratic model of 
-the objective function around initial guess $\mathbf{x}^0$ and iterate
-through the function using the \textit{Newton's methods} or its variations.
+\textit{function}. However, due to the
+non-linearity and noise in measurements, one can only approximate a solution.
+One way to solve such problems is to generate a quadratic model of 
+the objective function and iterate
+through the function using \textit{Newton's methods}. 
 For example,
 an optimal solution (or an interest point)
 Figure-\ref{fig:lsq_multivariable_function_example} is at the local
@@ -2521,22 +2290,20 @@ minimum of the function that is highlighted as a red point cloud.
 \end{figure}
 
 
-%In optimization literature,
-%there are many versions of Newton's method 
-%and they all try to find the
-%local maximum/minimum in the most efficient and accurate way.
-
-%However, in the end, they all solve the problem
-%with the \textit{gradient descent} manner.
+In optimization literature,
+there are many versions of Newton's method 
+and they all try to find the
+local maximum/minimum in the most efficient and accurate way.
+However, in the end, they all solve the problem
+with the \textit{gradient descent} manner.
 %the approximated Hessian function, is one of them and we will be using
 %it in our slam algorithm.
-
 To elaborate the problem, we provide a regression example 
 which can be infact solved with linear least squares techniques but it can serve 
 as a simple toy example throughout our explainations.
 
-Suppose that we have a model function $g(\mathbf{x};a)$. However,
-we don't know what the $\mathbf{x}=(x_1,x_2)$ coefficients (so-called
+Suppose that we have a model function $g(x;a)$. However,
+we don't know what the $x=(x_1,x_2)$ coefficients (so-called
 \textit{optimization} \textit{parameters}) are and we can only
 plug $a$, which is the \textit{independent} variable, into the
 \textit{model} $S$ to see
@@ -2559,9 +2326,9 @@ how the output of the model changes given the independent variable.
 \end{gather}
 
 \begin{equation}
-  S = g(\mathbf{x};a) := x_1 + x_2a \quad 
+S = g(x;a) := x_1 + x_2a \quad 
 \text{where} \quad 
-\mathbf{x} \in \R^2
+x=(x_1,x_2) \in \R^2
 \label{eq}
 \end{equation}
 
@@ -2581,14 +2348,14 @@ Figure-\ref{fig:lsq_curve_fit_measurements}.
 
 Our goal is now to find a function, which will fit this
 dataset. This is a typical least squares curve fitting problem.
-In this problem, we construct a \textit{residuals function} $r_i(\mathbf{x})$ by providing
+In this problem, we construct a \textit{residuals function} $r_i(x)$ by providing
 error values between model estimation $g(x;a_i)$ and dependent
 variable $S_i$. In this case, the dependent variable 
 represent the real world
 measurements and the residuals function represents the error between the estimated value and measurement value. 
 
 \begin{equation}
-  r_i(\mathbf{x}) := g(\mathbf{x};a_i) - S_i \qquad \text{ for }  i = 1,\dots,m.
+r_i(x) := g(x;a_i) - S_i \qquad \text{ for }  i = 1,\dots,m.
 \label{eq:}
 \end{equation}
 
@@ -2596,11 +2363,11 @@ The residuals function is usually squared to magnify larger error effect:
 
 \begin{equation}
 \begin{aligned}
-  F(\mathbf{x}) & = \sum_{i=1}^{m} \vert r_i(\mathbf{x}) \vert^2 = 
-  \sum_{i=1}^{m} \vert g(\mathbf{x};a_i) - S_i \vert^2 =
-  \sum_{i=1}^{m} (g(\mathbf{x};a_i) - S_i)^2 \\
+F(x) & = \sum_{i=1}^{m} \vert r_i(x) \vert^2 = 
+\sum_{i=1}^{m} \vert g(x;a_i) - S_i \vert^2 =
+\sum_{i=1}^{m} (g(x;a_i) - S_i)^2 \\
 & = \begin{Vmatrix}
-  \begin{pmatrix} g(\mathbf{x};a_1) - S_1 \\ \vdots \\ g(\mathbf{x};a_m) - S_m \end{pmatrix} 
+\begin{pmatrix} g(x;a_1) - S_1 \\ \vdots \\ g(x;a_m) - S_m \end{pmatrix} 
 \end{Vmatrix}_2^2
 \label{eq}
 \end{aligned}
@@ -2610,27 +2377,27 @@ Now, one can use the sum of squared error function to calculate the most likely
 configuration that can minimize the errors. 
 
 \begin{equation}
-  \mathbf{X}^* = \argmin_x F(\mathbf{x}) = 
-  \sum_{i=1}^{m} (g(\mathbf{x};a_i) - S_i)^2, 
-  \quad \mathbf{x} \in \R^2
+X^* = \argmin_x F(x) = 
+\sum_{i=1}^{m} (g(x;a_i) - S_i)^2, 
+\quad x \in \R^2
 \label{eq}
 \end{equation}
 
 At this point, the objective function is ready to be handed over to 
 to any gradient decent based least squares solver. The method will try to find the
-\textit{optimal} solution $\mathbf{X}^*$ by minimizing the objective function.
+\textit{optimal} solution $X^*$ by minimizing the objective function.
 
 \begin{equation}
-  \text{Minimize} \quad \sum_{i=1}^{m} (g(\mathbf{x};a_i) - S_i)^2, 
-\quad \mathbf{x} \in \R^2
+\text{Minimize} \quad \sum_{i=1}^{m} (g(x;a_i) - S_i)^2, 
+\quad x \in \R^2
 \label{eq}
 \end{equation}
 
 To help our understanding, the objective function is drawn in
 Figure-\ref{fig:lsq_sum_of_squared_error_function}.
-As we can see, the based on the given $\mathbf{x}$ values, 
+As we can see, the based on the given $x=(x_1,x_2)$ values, 
 the objective
-function $F(\mathbf{x})$ behave as follows:
+function $F(x)$ behave as follows:
 
 \begin{figure}[H]
 	\centering
@@ -2647,11 +2414,11 @@ is highlighted with the red cloud. What the gradient descent method essentially
 does is to travel from the initial guess point to the nearest local minimum 
 on the objective function. As we can see
 that the descent is successfully performed and the optimization
-operation results at $\mathbf{x}=(1.9,2.1)$. 
+operation results at $x=(1.9,2.1)$. 
 
 
 If we now place the optimization variables into our model function, we
-get the $g(\mathbf{x};a)=1.9+2.1a$ and a fitted line based on the given
+get the $g(x;a)=1.9+2.1a$ and a fitted line based on the given
 dataset in
 Figure-\ref{fig:lsq_curve_fit_operation}.
 
@@ -2666,204 +2433,30 @@ Figure-\ref{fig:lsq_curve_fit_operation}.
 Now that we have an intiution how least squares problems are solved 
 by gradient descent methods, let's further discuss one of them.
 
-\subsection{The Newton's Method}
+\subsection{Gradient Descent}
 
 In order to understand non-linear least square algorithms, 
-we first need to look at how the Newton's method works. 
-It provides a guideline for finding roots of a function by 
-taking differentiations of the function. The interesting phenomena is that the roots of 
-function corresponds to the interest points of the function such as maximum, mimimum or 
-saddle points. In least squares problem, we are only interested in minimum 
-points since we want to minimize the error. Keeping this in mind, let's 
-consider a non-linear objective function 
-$F(\mathbf{x}) = \frac{1}{2}\mathbf{f(x)^Tf(x)} = \frac{1}{2}\sum_i f_i(\mathbf{x})^2$ 
-where 
-it has $\mathbf{x} = [x_1, \dots, x_n] \in R^n$ multiple unknown variables.
-We also assume that the function $F(\mathbf{x})$ is differentiable with 
-respect to each $x_i$ unknown variable and its 
-first-order derivatives has the following form:
+we first need to look at how a gradient descent algorithm works. For instance; 
+assuming that the objective function $F(x)$ is differentiable and its 
+derivatives has the following form:
 
 \begin{equation}
-  \nabla F(\mathbf{x}) = \mathbf{J}_F = \mathbf{J_f^Tf}
+  \nabla F(x) = F'(x) = \frac{\partial F(x)}{\partial x}
 \end{equation}
 
-where $\mathbf{J}_F$ is the \textit{Jacobian} matrix that has a special matrix:
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
+	{fig/ref_imgs/taylor_1st_derivative.png}
+	\caption{First-order Derivative of Taylor Expansion}
+  \label{fig:taylor_1st_derivative}
+\end{figure}
+
+
 
 \begin{equation}
-  \mathbf{J}_F = \begin{bmatrix} \frac{\partial}{\partial x_j }f_i(\mathbf{x}) \end{bmatrix}_{ij} 
-  = 
-  \begin{bmatrix} 
-    \frac{\partial}{\partial x_1}f_1(\mathbf{x}) & \frac{\partial}{\partial x_2}f_1(\mathbf{x}) & \dots & \frac{\partial}{\partial x_n}f_1(\mathbf{x}) \\
-    \frac{\partial}{\partial x_1}f_2(\mathbf{x}) & \frac{\partial}{\partial x_2}f_2(\mathbf{x}) & \dots & \frac{\partial}{\partial x_n}f_2(\mathbf{x}) \\
-    \vdots & \vdots & \vdots & \vdots \\
-    \frac{\partial}{\partial x_1}f_m(\mathbf{x}) & \frac{\partial}{\partial x_2}f_m(\mathbf{x}) & \dots & \frac{\partial}{\partial x_n}f_m(\mathbf{x}) \\
-  \end{bmatrix}
-  \in \R^{ixj}
+  \nabla^2 F(x) = F''(x) = \frac{\partial^2 F(x)}{\partial x^2}
 \end{equation}
-
-
-%\begin{figure}[H]
-%	\centering
-%	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
-%	{fig/ref_imgs/taylor_1st_derivative.png}
-%	\caption{First-order Derivative of Taylor Expansion}
-%  \label{fig:taylor_1st_derivative}
-%\end{figure}
-
-And the second-order derivatives has another special matrix for called 
-\textit{Hessian}
-
-\begin{equation}
-\nabla^2 F(x) = \mathbf{H}_F
-  = 
-  \begin{bmatrix} 
-    \frac{\partial^2}{\partial x_1^2}f_1(\mathbf{x}) & \frac{\partial^2}{\partial x_1x_2}f_1(\mathbf{x}) & \dots & \frac{\partial^2}{\partial x_1x_n}f_1(\mathbf{x}) \\
-    \frac{\partial^2}{\partial x_2x_1}f_2(\mathbf{x}) & \frac{\partial^2}{\partial x_2^2}f_2(\mathbf{x}) & \dots & \frac{\partial^2}{\partial x_2x_n}f_2(\mathbf{x}) \\
-    \vdots & \vdots & \vdots & \vdots \\
-    \frac{\partial^2}{\partial x_nx_1}f_m(\mathbf{x}) & \frac{\partial^2}{\partial x_nx_2}f_m(\mathbf{x}) & \dots & \frac{\partial^2}{\partial x_n^2}f_m(\mathbf{x}) \\
-  \end{bmatrix}
-  \in \R^{mxn}
-\end{equation}
-
-Having first- and second-order derivatives helps us to 
-form a so-called \textit{Newton} step:
-
-\begin{equation}
-  \Delta \mathbf{x}^n = - 
-\frac{\nabla F(\mathbf{x}^n)}{\nabla^2 F(\mathbf{x}^n)} = - \mathbf{H}_F^{-1}\mathbf{J}_F
-\end{equation}\label{eq:delta_x_descent_direction}
-
-If we calculate the Netwon step, we know that $F(\mathbf{x})$ will decrease 
-in the direction of its negative derivative if the step is added:
-Then, one can 
-claim that if we iteratively travel through the function in the direction of its negative 
-derivative, we would eventually reach to a nearest local minima with respect to the starting 
-point. 
-%This is the fundamental idea behind any kind of gradient descent algorithm.
-%While descenting, one might want to control the length of the Newton step, 
-%For doing so, a tuning factor, called
-%\textit{step length} $\alpha$, is used to adjust the size of length:
-%
-%\begin{equation}
-%  \Delta \mathbf{x} = 
-%  - \alpha \frac{F'(\mathbf{x^n})}{F''(\mathbf{x^n})} = - \alpha \mathbf{H}_F^{-1}\mathbf{J}_F
-%\end{equation}\label{eq:delta_x_step_length}
-
-%% WRONG THE NEWTONS METHOD DOES NOT CREATE QUAD FUNCTIONS!
-%The analitical intuition behind how we calculate the Newton step is 
-%to build a $q$ quadratic model of the objective function around the $\mathbf{x}^n$ 
-%using Taylor expansion:
-%
-%\begin{equation}
-%  q^n(\Delta \mathbf{x}) = F(\mathbf{x}^n) + 
-%  \nabla F(\mathbf{x}^n)^T \Delta \mathbf{x} + \frac{1}{2} \Delta \mathbf{x}^T \nabla^2 F(\mathbf{x}^n)\Delta \mathbf{x}
-%\end{equation}
-%
-%After $n$ number of iteration of $\mathbf{x}^n$, the $q(\mathbf{x}^n)$ 
-%quadratic function will hugs (or fits to) the original function $F(\mathbf{x}^n)$ 
-%at the $\mathbf{x}^{k+n} (= \mathbf{x^*})$.
-%
-%\begin{figure}[H]
-%	\centering
-%	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
-%	{fig/ref_imgs/taylor_2nd_derivative.png}
-%\caption{REMOVE APPROX B - Second-order Derivative of Taylor Expansion}
-%  \label{fig:taylor_2nd_derivative}
-%\end{figure}
-%
-
-We can briefly describe the algorithm if 
-assuming that we have an educated initial guess $\mathbf{x}^0$ from which 
-we start to search 
-for a local minimum, we can describe the Newton algorithm as follows:
-
-\begin{enumerate}
-  \item take the first- and second-order derivatives of $F(\mathbf{x})$ 
-    at the current $\mathbf{x}^n$
-  \item iterate $\mathbf{x}^{n+1} := \mathbf{x}^n -\Delta \mathbf{x}^n $ until it converges
-\end{enumerate}
-
-As we see, the Newton's method is a simple but an effective algorithm if 
-we can calculate the first- and second-order derivatives accurately.
-However, it is either computationally expensive to calculate Hessian or 
-is unknown beforehand. Therefore, there are several variations of Newton's 
-method, one of which will be discussed in next section.
-%However, the problem can get very complicated 
-%if convergence speed and convergence success is considered. For this reason, 
-%there are many version of the algoritm that aims to solve the problem 
-%in the most efficient manner.
-
-\subsection{Levenberg-Marquardt}
-Levenberg-Marquardt (LM) is one of most well-known algoritm 
-to solve least squares problem. It is the modified version of the Netwon's 
-method. In this section, we describe the idea behind 
-the LM algorithm. Assume that we have a $\mathbf{r}(\mathbf{x}^n)$ residuals function which we 
-wish to model:
-
-\begin{equation}
-  \mathbf{r}(\mathbf{x}^n) = \begin{pmatrix} r_1(\mathbf{x}^n) \\ \vdots \\ r_m(\mathbf{x}^n) \end{pmatrix} \in \R^m
-\end{equation}
-
-To find a local maximum/minimum of the residuals function, we need to 
-determine the first derivative and it 
-$\mathbf{r}'(\mathbf{x}^n)$ appears again in Jacobian form:
-
-\begin{equation}
-  \mathbf{J} = \frac{\partial \mathbf{r}(\mathbf{x}^n)}{\partial \mathbf{x}^n } \bigg|_{\mathbf{x}^n}
-  = 
-  \begin{bmatrix} 
-    \vertbar & & \vertbar \\
-    \frac{\partial}{\partial x_1}\mathbf{r}(\mathbf{x}^n) & \dots & \frac{\partial}{\partial x_n}\mathbf{r}(\mathbf{x}^n) \\
-    \vertbar & & \vertbar
-  \end{bmatrix}
-  = 
-  \begin{bmatrix}
-    \horzbar & \nabla r_1(\mathbf{x}^n)^T & \horzbar \\
-     & \vdots & \\
-     \horzbar & \nabla r_m(\mathbf{x}^n)^T & \horzbar 
-  \end{bmatrix}
-  \in \R^{mxn}
-\end{equation}
-
-Least squares problem has special forms which can be exploitted. 
-Here, the residuals function function and its derivatives is given:
-%(Keep in mind that multiplication with $\frac{1}{2}$ in front of objective function
-%is for cosmetic reason since it does not effect local mimimum's position in the function)
-
-\begin{equation}
-  F(\mathbf{x}) = \frac{1}{2} ||\mathbf{r}(\mathbf{x}^n)||^2 = \frac{1}{2} \mathbf{r}(\mathbf{x}^n)^T \mathbf{r}(\mathbf{x}^n) \text{  (Objective function)}
-\end{equation}\label{eq:residuals_objective}
-\begin{equation}
-\nabla F(\mathbf{x}^n) = \mathbf{J}(\mathbf{x}^n)^T \mathbf{r}(\mathbf{x}^n) = \sum_{i=1}^{m} r_i(\mathbf{x}^n) \nabla r_i(\mathbf{x}^n) \text{  (First-order derivative)}
-\end{equation}\label{eq:residuals_objective_first_der}
-\begin{equation}
-  \nabla^2 F(\mathbf{x}^n) = \mathbf{J}(\mathbf{x}^n)^T\mathbf{J}(\mathbf{x}^n) + \sum_{i=1}^m r_i(\mathbf{x}^n) \nabla^2 r_i(\mathbf{x}^n) \text{ (Second-order derivative)}
-\end{equation}\label{eq:residuals_objective_second_der}
-
-
-Given \ref{eq:residuals_objective} and \ref{eq:residuals_objective_first_der}, we elaborate the quadratic model:
-
-\begin{equation}
-  F(\mathbf{x}^n + \Delta \mathbf{x}) \approx
-  q^n(\Delta \mathbf{x}) = 
-  \frac{1}{2}\mathbf{r}(\mathbf{x}^n)^T\mathbf{r}(\mathbf{x}^n) + 
-  \mathbf{r}(\mathbf{x}^n)^TJ(\mathbf{x}^n)\Delta \mathbf{x} + 
-\frac{1}{2}\Delta \mathbf{x}^T(\mathbf{J}^T\mathbf{J}+\mathbf{r}(\mathbf{x}^n)^T\mathbf{H})^n\Delta \mathbf{x}
-\end{equation}
-
-
-\begin{equation}
-  q_{LM}^n(\Delta \mathbf{x}) = \frac{1}{2}\mathbf{r}(\mathbf{x}^n)^T\mathbf{r}(\mathbf{x}^n) + \mathbf{r}(\mathbf{x}^n)^TJ(\mathbf{x}^n)\Delta \mathbf{x} + \frac{1}{2}\Delta \mathbf{x}^T\mathbf{B_{LM}}^n\Delta \mathbf{x}
-\end{equation}
-
-
-\begin{equation}
-  0 = 
-  \nabla q^{n}(\Delta \mathbf{x}^*) = 
-  \mathbf{r}(\mathbf{x}^n)^TJ(\mathbf{x}^n) + 
-(\mathbf{J}^T\mathbf{J}+\mathbf{r}(\mathbf{x}^n)^T\mathbf{H})^n\Delta \mathbf{x}^*
-\end{equation}
-
 
 \begin{figure}[H]
 	\centering
@@ -2874,18 +2467,119 @@ Given \ref{eq:residuals_objective} and \ref{eq:residuals_objective_first_der}, w
 \end{figure}
 
 
-It is critical to note that LM does not use $\nabla^2F(\mathbf{x})$ 
+Another fact about $F(x)$, considering above formula, is that its value will decrease 
+in the direction of its negative derivative:
+
+\begin{equation}
+  \Delta x = - 
+  \frac{\partial^2 F(x)}{\partial x^2}^{-1}
+  \frac{\partial F(x)}{\partial x}
+\end{equation}\label{eq:delta_x_descent_direction}
+
+That being in mind, one can 
+claim that if we iteratively travel through the function in the direction of its negative 
+derivative, we would eventually reach to a nearest local minima with respect to the starting 
+point. This is the fundamental idea behind gradient descent algorithm.
+On the other hand, using its derivative directly does not ensure that 
+we would reach to any local minima in some cases. Thus, a tuning factor so-called 
+\textit{step length} $\alpha$ is used to adjust the size of length:
+
+\begin{equation}
+  \Delta x = -\alpha 
+  \frac{\partial^2 F(x)}{\partial x^2}^{-1}
+  \frac{\partial F(x)}{\partial x}
+\end{equation}\label{eq:delta_x_step_length}
+
+
+Assuming that we have an educated initial guess $x_0$ from which we start to search 
+for a local minimum, we can describe the gradient descent algorithm as follows:
+
+\begin{enumerate}
+  \item take the derivative of $F(x)$ at the current $x_k$
+  \item find the sufficient step length $\alpha$
+  \item iterate $x_{k+1} := x_k - \alpha \frac{\partial F(x_k)}{\partial x}$ until it converges
+\end{enumerate}
+
+As we see, the gradient descent is a simple algorithm but it is an iterative 
+approach that might require an exhaustive search operation if the initial 
+guess is not given intellegently. Therefore, it can get very complicated 
+if convergence speed and convergence success is considered. For this reason, 
+there are many version of the algoritm that aims to solve in the most efficient 
+manner.
+
+\subsection{Levenberg-Marquardt}
+Levenberg-Marquardt (LM) is one of most popular gradient descent based algoritm 
+to solve least squares problem. In this section, we describe the idea behind 
+the LM algorithm. Assume that we have a $r(x)$ residuals function which we 
+wish to model:
+
+\begin{equation}
+  r(x) = \begin{pmatrix} r_1(x) \\ \vdots \\ r_m(x) \end{pmatrix} \in \R^m
+\end{equation}
+
+To find a local maximum/minimum of the residuals function, we need to 
+determine the first derivative and it 
+$r'(x)$ appears in a special form, i.e., Jacobian:
+
+\begin{equation}
+  J(x) = \begin{bmatrix} \frac{\partial}{\partial x_j }r_i(x) \end{bmatrix}_{ij} 
+  = 
+  \begin{bmatrix} 
+    \vertbar & & \vertbar \\
+    \frac{\partial}{\partial x_1} & \dots & \frac{\partial}{\partial x_1} \\
+    \vertbar & & \vertbar
+  \end{bmatrix}
+  = 
+  \begin{bmatrix}
+    \horzbar & \nabla r_1(x)^T & \horzbar \\
+     & \vdots & \\
+    \horzbar & \nabla r_m(x)^T & \horzbar 
+  \end{bmatrix}
+  \in \R^{mxn}
+\end{equation}
+
+Least squares problem has special forms which can be exploitted. 
+Here, the residuals function function and its derivatives is given:
+%(Keep in mind that multiplication with $\frac{1}{2}$ in front of objective function
+%is for cosmetic reason since it does not effect local mimimum's position in the function)
+
+\begin{equation}
+  F(x) = \frac{1}{2} ||r(x)||^2 = \frac{1}{2} r(x)^T r(x) \text{  (Objective function)}
+\end{equation}\label{eq:residuals_objective}
+\begin{equation}
+  \nabla F(x) = J(x)^T r(x) = \sum_{i=1}^{m} r_i(x) \nabla r_i(x) \text{  (First-order derivative)}
+\end{equation}\label{eq:residuals_objective_first_der}
+\begin{equation}
+\nabla^2 F(x) = J(x)^TJ(x) + \sum_{i=1}^m r_i(x) \nabla^2 r_i(x) \text{ (Second-order derivative)}
+\end{equation}\label{eq:residuals_objective_second_der}
+
+NOTE: Move this part to gradient descent ->
+The objective function is usually assumed to be highly non-linear; therefore, 
+one cannot perform computation such as derivatives. Therefore, we build 
+a $q_{LM}$ quadratic model of the objective function using Taylor expansion:
+
+\begin{equation}
+  q_{LM}^k(d) = f(x^k) + \nabla f(x^k)^T d + \frac{1}{2} d^T B_{LM}^kd
+\end{equation}
+
+Given \ref{eq:residuals_objective} and \ref{eq:residuals_objective_first_der}, we elaborate the quadratic model:
+
+\begin{equation}
+  q_{LM}^k(d) = \frac{1}{2}r(x^k)^Tr(x^k) + r(x^k)^TJ(x^k)d + \frac{1}{2}d^TB_{LM}^kd
+\end{equation}
+
+It is critical to note that LM does not use $\nabla^2F(x)$ 
 the exact second-order derivative (\ref{eq:residuals_objective_second_der})
 (also appears in the special form called \textit{Hessian}) in its quadratic model. 
 This is because it is computationaly expensive. Instead, we use an approximated 
-Hessian model by removing $\sum_{i=1}^mr_i(\mathbf{x})\nabla^2r_i(\mathbf{x})$ and replacing with 
-term $\lambda^n \mathbf{I}$. Finally, the final approximated Hessian function would be:
+Hessian model by removing $\sum_{i=1}^mr_i(x)\nabla^2r_i(x)$ and replacing with 
+term $\lambda^k I$. Finally, the final approximated Hessian function would be:
 
 \begin{equation}
-  \mathbf{B_{LM}}^n = \mathbf{J}(\mathbf{x}^n)^T \mathbf{J}(\mathbf{x}^n) + \lambda^n \mathbf{I}
+  B_{LM}^k = J(x^k)^T J(x^k) + \lambda^k I
 \end{equation}
 
-where $\lambda^n>0$ is a positive number and $\mathbf{I}\in \R^{kxk}$ is the identity matrix.
+where $\lambda^k>0$ is a positive number and $I\in \R^{nxn}$ is the identity matrix.
 
 \begin{figure}[H]
 	\centering
@@ -2902,31 +2596,31 @@ Similar to \ref{eq:delta_x_descent_direction}, one can calculate the descent dir
 in the context of LM method as follows:
 
 \begin{equation}
-  \mathbf{B_{LM}}^n \Delta \mathbf{x}^n = - \nabla F(\mathbf{x}^n) \text{ or } \Delta \mathbf{x}^n = - (\mathbf{B_{LM}}^n)^{-1}\nabla F(\mathbf{x}^n)
+  B_{LM}^kd^k = - \nabla f(x^k) \text{ or } d^k = - (B_{LM}^k)^{-1}\nabla f(x^k)
 \end{equation}\label{eq:lm_descent_direction}
 
 If we can write above equation using the content of Hessian model more explicitly: 
 
 \begin{equation}
-  [\mathbf{J}(\mathbf{x}^n)^T\mathbf{J}(\mathbf{x}^n) + \lambda^n\mathbf{I}]\Delta \mathbf{x}^n = -\mathbf{J}(\mathbf{x}^n)^T\mathbf{r}(\mathbf{x}^n)
+  [J(x^k)^TJ(x^k) + \lambda^kI]d^k = -J(x^k)^Tr(x^k)
 \end{equation}\label{eq:damping_full}
 
-it gives a clearer picture why $\lambda^nI$ term is used. In other gradient-descent 
+it gives a clearer picture why $\lambda^kI$ term is used. In other gradient-descent 
 based algorithm performs line search to determine the step length of the current 
 iteration. In LM, this is done by tuning $\lambda$ parameter, also known as 
 \textit{damping parameter}. For example, suppose that we assign $\lambda$ 
 a significantly small value. Then, \ref{eq:damping_full} becomes:
 
 \begin{equation}
-  \lambda^n\Delta \mathbf{x}^n \approx -\mathbf{J}(\mathbf{x}^n)^T\mathbf{r}(\mathbf{x}^n) \text{ or } 
-  \Delta \mathbf{x}^n \approx -\frac{1}{\lambda^n}\mathbf{J}(\mathbf{x}^n)^T\mathbf{r}(\mathbf{x}^n)\text{ or } 
-  \Delta \mathbf{x}^n \approx -\frac{1}{\lambda^n}\nabla F(\mathbf{x}^n)
+  \lambda^kd^k \approx -J(x^k)^Tr(x^k) \text{ or } 
+  d^k \approx -\frac{1}{\lambda^k}J(x^k)^Tr(x^k)\text{ or } 
+  d^k \approx -\frac{1}{\lambda^k}\nabla F(x^k)
 \end{equation}
 
 Whereas, if we assign $\lambda$ a significantly large value, then it becomes:
 
 \begin{equation}
-  \mathbf{J}(\mathbf{x}^n)^T\mathbf{J}(\mathbf{x}^n)\Delta \mathbf{x}^n = -\mathbf{J}(\mathbf{x}^n)^T\mathbf{r}(\mathbf{x}^n)
+  J(x^k)^TJ(x^k)d^k = -J(x^k)^Tr(x^k)
 \end{equation}
 
 which is a regular \textit{Newton step} (corresponds to $\alpha=1$ in \ref{eq:delta_x_step_length}).
@@ -2936,22 +2630,22 @@ so that it will allow the algorithm to converge to a local minimum efficiently
 and accurately. This is done by the \textit{progress ratio} test:
 
 \begin{equation}
-  \rho^n = \frac{F(\mathbf{x}^n) - F(\mathbf{x}^n+\Delta \mathbf{x})}{q_{LM}^n(\mathbf{0})-q_{LM}^n(\Delta \mathbf{x})} =
-  \frac{\text{actual decrease in objective } F(\mathbf{x})}
-  {\text{predicted decrease by model } q_{LM}^n(\mathbf{\Delta \mathbf{x}})}
+  \rho^k = \frac{F(x^k) - F(x^k+d^k)}{q_{LM}^k(0)-q_{LM}^k(d^k)} =
+  \frac{\text{actual decrease in objective } F(x)}
+  {\text{predicted decrease by model } q_{LM}^k(d)}
 \end{equation}\label{eq:lm_progress_ration}
 
-Based on the $p^n$, we can create an empiric strategy:
+Based on the $p^k$, we can create an empiric strategy:
 
 \begin{enumerate}
-  \item If $p^n \geq t_2$, then it is considered as a very successful step; 
+  \item If $p^k \geq t_2$, then it is considered as a very successful step; 
     therefore, we can even choose smaller value for damping facor in the next iteration 
     so that 
     we increase the descent speed.
-  \item If $t_1 \leq p^n < t_2$, then it is still a successfull step but we 
+  \item If $t_1 \leq p^k < t_2$, then it is still a successfull step but we 
     can keep the damping factor same in the next iteration so that we don't 
     miss out the local minimum.
-  \item If $p^n < t_1$, then it is a bad step; therefore, we can reject this 
+  \item If $p^k < t_1$, then it is a bad step; therefore, we can reject this 
     damping factor choice and choose a larger value.
 \end{enumerate}
 
@@ -2972,14 +2666,14 @@ an optimal solution.
 That being said, we can now summarize the algorithm into five steps:
 
 \begin{enumerate}
-  \item build the quadratic model $q_{LM}^n(\Delta \mathbf{x}^n)$ of the objective function,
-  \item compute the descent direction $\Delta \mathbf{x}^n$ by solving the linear system of 
+  \item build the quadratic model $q_{LM}^k(d)$ of the objective function,
+  \item compute the descent direction $d^k$ by solving the linear system of 
     equations in \ref{eq:lm_descent_direction},
-  \item calculate the progress ratio $\rho^n$ in \ref{eq:lm_progress_ration}.
-  \item choose the next damping factor $\lambda^{n+1}$ according to progress ratio test,
+  \item calculate the progress ratio $\rho^k$ in \ref{eq:lm_progress_ration}.
+  \item choose the next damping factor $\lambda^{k+1}$ according to progress ratio test,
   \item set the next iteration based on progress ratio test:
-    $\\ \text{  if } \rho^n > t_1 \rightarrow \mathbf{x}^{n+1}:=\mathbf{x}^n +\Delta \mathbf{x}^n \text{ (step accepted) }\\ 
-    \text{  if }\rho^n > t_1 \rightarrow \mathbf{x}^{n+1}:=\mathbf{x}^n \text{ (step rejected)}$
+    $\\ \text{  if } \rho^k > t_1 \rightarrow x^{k+1}:=x^k +d^k \text{ (step accepted) }\\ 
+    \text{  if }\rho^k > t_1 \rightarrow x^{k+1}:=x^k \text{ (step rejected)}$
 \end{enumerate}
 
 
