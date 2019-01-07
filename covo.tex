@@ -830,7 +830,7 @@ that offers such implementations.
 % - Matthies1987a - Error Modeling in Stereo Navigation
 % - Olson2003 - Rover navigation using stereo ego-motion
 First research in estimating camera ego-motion was done in 
-Moravec PhD Thesis in 1980 \cite{Moravec1980}. He used a sliding camera as 
+a PhD Thesis \cite{Moravec1980} in 1980s. He used a sliding camera as 
 a stereo fashion that captures images when the robot stopped after moving for some 
 small distance. Another early study, from Matthies and Shafer \cite{Matthies1987a}, 
 formulized the ego-motion estimation for stereo vison.
@@ -841,16 +841,18 @@ their robots since it was a critical application \cite{Olson2003}.
 % First VO Paper
 % Nister2004 - Visual Odometry
 
-For the first time, Visual Odometry term was introduced in \cite{Nister2004}
+For the first time, Visual Odometry term was introduced in \cite{Nister2004} 
 by the computer vision researchers. 
-They demonstrated a VO pipeline that became a defacto system configuration even 
+It estimates the transformation matrix by solving the P3P problem between consecutive frames.
+Nister also demonstrated a VO pipeline that became a defacto system configuration even 
 for today's VO applications.
 In computer vision, Structure from Motion (SFM), that tackles 3D reconstruction of 
 an environment with moving camera, is well-studied topic. For SFM, it is critical 
 to estimate camera pose accurately to build the 3D environment. VO 
 can be thought of subset problem of SFM. 
 The reason VO parted from SFM is 
-because VO systems are required to operate in real-time, which introduces 
+because VO systems started to empower other applications such SLAM and 
+are required to operate in real-time, all of which introduces 
 a great challenge. With the help of early robotics applications 
 in NASA and computer vision community, the VO became quite popular field. 
 That being said, two of the most influential papers were 
@@ -864,18 +866,75 @@ One can also find a survey of VO types, approaches and challenges in
 % - Scaramuzza2011 - Visual Odometry Part II: Matching,Robustness, Optimization, and Applications
 % - Aqel2016 - Review of visual odometry: types, approaches, challenges, and applications
 
+Over the years, research on VO is progressively increased and various types of 
+VO systems are proposed. Therefore, 
+VO systems can be categorized based on different phenomenas such as 
+camera sensor types and solver algorithms choice.
+One can utilize monucular or stereo cameras in order to capture images. 
+The stereo cameras are further grouped 
+into two category; i.e., active and passive cameras. For active camera, 
+besides color or monochrome camera, there is another camera such IR camera that measures the depth information. 
+For passive camera, the depth is calculated from two color or monochrome camera. 
+In the case of solver algorithms, one can group VO into two category; i.e.,
+feature-based and appearance-based.
+
+The feature-based VO algorithms are interested in extracting distinct and  
+repeatable feature points from images and finding correspondences in 
+extracted features either between consecutive frames or keyframes. 
+Before estimating camera poses, 
+an important step for the feature-based alogrithms is to remove outliers 
+in feature matches with RANSAC \cite{Fischler1981}
+% Fischler1981 - RANSAC
+There are two popular open source feature-based VO tools; i.e., 
+LIBVISO2 \cite{Geiger2011} and FOVIS \cite{Huanga2011}.
+To explain LIBVISO2 briefly, 
+both simple blob and corner filters are used to extract features.
+The extracted features are filtered by non-maximum suppression to increase 
+the robustness of the matching process.
+Then, it calculates the depth information by triangulation technique as 
+it uses passive stereo camera. Finally, they minimize the reprojection error. 
+The reprojection error function is constructed by projection from 
+features on the left camera onto the right camera and vice-versa, 
+to estimate the pose. Note that RANSAC applied on feature matches to remove 
+outliers. On the other hand, FOVIS is more accurate and faster than 
+LIBVISO2 according to \cite{Fang2015a}.
+% RGBD VO Comparisons
+%% - Angladon2017 - An evaluation of real-time RGB-D visual odometry algorithms on mobile devices
+% - Fang2015a - Experimental evaluation of RGB-D visual odometry methods
+FOVIS uses only FAST corner detectors to extract features. 
+For the matchings, FOVIS uses keyframe fashion instead of consective images to 
+reduce the drift.
+Instead of 
+using RANSAC for outlier rejection, it contructs 
+a graph of consistent feature matches and updates the features that obey the 
+idea that 
+the Euclidean distance between two features at one time should match 
+their distance at another time. Finally, several refinement processes are applied 
+during motion estimation to improve accuracy.
 % RGBD VO Implementations
-% - Kerl2013a - DVO - Robust Odometry Estimation for RGB-D Cameras
-% - Huanga2011 - FOVIS - Visual Odometry and Mapping for Autonomous Flight Using an RGB-D Camera
 % - Geiger2011 - LIBVISO2 - StereoScan: Dense 3d Reconstruction in Real-time
-% - Dryanovski2013 - CCNY - Fast Visual Odometry and Mapping from RGB-D Data
-% - Fang2015a - DEMO - Real-time Depth Enhanced Monocular Odometry
+% - Huanga2011 - FOVIS - Visual Odometry and Mapping for Autonomous Flight Using an RGB-D Camera
+
+The biggest disadvantage of feature-based VO is that accuracy of the pose estimations 
+decreases if the operating environment lacks texture-rich scenes such as 
+corridors or the measured images are blurry due to fast motions. Thus, 
+appearance-based VO algorithms utilize the entire image instead of extracted features.
+Initially, Iterative Closest Point (ICP) \cite{Besl1992} 
+was used to minimize the geometrical error between 3D surfaces. There are 
+also various kinds of ICP algorithms 
+that offers to compute efficiently \cite{Rusinkiewicz2001}. Even though ICP 
+is useful for creating 3D shapes with point clouds, it is slower and less 
+accurate comparing to feature-based methods.
 % - Besl1992 - First ICP Paper - A method for registration of 3-D shapes
 % - Rusinkiewicz2001 - ICP - Efficient Variants of the ICP Algorithm
+Then, another type of apperance-based approach, so-called Dense Visual Odometry (DVO) 
+\cite{Kerl2013a}, 
+was emerged by minimizing 
+the photometrical error based on the pixel intensity between consecutive frames. 
+% - Kerl2013a - DVO - Robust Odometry Estimation for RGB-D Cameras
 
-% RGBD VO Comparisons
-% - Angladon2017 - An evaluation of real-time RGB-D visual odometry algorithms on mobile devices
-% - Fang2015a - Experimental evaluation of RGB-D visual odometry methods
+%% - Dryanovski2013 - CCNY - Fast Visual Odometry and Mapping from RGB-D Data
+%% - Fang2015a - DEMO - Real-time Depth Enhanced Monocular Odometry
 
 
 \section{Visual Odometry Pipeline} \label{sc_visual_odometry_pipeline}
