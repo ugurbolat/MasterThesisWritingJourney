@@ -24,6 +24,7 @@
 \usepackage{algorithm}
 \usepackage[noend]{algpseudocode}
 \usepackage{array}
+%\usepackage[backend=bibtex]{biblatex}
 
 
 % ***************************CONFIGS***************************
@@ -824,6 +825,57 @@ that offers such implementations.
 
 \section{Related Works} \label{sc_visual_odometry_related_works}
 
+% First ego motion estimation with cam
+% - Moravec1980 - Obstacle Avoidance and Navigatio n in the Real World by a Seeing Robot Rover
+% - Matthies1987a - Error Modeling in Stereo Navigation
+% - Olson2003 - Rover navigation using stereo ego-motion
+First research in estimating camera ego-motion was done in 
+Moravec PhD Thesis in 1980 \cite{Moravec1980}. He used a sliding camera as 
+a stereo fashion that captures images when the robot stopped after moving for some 
+small distance. Another early study, from Matthies and Shafer \cite{Matthies1987a}, 
+formulized the ego-motion estimation for stereo vison.
+The interest in VO peaked 
+after NASA's Mars expeditions with a rover in 2003 . 
+Reseachers and engineers in NASA JPL further improved the robutness of 
+their robots since it was a critical application \cite{Olson2003}.
+% First VO Paper
+% Nister2004 - Visual Odometry
+
+For the first time, Visual Odometry term was introduced in \cite{Nister2004}
+by the computer vision researchers. 
+They demonstrated a VO pipeline that became a defacto system configuration even 
+for today's VO applications.
+In computer vision, Structure from Motion (SFM), that tackles 3D reconstruction of 
+an environment with moving camera, is well-studied topic. For SFM, it is critical 
+to estimate camera pose accurately to build the 3D environment. VO 
+can be thought of subset problem of SFM. 
+The reason VO parted from SFM is 
+because VO systems are required to operate in real-time, which introduces 
+a great challenge. With the help of early robotics applications 
+in NASA and computer vision community, the VO became quite popular field. 
+That being said, two of the most influential papers were 
+\cite{Fraundorfer2012} and \cite{Scaramuzza2011}. By publishing these tutorials, 
+the authors gave researchers and engineers a design recipe for building the 
+right VO system since there is no such a system that works under any conditions.
+One can also find a survey of VO types, approaches and challenges in 
+\cite{Aqel2016}.
+% Surveys
+% - Fraundorfer2012 - Visual odometry: Part I: The First 30 Years and Fundamentals
+% - Scaramuzza2011 - Visual Odometry Part II: Matching,Robustness, Optimization, and Applications
+% - Aqel2016 - Review of visual odometry: types, approaches, challenges, and applications
+
+% RGBD VO Implementations
+% - Kerl2013a - DVO - Robust Odometry Estimation for RGB-D Cameras
+% - Huanga2011 - FOVIS - Visual Odometry and Mapping for Autonomous Flight Using an RGB-D Camera
+% - Geiger2011 - LIBVISO2 - StereoScan: Dense 3d Reconstruction in Real-time
+% - Dryanovski2013 - CCNY - Fast Visual Odometry and Mapping from RGB-D Data
+% - Fang2015a - DEMO - Real-time Depth Enhanced Monocular Odometry
+% - Besl1992 - First ICP Paper - A method for registration of 3-D shapes
+% - Rusinkiewicz2001 - ICP - Efficient Variants of the ICP Algorithm
+
+% RGBD VO Comparisons
+% - Angladon2017 - An evaluation of real-time RGB-D visual odometry algorithms on mobile devices
+% - Fang2015a - Experimental evaluation of RGB-D visual odometry methods
 
 
 \section{Visual Odometry Pipeline} \label{sc_visual_odometry_pipeline}
@@ -1557,6 +1609,90 @@ demonstrated without an application in real SLAM or VO.
 
 \section{Related Works} \label{sc_error_aware_visual_odometry_related_works}
 
+To build an error-aware VO with a RGB-D camera, 
+one needs to be able to model noise characteristics of the sensor used in the 
+camera. The passive stereo camera and its error propagation application 
+for the uncertainty estimation are already well-studied problems 
+in \cite{Leo2011} and \cite{Miura1993AnUM}.
+% Uncertainty Model for Stereo Cam
+% - Leo2011 - Covariance Propagation for the Uncertainty Estimation in Stereo Vision
+% - Miura1993AnUM - An Uncertainty Model of Stereo Vision and its Application to Vision-Motion Planning of Robot
+However, in this thesis, I am interested in implementing  
+the spatial error propagation of the active stereo 
+for the VO application since there is, to my knowledge, little work being done.
+Beacuse our VO algorithm is a feature-based, 
+quantization, introducing a systematic error in the location of detected features, 
+of projected 2D points onto the image plane from 3D world using RGB camera is 
+needed to be known.
+This quantization error refers also as a pixel noise 
+\cite{RichardHartley2003}
+which is assumed to be maximum one-pixel and normally distributed in literature.
+To represent the pixel uncertainty of features in 3D world, 
+the conic ray model \cite{Sola2007a} is used by taking advantage of the pinhole model of 
+a RGB camera. 
+%However, this model can only cover uncertainties on image plane axes 
+%that are perpendicular to the camera coordinate system.
+% Conic Ray Model For Feature Pixel Uncertainty
+% - RichardHartley2003 - Multiple View Geometry
+% - Sola2007a - Towards Visual Localization, Mapping and Moving Objects Tracking by a Mobile Robot: A Geometric and Probabilistic Approach
+
+One needs to add depth uncertainty as well. For doing so, the depth camera 
+needs to be investigated. In \cite{Mallick2014b}, authors gathered existing 
+studies about the depth camera's noise of Kinect. Since Kinect has two version 
+that uses different technolog for measuring depth information, researchers 
+compared the performance of both versions in 
+\cite{Wasenmuller2017b} and \cite{Kinect2015}.
+Note that we use Kinect V1 which uses the Structured-Light technique.
+Another extensive paper is \cite{Khoshelham2012a}, 
+outlining both a theoretical and experimental background for 
+accuracy and resolution of the Kinect's depth camera based on the geometrical model.
+Conversely, \cite{Choo2014} conducts a comprehensive statistical analysis 
+to build a high-order polynomial mathematical model 
+for the standard deviation of depth error.
+% Kinect Depth Noise Model
+% - Mallick2014b - Characterizations of noise in Kinect depth images: A review
+% - Wasenmuller2017b - Comparison of kinect v1 and v2 depth images in terms of accuracy and precision
+% - Kinect2015 - Kinect Range Sensing: Structured-Light versus Time-of-Flight Kinect
+% - Khoshelham2012a - Accuracy and resolution of kinect depth data for indoor mapping applications
+% - Choo2014 - Statistical Analysis-Based Error Models for the Microsoft
+
+Even though the studies \cite{Park2012a}, \cite{Nguyen2012a} 
+that deals with Kinect model the uncertainty, they don't utilize them on a 
+VO system. In \cite{Park2012a}, the author contributed an important methodology on how 
+to model confidence ellipsoids of 3D point clouds measured by Kinect. In this paper, 
+standard deviation of the depth noise is assumed to constant; 
+in fact, it increases with distance from camera quadraticly. \cite{Nguyen2012a}, however, 
+addresses this issue by defining a quadratic function whose paratemeters are 
+identified with optimization process. They even evaluate performance of 
+their proposed model for pose estimation, which is quite relavent to our task, 
+but settings of their experimentation is unclear since they focus mostly on 
+3D reconstruction.
+For applications such as SLAM and 3D Reconstruction, 
+there are other papers \cite{Endres2014}, \cite{Konolige08}, \cite{Di2016a} that 
+incorporate uncertainty models to , but 
+they assume one-pixel Gaussian noise for features. Obviously, this 
+increases their localization accuracy. On the other hand, it still unclear 
+how one can propogate covariance of the detected features to the covariance of 
+the estimated pose in the presence of outliers of matched features. 
+The only exception that attempts to model the pixel 
+uncertainty of features is \cite{Belter2018a}. i
+They achieved it after implementing so-called 
+reserve-SLAM simulation tool to identify the pixel noise caused by feature 
+descriptor. The difference to 
+to this thesis, they found out that feature detectors that uses edge filters 
+causes error and thus they assign a confidence ellipsoid rotated along the edge.
+They too perform the optimization process in the presence of outliers. 
+In this thesis, I am interested in propogating the covariance of the matched features 
+to the covariance of the estimated camera pose in the presence of small outliers 
+after applying RANSAC.
+% Similar Implementations
+% - Park2012a - Spatial Uncertainty Model for Visual Features Using a Kinect™ Sensor
+% - Nguyen2012a - Modeling kinect sensor noise for improved 3D reconstruction and tracking
+% - Endres2014 - 3D Mapping with an RGB-D Camera
+% - Konolige08 - FrameSLAM : From Bundle Adjustment to Real-Time Visual Mapping
+% - Di2016a - RGB-D SLAM based on extended bundle adjustment with 2D and 3D information
+% - Belter2018a - Modeling spatial uncertainty of point features in feature-based RGB-D SLAM
+
 \section{Modeling Errors in VO} \label{sc_spatial_uncertainty}
 
 The main reason why conventional VO applications do not provide any uncertainty 
@@ -2025,7 +2161,7 @@ Here we define the back-projection function as follows:
 \mathbf{t}_{k,k+1}
 \end{equation}
 
-In traditional VO problem, the cost function of the optimization problem 
+In traditional VO problem, the residuals function of the optimization problem 
 is defined by the difference only between back-projected point clouds from $k+1^{th}$ and 
 point clouds from $k^{th}$. 
 
@@ -2049,12 +2185,12 @@ Let's include covarince matrices into the optimization problem:
   \argmin_{\underbrace{\mathbf{t}_{k,k+1}, \mathbf{q}_{k,k+1}}_{\mathbf{x}_{k,k+1}}}
   \sum_i|| \underbrace{\mathbf{X}_i^k - 
   f(\mathbf{t}_{k,k+1}, \mathbf{q}_{k,k+1}, \mathbf{X}_i^{k+1})}
-  _{\mathbf{C}_{b}(\mathbf{x}_{k,k+1})}
+  _{\mathbf{r}^{(i)}_{b}(\mathbf{x}_{k,k+1})}
 ||^2_{\mathbf{Q}_i^{k+1}} 
 \end{equation}
 
 
-However, this cost function builds on an assumption that 
+However, this residuals function builds on an assumption that 
 features from the $k^{th}$ frame are noise-free and 
 features from the $k+1^{th}$ frame are noisy. 
 Thus, we cloud only weight with $\mathbf{Q}_{1:m}^{k+1}$ as seen in the above equation.
@@ -2073,11 +2209,11 @@ into account during optimization.
 \end{figure}
 
 With being said, we can now extend the 
-cost function of our optimization problem by adding forward-projection.
-Let's define the auxilary cost function in the following form:
+residuals function of our optimization problem by adding forward-projection.
+Let's define the auxilary function in the following form:
 
 \begin{equation}
-  \mathbf{C_{f}}(\mathbf{x}_{k,k+1}) = 
+  \mathbf{r_{f}}^{(i)}(\mathbf{x}_{k,k+1}) = 
  \mathbf{X}_i^{k+1} - 
  f^{-1}(\mathbf{x}_{k,k+1}, \mathbf{X}_i^{k})
 \end{equation}
@@ -2096,31 +2232,26 @@ to each other along with corresponding covariance matrices:
   \mathbf{x^*}_{k,k+1} = 
   \argmin_{\mathbf{x}_{k,k+1}}
   \sum_i
-  \underbrace{ ||\mathbf{C_{b}}(\mathbf{x}_{k,k+1}) ||^2_{\mathbf{Q}_i^{k+1}}}
-  _{\mathbf{r_b}^{(i)}(\mathbf{x}_{k,k+1})} +
-  \underbrace{ || \mathbf{C_{f}}(\mathbf{x}_{k,k+1})||^2_{\mathbf{Q}_i^{k}}}
-    _{\mathbf{r_f}^{(i)}(\mathbf{x}_{k,k+1})}
-\end{equation}
+  ||\mathbf{r_b}^{(i)}(\mathbf{x}_{k,k+1})||^2_{\mathbf{Q}_i^{k+1}}+
+  ||\mathbf{r_f}^{(i)}(\mathbf{x}_{k,k+1}) ||^2_{\mathbf{Q}_i^{k}}
+\end{equation}\label{eq:residuals_w_back_and_forward}
 
-With the new cost function, we are able to 
+With the new auxilary function, we are able to 
 minimize the error on both forward- and back-projection.
 To take advantage of the sparsity of the matrix manipulation, we further 
-modify the cost function. Let's define, a single back-projection operation for a single 
+modify the residuals function. Let's define, a single back-projection operation for a single 
 feature match is a $\mathbf{r_b}^{(i)}$ single residual block function. 
 The same definition applies for the forward-projection with $\mathbf{r_f}^{(i)}$.
-Note that we only use $\frac{1}{2}$ in front of the cost function for cosmetics 
+Note that we only use $\frac{1}{2}$ in front of the residuals function for cosmetics 
 reasons as it does not effect convergence of the optimization process.
-Then, let's reorginize the cost function with the residual blocks:
-
-\begin{equation}
-  \begin{aligned}
-  \mathbf{x}^*_{k,k+1} = \argmin_{\mathbf{x}_{k,k+1}} &
-  %\mathbf{F(x)} & = 
-    \frac{1}{2} (||\mathbf{r_b}(\mathbf{x}_{k,k+1})||^2_{\mathbf{Q}^{k+1}} + ||\mathbf{r_f}(\mathbf{x}_{k,k+1})||^2_{\mathbf{Q}^{k}}) \\
-\end{aligned}
-\end{equation}
-
-We can even further reorginize it by stacking residual blocks by columns:
+%\begin{equation}
+%  \begin{aligned}
+%  \mathbf{x}^*_{k,k+1} = \argmin_{\mathbf{x}_{k,k+1}} &
+%  %\mathbf{F(x)} & = 
+%    \frac{1}{2} (||\mathbf{r_b}(\mathbf{x}_{k,k+1})||^2_{\mathbf{Q}^{k+1}} + ||\mathbf{r_f}(\mathbf{x}_{k,k+1})||^2_{\mathbf{Q}^{k}}) \\
+%\end{aligned}
+%\end{equation}
+Then, let's reorginize the residual blocks by stacking residual blocks by columns:
 
 \begin{equation}
 \begin{aligned}
@@ -2131,7 +2262,7 @@ We can even further reorginize it by stacking residual blocks by columns:
 \end{aligned}
 \end{equation}
 
-Above equation is the final cost function that we are going to minize. 
+Above equation is the final residuals function that we are going to minize. 
 The LM algorithm can be used for the optimization. I refer readers for 
 further details of the LM algorithm to appendices \ref{sc_least_squares}.
 However, we also need to extend regular least squares problem to 
@@ -2141,7 +2272,7 @@ Let's omit $(k,k+1)$ part and generalize the problem for convenience:
 
 \begin{equation}
   \begin{aligned}
-    \mathbf{x}^* & = \argmin_{\mathbf{x}} 
+    \mathbf{x}^* = \argmin_{\mathbf{x}} F(\mathbf{x}) = & = \argmin_{\mathbf{x}} 
   \frac{1}{2} ||\mathbf{r}(\mathbf{x})||^2_{\mathbf{Q}} \\
   & = \frac{1}{2} \mathbf{r}(\mathbf{x})^T \mathbf{Q_{uvz}}^{-1} \mathbf{r}(\mathbf{x}) \\
   & = \frac{1}{2} \mathbf{r}(\mathbf{x})^T \mathbf{\Omega}_{\mathbf{uvz}} \mathbf{r}(\mathbf{x})
@@ -2163,12 +2294,12 @@ as follows:
   F(\mathbf{x}+\Delta \mathbf{x}) \approx q_{LM}(\Delta \mathbf{x}) = \frac{1}{2}
 \mathbf{r_s}(\mathbf{x})^T\mathbf{r_s}(\mathbf{x}) + 
 \mathbf{r_s}(\mathbf{x})^T\mathbf{J_s}(\mathbf{x})\Delta \mathbf{x} + 
-\frac{1}{2} \Delta \mathbf{x}^T\mathbf{B_{LM}}\Delta \mathbf{x}
+\frac{1}{2} \Delta \mathbf{x}^T\mathbf{B_{LM,s}}(\mathbf{x})\Delta \mathbf{x}
 \end{equation}
 
 where $\mathbf{r_s}(\mathbf{x}) = \mathbf{L}^T\mathbf{r}(\mathbf{x})$ is the residuals blocks, 
 $\mathbf{J_s}(\mathbf{x}) = \mathbf{L}^T \mathbf{J}(\mathbf{x})$ is the Jacobion matrix and 
-$\mathbf{B_{LM}} = \mathbf{J_s}(\mathbf{x})^T \mathbf{J_s}(\mathbf{x}) + 
+$\mathbf{B_{LM,s}}(\mathbf{x}) = \mathbf{J_s}(\mathbf{x})^T \mathbf{J_s}(\mathbf{x}) + 
 \lambda \mathbf{I}$ is the approximated Hessian 
 matrix.
 We can get the $\mathbf{L}$ matrix by the Cholesky factorization of
@@ -2181,11 +2312,52 @@ and the rotation results are sufficient.
   \mathbf{x}^{n+1} = \mathbf{x}^{n} + \Delta \mathbf{x}
 \end{equation}
 
-\subsubsection{Least Squares on Manifold}
+\subsubsection{Least Squares on a Manifold}
+
+Our ultimate goal in VO is to find the relative pose of a camera from 
+$k^{th}$ frame to $k+1^{th}$ frame. 
+We define a relative pose as a state vector $\mathbf{x}_{k,k+1}$. 
+Through LM algorithm, we hope to 
+find a optimal solution $\mathbf{x^*}_{k,k+1}$ where the residuals are minimum.
+Remember that we iterately descent to the minimum by performing an 
+addition operator $\Delta \mathbf{x}$ to each parameters in the state vector. 
+However, one important point to note that our state vector is comprised of 
+translation $\mathbf{t}_{k,k+1}$ and rotation $\mathbf{q}_{k,k+1}$. 
+
+\begin{equation}
+  \mathbf{x}^n_{k,k+1} = \begin{bmatrix} \mathbf{t}^n_{k,k+1} \\ \mathbf{q}^n_{k,k+1} \end{bmatrix} \in \R^7
+  \text{ ,   } 
+  \Delta \mathbf{x} = \begin{bmatrix} \Delta \mathbf{t} \\ \Delta \mathbf{q} \end{bmatrix} \in \R^6
+\end{equation}
+
+One can perform a regular $+$ addition operation with translation 
+to travel on the objective function $F(\mathbf{x}_{k,k+1})$ since 
+it is in Euclidean space $\R^3$ where one can add vectors to each other. 
+Conversely, this does not apply for rotation 
+since it is $SO(3)$ lie group in which the elements $\phi \in \R^3$ of rotation 
+are in the tangent space $\mathcal{R} \in SO(3)$.
+A solution to this issue would be optimizing on a manifold.
+To do so, we introduce \textit{box-plus} operator
+$\boxplus : \mathcal{S} x \R^n \rightarrow \mathcal{S}$ where $\mathcal{S}$ 
+is an arbitrary manifold and $\R^n$ is a N-dimensional real value vector space. 
+The goal is to perform small changes that are mapped to a local neighborhood in 
+its own state space:
 
 \begin{equation}
   \mathbf{x}^{n+1} = \mathbf{x}^{n} \boxplus \Delta \mathbf{x}
 \end{equation}
+
+\begin{figure}[H]
+	\centering
+  \includegraphics[width=0.5\linewidth,natwidth=640,natheight=640]
+  {fig/ref_imgs/sphere_manifold.png}
+  \caption{Mapping a local neighborhood in the state space}
+	\label{fig:conic_ray_3d_error_model}
+\end{figure}
+
+
+For translating the camera with a small euclidean vector, 
+one can perform regular addition since $\R^3 x \R^3 \rightarrow \R^3$:
 
 \begin{equation}
   \mathbf{t}^n \boxplus \Delta \mathbf{t} = 
@@ -2194,17 +2366,17 @@ and the rotation results are sufficient.
   \begin{bmatrix} \Delta x \\ \Delta y \\ \Delta z \end{bmatrix}
 \end{equation}
 
+NOTE:CHANGE $\R x \R$ to $\R\times \R$
+
+For rotating, however; the box-plus operation refers to 
+$SO(3) \times \R^3 \rightarrow SO(3)$ and one can rotate in its local space 
+with a small unit quaternion as follows:
+
 \begin{equation}
   \mathbf{q}^n \boxplus \Delta \mathbf{q} = 
   \mathbf{q}^n \otimes \Delta \mathbf{q} = 
   \mathbf{q}^n \otimes 
   \begin{bmatrix} \sqrt{1-||\Delta \phi||^2} \\ \Delta \phi \end{bmatrix}
-\end{equation}
-
-\begin{equation}
-  \mathbf{x}^n = \begin{bmatrix} \mathbf{t}^n \\ \mathbf{q}^n \end{bmatrix} \in \R^7
-  \text{ ,   } 
-  \Delta \mathbf{x} = \begin{bmatrix} \Delta \mathbf{t} \\ \Delta \mathbf{q} \end{bmatrix} \in \R^6
 \end{equation}
 
 %\begin{equation}
@@ -2215,49 +2387,82 @@ and the rotation results are sufficient.
 %  \end{aligned}
 %\end{equation}
 
+How does our new state vector with a manifold effect the LM algoritm? Remember 
+that we form $q_{LM}(\Delta \mathbf{x})$ 
+quadratic functions for each iteration around $\mathbf{x}^n$ and 
+$\mathbf{J_s}$ Jacobian and $\mathbf{B_{LM,s}}$ approximated Hessian matrix 
+are calculated by taking derivative of residuals function with respect to 
+state vector $\mathbf{x}_{k,k+1}$. Since we modify our state vector representation 
+and its corresponding updating operation, we need to modify the way we calculate 
+derivatives. Here is the quadratic function with modified elements:
 
 \begin{equation}
   F(\mathbf{x}^n \boxplus \Delta \mathbf{x}) \approx 
-  q_{LM}(\Delta \mathbf{x}) = \frac{1}{2}
+  q_{LM} (\Delta \mathbf{x}) = 
+  \frac{1}{2}
 \mathbf{r_s}(\mathbf{x}^n)^T\mathbf{r_s}(\mathbf{x}^n) + 
 \mathbf{r_s}(\mathbf{x}^n)^T\mathbf{J'_s}(\mathbf{x}^n)\Delta \mathbf{x} + 
-\frac{1}{2} \Delta \mathbf{x}^T\mathbf{B'_{LM}}\Delta \mathbf{x}
+\frac{1}{2} \Delta \mathbf{x}^T\mathbf{B'_{LM,s}}(\mathbf{x}^n)\Delta \mathbf{x}
 \end{equation}
 
+One can apply chain rule to form the new Jacobian matrix:
+
 \begin{equation}
-  \mathbf{J'_s} = 
+  \begin{aligned}
+  \mathbf{J'_s}(\mathbf{x}^n) = 
   \mathbf{L} \frac{\partial \mathbf{r_s}(\mathbf{x}^n)}
-  {\partial \Delta \mathbf{x}} \bigg|_{\mathbf{x}^n} = 
+  {\partial \Delta \mathbf{x}} \bigg|_{\mathbf{x}^n} & = 
   \mathbf{L} \frac{\partial \mathbf{r_s}(\mathbf{x}^n)}
 {\partial (\mathbf{x}^n \boxplus \Delta \mathbf{x})} \bigg|_{\mathbf{x}^n}
   \frac{\partial (\mathbf{x}^n \boxplus \Delta \mathbf{x})}
-  {\partial \Delta \mathbf{x}} \bigg|_{\mathbf{x}^n,\Delta \mathbf{x}=0} = 
-  \mathbf{L}\mathbf{J}(\mathbf{x}^n) \mathbf{M}(\mathbf{\mathbf{x}^n 
-  \boxplus \Delta \mathbf{x}})
-\end{equation}
+  {\partial \Delta \mathbf{x}} \bigg|_{\mathbf{x}^n,\Delta \mathbf{x}=0} \\
+  & = 
+  \mathbf{L}\mathbf{J}(\mathbf{x}^n) 
+  \mathbf{M}(\mathbf{\mathbf{x}^n \boxplus \Delta \mathbf{x}})
+  = 
+  \mathbf{L}\mathbf{J'}(\mathbf{x}^n)
+  = 
+  \mathbf{J'_s}(\mathbf{x}^n)
+\end{aligned}
+\end{equation}\label{eq:new_jacobian_chain_rule}
+
+where $\mathbf{L}$ is the matrix from the Cholesky factorization of information matrix, 
+$\mathbf{J}(\mathbf{x}^n)$ is the older Jacobian matrix with the respect to 
+older state vector where we assumed that all elements are in Euclidean space, 
+$\mathbf{M}(\mathbf{\mathbf{x}^n \boxplus \Delta \mathbf{x}})$ is the 
+matrix that we form by taking partial derivative with respect to new state vector.
+Let's investigate further by breaking the new Jacobian matrix into smaller matrices 
+to understand better. For weighting the optimization process, 
+we assign weights with the corresponding cofindence ellipsoid of matched features 
+from both consecutive frames by means of back- and forward-projection.
 
 \begin{equation}
   \mathbf{L} 
   =
   \begin{bmatrix}
-    \mathbf{L_b}^{(1)} \\
-    \mathbf{L_f}^{(1)} \\
+    \mathbf{L}^{(k,1)} \\
+    \mathbf{L}^{(k+1,1)} \\
     \vdots \\
-    \mathbf{L_b}^{(m)} \\
-    \mathbf{L_f}^{(m)}
+    \mathbf{L}^{(k,m)} \\
+    \mathbf{L}^{(k+1,m)}
   \end{bmatrix}
 \end{equation}
 
-where $\mathbf{L_b}^{(i)} \text{, } \mathbf{L_f}^{(i)} \in \R^{3x3}$ 
+where $\mathbf{L}^{(k,i)} \text{, } \mathbf{L}^{(k+1,i)} \in \R^{3x3}$ are 
+calculated from 
+$\mathbf{\Omega_{uvz}}^{(k,i)} =  {\mathbf{Q_{uvz}}^{(k,i)}}^{-1}$ 
+by factorization $\mathbf{\Omega = LL^T}$.
+For each matched feature, 
+the calculation of older Jacobian with back- and forward-projection is the following:
 
 \begin{equation}
   \mathbf{J}(\mathbf{x}^n) = \frac{\partial 
   \mathbf{r}(\mathbf{x}^n)}{\partial \mathbf{x}^n } \bigg|_{\mathbf{x}^n}
   = 
   \begin{bmatrix}
-    \horzbar & \nabla r_1(\mathbf{x}^n)^T & \horzbar \\
+    \horzbar & \nabla \mathbf{r}^{(1)}(\mathbf{x}^n)^T & \horzbar \\
      & \vdots & \\
-     \horzbar & \nabla r_m(\mathbf{x}^n)^T & \horzbar 
+     \horzbar & \nabla \mathbf{r}^{(m)}(\mathbf{x}^n)^T & \horzbar 
   \end{bmatrix}
   =
   \begin{bmatrix}
@@ -2270,7 +2475,9 @@ where $\mathbf{L_b}^{(i)} \text{, } \mathbf{L_f}^{(i)} \in \R^{3x3}$
 \end{equation}
 
 where $\mathbf{J_b}^{(i)}(\mathbf{x}^n) \text{, } 
-\mathbf{J_f}^{(i)}(\mathbf{x}^n) \in \R^{3x7}$ 
+\mathbf{J_f}^{(i)}(\mathbf{x}^n) \in \R^{3x7}$. Notice that in older state 
+vector, we have 3 elements from translation and 4 elements from rotation of the 
+quaternion. Also, here is the second partial derivative of the chain rule:
 
 \begin{equation}
   \mathbf{M} (\mathbf{x}^n\boxplus \Delta \mathbf{x})
@@ -2285,7 +2492,13 @@ where $\mathbf{J_b}^{(i)}(\mathbf{x}^n) \text{, }
 \end{equation}
 
 where $\mathbf{M_b}^{(i)}(\mathbf{x}^n\boxplus \Delta \mathbf{x}) \text{, } 
-\mathbf{M_f}^{(i)}(\mathbf{x}^n\boxplus \Delta \mathbf{x}) \in \R^{7x6}$ 
+\mathbf{M_f}^{(i)}(\mathbf{x}^n\boxplus \Delta \mathbf{x}) \in \R^{7x6}$.
+Whereas, when taking partial derivative with the respect to 
+new state vector that has same 3 elements from translation and 3 elements from 
+rotation as we choose the quaternion to be a unit.
+To take the derivative with respect to new state vector, we need to consider 
+Euclidean space for translation and tangent space for rotation. For translation part, 
+we don't have any further effect on the new Jacobian since we stay in the same space:
 
 \begin{equation}
   \begin{aligned}
@@ -2303,6 +2516,9 @@ where $\mathbf{M_b}^{(i)}(\mathbf{x}^n\boxplus \Delta \mathbf{x}) \text{, }
   \end{aligned}
 \end{equation}
 
+For rotation part, however; we apply chain rule one more time to take its derivative:
+
+TALK ABOUT LOCAL PARAMETERIZATION!
 
 \begin{equation}
   \begin{aligned}
@@ -2348,6 +2564,11 @@ where $\mathbf{M_b}^{(i)}(\mathbf{x}^n\boxplus \Delta \mathbf{x}) \text{, }
   \end{aligned}
 \end{equation}
 
+Note that while rotating $\mathbf{q}^n$ with $\mathbf{\Delta \mathbf{q}}$, 
+we utilize $\mathbf{Q}^{+}$ matrix multiplication of a quaternion rather Hamilton product 
+for convenience.
+If we combine both parts into a single matrix, it will be formed as follows:
+
 \begin{equation}
 \mathbf{M}_{\mathbf{b}}^{(i)}(\mathbf{x}^n \boxplus \Delta \mathbf{x}) = 
     \frac{\partial (\mathbf{x}^n \boxplus \Delta \mathbf{x})}
@@ -2359,6 +2580,25 @@ where $\mathbf{M_b}^{(i)}(\mathbf{x}^n\boxplus \Delta \mathbf{x}) \text{, }
   \in \R^{7x6}
 \end{equation}
 
+As explained, we now have the new Jacobian matrix based on a manifold fashion.
+Thus, we can solve the following linear system of equation as for the LM algorithm
+to calculate step length:
+
+\begin{equation}
+  (\mathbf{J'_s}(\mathbf{x}_{k,k+1}^n)^T\mathbf{J'_s}(\mathbf{x}_{k,k+1}^n) 
+  + \lambda^n \mathbf{I})
+  \Delta \mathbf{x} =  
+  -\mathbf{J'_s}(\mathbf{x}_{k,k+1}^n)\mathbf{r_s}(\mathbf{x}_{k,k+1}^n)
+\end{equation}
+
+Then, we can add corresponding small changes to the new state vector:
+
+\begin{equation}
+  \mathbf{x}^{n+1} = \mathbf{x}^{n} \boxplus \Delta \mathbf{x}
+\end{equation}
+
+After this point, we iterate through an optimal solution with the LM algorithm 
+as discussed in appendices \ref{sc_least_squares}.
 
 \section{Covariance of the Estimated Pose} \label{sc_covariance_estim}
 
@@ -2378,29 +2618,56 @@ estimate feature uncertainties.
 	\label{fig:min_euclidean_error}
 \end{figure}
 
+Calculating covarinace matrix for the estimated state vector parameters is fairly 
+straightforward if the optimization for the relative camera pose is performed 
+as described in previous section. We can simply utilize the 
+\textit{error propagation law} 
+(I refer readers for to appendices \ref{sc_error_prop_law} for further details 
+of it). 
+For doing so, we require the Jacobian matrix 
+at the optimal solution and corresponding covariance  
+matrices for each matched feature. Then, we can propagate them to get the 
+covariance for the estimated parameters by applying the following equation:
 
 \begin{equation}
-  \mathbf{Q_{\mathbf{t},\mathbf{q}}^k} = 2^2 \cdot \mathbf{J(x^*)^T Q_{uvz}^k J(x^*)}
-\end{equation}
+\mathbf{Q_{\mathbf{t},\mathbf{q}}}^{k,k+1} = (\frac{1}{2})^2 \cdot \mathbf{J'}(\mathbf{x^*}_{k,k+1})^T \mathbf{Q_{uvz}}^k \mathbf{J'}(\mathbf{x^*}_{k,k+1})
+\end{equation}\label{eq:error_prop_cam_pose}
 
 where 
+$\mathbf{J'}(\mathbf{x^*}_{k,k+1}) \in \R^{6mx6}$ 
+is the Jacobian of extended residuals function with back-,forward-projection and 
+manifold in \ref{eq:new_jacobian_chain_rule},
+
 \begin{equation}
 \begin{aligned}
-& \mathbf{Q_{uvz}^k} = \begin{bmatrix} 
+  & \mathbf{Q_{uvz}}^{k,k+1} = \begin{bmatrix} 
   \mathbf{Q_{uvz}}^{(k,1)} & \dots & & &\mathbf{0} \\
-  \mathbf{0} & \mathbf{Q_{uvz}}^{(k,1)} & &\dots & \vdots  \\
+  \mathbf{0} & \mathbf{Q_{uvz}}^{(k+1,1)} & &\dots & \vdots  \\
    \vdots & & \vdots &  &\\
    &  & & \mathbf{Q_{uvz}}^{(k,m)} & \mathbf{0} \\
-   \mathbf{0} &  & & & \mathbf{Q_{uvz}}^{(k,m)}
+   \mathbf{0} &  & & & \mathbf{Q_{uvz}}^{(k+1,m)}
   \end{bmatrix} \in \R^{6mx6m}
-  \\
+\end{aligned}
+\end{equation}
+
+is the covariance matrix that comprised of all covarince matrices for all 
+matched features from $k^{th}$ and $k+1^{th}$ consecutive frames,
+
+\begin{equation}
+\begin{aligned}
   & \mathbf{Q_{uvz}}^{(k,i)} = \begin{bmatrix} 
     \sigma_u^2 & 0 & 0 \\ 
     0 & \sigma_v^2 & 0 \\
     0 & 0 & (\sigma_z^{(i)}(z, \theta))^2
   \end{bmatrix} \in \R^{3x3}
-  \\
-& \mathbf{Q_{\mathbf{t},\mathbf{q}}^k}  = \begin{bmatrix} 
+\end{aligned}
+\end{equation}
+
+is the covarince matrix for the $i^{th}$ matched feature from $k^{th}$ frame,
+
+\begin{equation}
+\begin{aligned}
+  & \mathbf{Q_{\mathbf{t},\mathbf{q}}}^{k,k+1}  = \begin{bmatrix} 
   \sigma_{t_x}^2 & 0 & 0 & 0 & 0 & 0 \\ 
   0 & \sigma_{t_y}^2 & 0 & 0 & 0 & 0 \\
   0 & 0 & \sigma_{t_z}^2 & 0 & 0 & 0 \\
@@ -2408,12 +2675,22 @@ where
   0 & 0 & 0 & 0 & \sigma_{q_y}^2 & 0 \\
   0 & 0 & 0 & 0 & 0 & \sigma_{q_z}^2
   \end{bmatrix} \in \R^{6x6}
-  \\
-  & \mathbf{J(x^*)} \in \R^{6mx6} = \text{Jacobian of residuals function}
-  \\
-&  m  = \text{the number of measured feature matches}
 \end{aligned}
 \end{equation}
+
+is the resulting covariance matrix for the estimated state vector paramaters 
+(in other other words, it is the uncertainty of the estiamted pose of the camera)
+for $k^{th}$ and $k+1^{th}$ consecutive frames, 
+$m$ is the the number of measured feature matches.
+Notice $(\frac{1}{2})^2$ in front of \ref{eq:error_prop_cam_pose}. This multiplication 
+corresponds to the back- and forward-projection of residuals function. 
+To be more clear, remember that 
+we represented a relative camera motion with both back and forward 
+transformation in order to take errors on both $k^{th}$ and $k+1^{th}$ 
+consecutive images into account. This resulted in having two residuals 
+$\mathbf{r_b}^{(i)}$ and $\mathbf{r_f}^{(i)}$ 
+for one feature match (see notation \ref{eq:residuals_w_back_and_forward}). 
+Therefore, we divide by 2. The reason we square it is beacuse of the covariance.
 
 % ***************************CP5-EVALUATION***************************
 \chapter{Evaluation} \label{cp_evaluation}
@@ -2429,12 +2706,24 @@ where
 % ***************************CP7-EVALUATION***************************
 \chapter{Bibliography} \label{cp_bib}
 
+%deleting auto-generated reference title
+
+% throws error
+%\renewcommand\refname{\vskip -1cm} 
+
+\nocite{*}
+
+\bibliographystyle{alpha}
+\bibliography{/home/bolatu/Documents/mendeley_bib/Master_Thesis_Bib}
+
+
 
 % ***************************CP7-EVALUATION***************************
 \chapter{Appendices} \label{cp_appendices}
 
 \section{Cholesky Factorization}\label{sc_cholesky}
 
+\section{Quaternions}\label{sc_quaternions}
 
 \section{Rigid-Body Transformations} \label{sc_rigid_body_transformations}
 
@@ -2984,7 +3273,7 @@ That being said, we can now summarize the algorithm into five steps:
 
 
 
-\section{Error Propagation Law}
+\section{Error Propagation Law} \label{sc_error_prop_law}
 
 \begin{figure}[H]
 	\centering
