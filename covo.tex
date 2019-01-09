@@ -120,14 +120,14 @@ Professorship of Process Automation
 % ***************************ABSTRACT***************************
 % Soft intro to the problem
 % talk about robustness
-Robutness of a robot 
-can be defined as an ability to operate under uncertainty 
-without causing a downtime. There are well-designed robots whose task 
+  \textit{Robutness} of a robot 
+  can be defined as an ability to operate under \textit{uncertainty} 
+without the occurrence of a downtime. There are well-designed robots whose task 
 is to solve defined problem without moving from its assembled position. 
-They are able to operate safely since uncertainty of active components and 
-of its environment are modeled. 
+They are able to operate safely as uncertainty of operational components and 
+of its controlled environment are modeled with great accuracy and precision. 
 However, once we build robots that move around and interact with real world, 
-number of unforseen events increse. In such scenarios, robustness is crucial. 
+number of unforseen events increse drastically. In such scenarios, robustness is crucial. 
 The way we increase robutness is to have intellegent agents and 
 accurate uncertainty models of their measurements. That being said, 
 this work focuses on the latter and 
@@ -139,23 +139,24 @@ in the context of Visual Odometry.
 %one of which is 
 %\cite{Huanga2011} 
 %that produces fast relative ego-motion estimation. 
-Due to the drift occuring in relative pose estimations over time, 
-we need to combine VO with other dead-reckoning based and 
+They are usually combined with other dead-reckoning based and 
 landmark based measurements 
-in typical filter-based or graph-based SLAM applications.
-To do so, we must have uncertainty 
-of the pose estimation in the form of covariance matrix. 
+in typical filter-based or graph-based SLAM applications 
+beacuse of the drift occuring in relative pose estimations over time.
+To do so, one should have reliable uncertainty model 
+of the sensors being measured so that 
+uncertainty of pose estimation can be estimated in the form of covariance matrix. 
 To my knowledge, there 
 are no open source VO softwares that provides such covarince matrices 
 for its pose estimations. Thus, the covariance matrix from VO are taken as 
 identity matrix. This does not offer 
 any meaningful information as to whether the estimation should have 
-certain importance comparing to other sensor measurment or not 
+certain importance comparing to other sensor measurment 
 during filtering or optimization process.
 On the other hand, there are papers that model the uncertainty of RGB-D cameras 
-such as Kinect, but they applied it on applications that are outside of VO. 
+such as Kinect, but they applied their models on applications that are outside of VO. 
 Main goal of this work is to build such a VO system that it provides not only 
-pose estimations but also covariance matrices of estimated poses.
+relative pose estimations but also covariance matrices of its estimated poses.
 
 
 \end{abstract}
@@ -179,7 +180,7 @@ pose estimations but also covariance matrices of estimated poses.
 
 % General intro to the problem
 For a mobile robot to act autonomously in real world, the state of the robot 
-must be known accurately. We define this physical state by its pose, meaning 
+must be known accurately. We define this physical state by its \textit{pose}, meaning 
 its position and orientation. The current pose of the robot can be measured 
 by two ways; i.e., \textit{dead-reckoning} that measures \textit{relative} motion and 
 \textit{landmarks} that measures \textit{absolute} position which are known a priori. 
@@ -202,44 +203,50 @@ terms of robustness, accuracy and real-time operation.
 As being part of dead-reckoning systems, 
 VO provides the \textit{ego-motion} estimation of a robot by 
 exploiting only one or multiple cameras. The working principle of VO relies on 
-the idea that series of images that are captured by the camera in 3D environment 
-might tell us about relative pose relationship between images as 
-certain objects' shapes or intensity of the pixel change during motion of the camera.
-Therefore, for VO system to work accurately, the environment should be illuminated 
+the idea that 
+if we had two subsequent images captured by the camera in 3D space might tell 
+us about change in the camera's pose from one image to another as 
+changing patterns of objects' shapes or of pixels' intentisty occurs during motion.
+This change in the pose refers as \textit{relative pose}.
+With this in mind, for VO system to work accurately, the environment should be illuminated 
 properly, static and texture-rich.
 However, in real world, we deal with shadowed, dynamic and texture-poor 
-environments. Eventually, drifts will occur in VO. The good design of 
-a mobile robot should contain sufficient amount sensors along with 
-known bias and calibration parameters. 
+environments. Eventually, drifts will occur in VO. Hence, the good design of 
+a mobile robot should contain sufficient amount sensors along with their 
+known biases and calibration parameters. 
 
 % RGB-D Camera and VO?
-Dead-reckoning sensors, except camera, are mostly built around 
+Most dead-reckoning sensors, except camera, are mostly built around 
 one specific purpose, which is to measure motion, and
-outputs information that do not need further manipulations. 
-Whereas, camera maps 3D environment onto 2D plane and the output 
-is quantized pixels according to intensity of the illumination.
-With the measured pixels, one can build many applications besides robotics 
-vision. That is the reason 
-we now have a huge research field for computer vision applications. When 
-designing a VO system, one has to choose the suitable algorithm and camera type based 
+outputs information that do not need further manipulations (except post-filtering). 
+Whereas, camera offers rich data by mapping 3D space onto 2D plane and the output data 
+are quantized pixels according to intensity of the illumination.
+This makes camera sensor a multi-purpose device and 
+one can build various kinds of computer vision applications. 
+Considering the potential, 
+computer vision researchers 
+proposed methods that are tailored to different type of environments.
+When designing a VO system, 
+one should select the suitable algorithm and camera type based 
 on the operating enviroment. 
 % Why used? Advantages?
 As to camera types, RGB-D cameras based on 
 structured light (e.g., PrimeSense Carmine, Microsoft Kinect and Asus Xtion) 
-are active stereo cameras. 
-They gave a rise to great 3D vision applications including VO. Even though 
+that are categorized as active stereo cameras are especially intriguing.
+They gave a rise to superb 3D vision applications including VO. Even though 
 it has certain limitations; i.e., the depth accuracy being grown with distance 
-to the object or the properties of the object material, it offers a cheap 
-3D data for indoor applications. As to algorithms, there are now many 
+to the object or the properties of the projected objects' material, it offers a cheap 
+3D data for maninly indoor applications. As to algorithms, there are now many 
 open source VO softwares; e.g.,
 LIBVISO2 \cite{Geiger2011} and FOVIS \cite{Huanga2011}, that provide 
 relative pose estimation of a stereo camera. 
-The drawback of those early VO algorithms is that they do not estimate 
-how uncertain the predicted pose is. Hence, VO systems used in SLAM 
-are titly-coupled or are given less importance when 
+The drawback of those early VO algorithms are that they do not provide information  
+about how uncertain the relative predicted pose is, namely \textit{covariance matrix}. 
+That is why VO systems used in SLAM 
+are either titly-coupled or given less importance when 
 combining with other sensors. For the titly-coupled versions, this 
-introduces a huge disadvantage regarding robutness of the system since 
-we don't have information about uncertainty.
+introduces a disadvantage regarding robutness of the system since 
+we don't have information about uncertainty of pose estimations.
 
 % Outline the thesis?
 Outline the thesis?
