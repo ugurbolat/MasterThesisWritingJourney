@@ -15,7 +15,6 @@
 \usepackage{hyperref}
 \usepackage{siunitx}
 \usepackage{graphicx}
-\usepackage{subcaption}
 \usepackage{mwe}
 \usepackage{tabularx}
 \usepackage{cite}
@@ -24,7 +23,8 @@
 \usepackage{algorithm}
 \usepackage[noend]{algpseudocode}
 \usepackage{array}
-%\usepackage[backend=bibtex]{biblatex}
+%\usepackage{subfig}
+
 
 
 % ***************************CONFIGS***************************
@@ -125,23 +125,20 @@ Professorship of Process Automation
 without the occurrence of a downtime. There are well-designed robots whose task 
 is to solve defined problem without moving from its assembled position. 
 They are able to operate safely as uncertainty of operational components and 
-of its controlled environment are modeled with great accuracy and precision. 
+of its controlled environment are modeled with substantial accuracy and precision. 
 However, once we build robots that move around and interact with real world, 
 number of unforseen events increse drastically. In such scenarios, robustness is crucial. 
 The way we increase robutness is to have intellegent agents and 
-accurate uncertainty models of their measurements. That being said, 
+accurate uncertainty models of their sensors and estimations. That being said, 
 this work focuses on the latter and 
 aims to investigate uncertainty of RGB-D camera sensor 
 in the context of Visual Odometry.
 
-% What is still missing? 
-  So far, reseachers and engineers have developed plenty of RGB-D camera based VO applications.
-%one of which is 
-%\cite{Huanga2011} 
-%that produces fast relative ego-motion estimation. 
-They are usually combined with other dead-reckoning based and 
-landmark based measurements 
-in typical filter-based or graph-based SLAM applications 
+So far, reseachers and engineers have developed 
+many RGB-D camera based VO applications.
+In filter-based or graph-based SLAM applications, 
+they are usually combined with other dead-reckoning and 
+landmark measurements 
 beacuse of the drift occuring in relative pose estimations over time.
 To do so, one should have reliable uncertainty model 
 of the sensors being measured so that 
@@ -151,12 +148,15 @@ are no open source VO softwares that provides such covarince matrices
 for its pose estimations. Thus, the covariance matrix from VO are taken as 
 identity matrix. This does not offer 
 any meaningful information as to whether the estimation should have 
-certain importance comparing to other sensor measurment 
+certain importance comparing to other sensor measurments 
 during filtering or optimization process.
 On the other hand, there are papers that model the uncertainty of RGB-D cameras 
 such as Kinect, but they applied their models on applications that are outside of VO. 
-Main goal of this work is to build such a VO system that it provides not only 
-relative pose estimations but also covariance matrices of its estimated poses.
+The main goal of this work is to build such a VO system that it provides not only 
+relative pose estimations but also a covariance matrix of its estimated poses.
+We estimate the covarince matrix of the predicted pose 
+by propogating metric uncertainty of 3D point features
+that are modeled with the sensor characteristics of a RGB-D camera.
 
 
 \end{abstract}
@@ -194,9 +194,10 @@ Localization and Mapping (SLAM).
 To solve SLAM problems, robots are equiped 
 with various kind of both dead-reckoning systems; e.g., IMU, wheel odometry and 
 visual odometry and landmark measurements; e.g., GPS and RF-based positioning systems.
-SLAM problem has almost 30 years old history \cite{Moravec1980} and vision 
-systems always had a great importance. Even though SLAM is considered 
-to be solved \cite{Frese2010}, there are still open research questions in 
+SLAM problem has almost 30 years history \cite{Moravec1980} and vision 
+systems always had a great importance. Even though 
+some researchers \cite{Frese2010} consider SLAM
+to be solved, there are still open research questions in 
 terms of robustness, accuracy and real-time operation.
 
 % What is VO?
@@ -204,8 +205,8 @@ As being part of dead-reckoning systems,
 VO provides the \textit{ego-motion} estimation of a robot by 
 exploiting only one or multiple cameras. The working principle of VO relies on 
 the idea that 
-if we had two subsequent images captured by the camera in 3D space might tell 
-us about change in the camera's pose from one image to another as 
+if we had two subsequent images captured by the camera in 3D space would tell 
+us about a change in the camera's pose from one image to another as 
 changing patterns of objects' shapes or of pixels' intentisty occurs during motion.
 This change in the pose refers as \textit{relative pose}.
 With this in mind, for VO system to work accurately, the environment should be illuminated 
@@ -216,36 +217,36 @@ a mobile robot should contain sufficient amount sensors along with their
 known biases and calibration parameters. 
 
 % RGB-D Camera and VO?
-Most dead-reckoning sensors, except camera, are mostly built around 
-one specific purpose, which is to measure motion, and
-outputs information that do not need further manipulations (except post-filtering). 
+As opposed to camera, most dead-reckoning sensors are mostly built around 
+one specific purpose and
+output information that do not need further manipulations (except post-filtering). 
 Whereas, camera offers rich data by mapping 3D space onto 2D plane and the output data 
 are quantized pixels according to intensity of the illumination.
 This makes camera sensor a multi-purpose device and 
 one can build various kinds of computer vision applications. 
 Considering the potential, 
 computer vision researchers 
-proposed methods that are tailored to different type of environments.
-When designing a VO system, 
+proposed VO methods that are tailored to different type of environments.
+When designing a VO pipeline, 
 one should select the suitable algorithm and camera type based 
 on the operating enviroment. 
 % Why used? Advantages?
 As to camera types, RGB-D cameras based on 
 structured light (e.g., PrimeSense Carmine, Microsoft Kinect and Asus Xtion) 
 that are categorized as active stereo cameras are especially intriguing.
-They gave a rise to superb 3D vision applications including VO. Even though 
+They gave a rise to many 3D vision applications including VO. Even though 
 it has certain limitations; i.e., the depth accuracy being grown with distance 
 to the object or the properties of the projected objects' material, it offers a cheap 
-3D data for maninly indoor applications. As to algorithms, there are now many 
+3D data, especially for indoor applications. As to algorithms, there are now many 
 open source VO softwares; e.g.,
 LIBVISO2 \cite{Geiger2011} and FOVIS \cite{Huanga2011}, that provide 
 relative pose estimation of a stereo camera. 
-The drawback of those early VO algorithms are that they do not provide information  
+The drawback of those early VO systems are that they do not provide any information  
 about how uncertain the relative predicted pose is, namely \textit{covariance matrix}. 
 That is why VO systems used in SLAM 
-are either titly-coupled or given less importance when 
-combining with other sensors. For the titly-coupled versions, this 
-introduces a disadvantage regarding robutness of the system since 
+are either titly-coupled with other sensors like IMU or given less importance when 
+combining with other sensors. 
+This introduces a disadvantage regarding robutness of the system since 
 we don't have information about uncertainty of pose estimations.
 
 % Outline the thesis?
@@ -1806,7 +1807,7 @@ that deals with uncertainty of RGB-D sensors, they only intend to
 improve accuracy of the pose estimation, but not to provide any uncertainty 
 information about their estimation. Therefore, my aim, in this thesis, is to build 
 a feature-based RGB-D Visual Odometry system that outputs pose estimations 
-along with their uncertainties.
+along with their metric uncertainties.
 As a result, VO system can be treated as a low-level 
 relative motion sensor in a sensor fusion application.
 
@@ -1898,6 +1899,9 @@ after applying RANSAC.
 % - Konolige08 - FrameSLAM : From Bundle Adjustment to Real-Time Visual Mapping
 % - Di2016a - RGB-D SLAM based on extended bundle adjustment with 2D and 3D information
 % - Belter2018a - Modeling spatial uncertainty of point features in feature-based RGB-D SLAM
+
+
+\section{Algorithm Description}
 
 \section{Modeling Errors in VO} \label{sc_spatial_uncertainty}
 
@@ -2918,8 +2922,25 @@ Therefore, we divide by 2. The reason we square it is beacuse of the covariance.
 \subsection{Estimation of Relative Pose and its Covariance}
 
 % Translation RPE with 3 sigma 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth,natwidth=640,natheight=640]
+  {fig/eva_graphs/synt_trans_rpe_3sigma.pdf}
+  \caption{asda}
+	\label{fig:2d_local_coords_in_world_coords}
+\end{figure}
+
 
 % Rotation RPE with 3 sigma 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth,natwidth=640,natheight=640]
+  {fig/eva_graphs/synt_rot_rpe_3sigma.pdf}
+  \caption{asda}
+	\label{fig:2d_local_coords_in_world_coords}
+\end{figure}
+
+
 
 % 3
 \subsection{Evaluation of Estimated Covariance}
@@ -2928,42 +2949,161 @@ Therefore, we divide by 2. The reason we square it is beacuse of the covariance.
 %% Note: How does it look with error in both img optimization?
 
 % NEES and ANEES
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth,natwidth=640,natheight=640]
+  {fig/eva_graphs/synt_nees.pdf}
+  \caption{asda}
+	\label{fig:2d_local_coords_in_world_coords}
+\end{figure}
+
+Translation Average NEES: 47.64
+
+Rotation Average NEES: 47.72
 
 % Histogram of NEES
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth,natwidth=640,natheight=640]
+  {fig/eva_graphs/synt_hist_nees.pdf}
+  \caption{asda}
+	\label{fig:2d_local_coords_in_world_coords}
+\end{figure}
+
 
 \section{TUM RGB-D Dataset}
+
+\subsection{Discovering Effect of Outliers on Pixel Uncertainty}
+
+% Time-based error histogram with 20 frame discrete window
+% - Show that pixel errors are gaussian and stds are different along the path
+
+\begin{figure}[H]
+  \makebox[\textwidth][c]{\includegraphics[width=1.4\linewidth,natwidth=640,natheight=640]
+  {fig/eva_graphs/tum_fr1_xyz_tbased_hist_uv_err.pdf}}
+  \caption{asda}
+	\label{fig:2d_local_coords_in_world_coords}
+\end{figure}
+
+
+% Time-based std with 5 frame sliding window with fr1_xyz
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth,natwidth=640,natheight=640]
+  {fig/eva_graphs/tum_fr1_xyz_tbased_uv_err_std.pdf}
+  \caption{asda}
+	\label{fig:2d_local_coords_in_world_coords}
+\end{figure}
+
+
+% Boxplot of Time-based std with 5 frame sliding window for all datasets
+
+% BUG: Caption does not located under figures!
+\begin{figure}[H]
+\begin{tabular}{ccc}
+\centering
+\subcaptionbox{asd}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/tum_fr1_xyz_boxplot_tbased_uv_err_std.pdf}} &
+\subcaptionbox{asd}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/tum_fr1_rpy_boxplot_tbased_uv_err_std}} &
+\subcaptionbox{asd}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/tum_fr1_room_boxplot_tbased_uv_err_std}} \\
+\subcaptionbox{asd}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/tum_fr1_360_boxplot_tbased_uv_err_std}} &
+\subcaptionbox{asd}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/tum_fr1_desk_boxplot_tbased_uv_err_std}} &
+\subcaptionbox{asd}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/tum_fr1_desk2_boxplot_tbased_uv_err_std}}
+\end{tabular}
+\caption{Remove Y axes title and Y axes thick from graphs!!!}
+\end{figure}
 
 % 2
 \subsection{Estimation of Relative Pose and its Covariance}
 
 % 2.1
 % - Decide which one to use for scaling: RANSAC Threshold or max std?
+% -> DONE! Decided on max std besides the outliers due to wrong ground truth!
 % - Show estimated covariances that is scaled with RANSAC Threshold or Max std?
 
 % Translation RPE frame-to-frame with 3 sigma with fr1_xyz
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth,natwidth=640,natheight=640]
+  {fig/eva_graphs/tum_fr1_xyz_trans_rpe_3sigma.pdf}
+  \caption{asda}
+	\label{fig:2d_local_coords_in_world_coords}
+\end{figure}
+
 
 % Rotation RPE frame-to-frame with 3 sigma with fr1_xyz
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth,natwidth=640,natheight=640]
+  {fig/eva_graphs/tum_fr1_xyz_rot_rpe_3sigma.pdf}
+  \caption{asda}
+	\label{fig:2d_local_coords_in_world_coords}
+\end{figure}
+
 
 % 1
 \subsection{Evaluation of Estimated Covariance}
 
-% 1.3
-% Time-based error histogram with 10-15 frame discrete window
-% - Show that pixel errors are gaussian and stds are different along the path
-
-% 1.2
-% Time-based std with 10-15 frame sliding window
-
-% 1.1
-% Percentage of Outliers that is bigger than RANSAC Threshold?
-% - Compare stds with RANSAC threshold. Does RANSAC threshold bound error in
-% pixels?
-% - Run the test for ther trajectories and make same comparison
-
 
 % NEES and ANEES with fr1_xyz
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth,natwidth=640,natheight=640]
+  {fig/eva_graphs/tum_fr1_xyz_nees.pdf}
+  \caption{asda}
+	\label{fig:2d_local_coords_in_world_coords}
+\end{figure}
+
+fr1 xyz
+
+Translation Average NEES: 24.102167961194326
+
+Rotation Average NEES: 52.094722966630314
 
 % Histogram of NEES with all datasets!
+% BUG: Caption does not located under figures!
+\begin{figure}[H]
+\begin{tabular}{ccc}
+\centering
+\subcaptionbox{fr1 xyz}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/tum_fr1_xyz_hist_nees.pdf}} &
+\subcaptionbox{fr1 rpy}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/tum_fr1_rpy_hist_nees}} &
+\subcaptionbox{fr1 room}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/tum_fr1_room_hist_nees}} \\
+\subcaptionbox{fr1 360h}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/tum_fr1_360_hist_nees}} &
+\subcaptionbox{fr1 desk}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/tum_fr1_desk_hist_nees}} &
+\subcaptionbox{fr1 desk2}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/tum_fr1_desk2_hist_nees}}
+\end{tabular}
+\caption{4 x 4}
+\end{figure}
+
+fr1 360 
+
+Translation Average NEES: 23.056611560549662
+
+Rotation Average NEES: 75.33737874564399
+
+fr1 rpy 
+
+Translation Average NEES: 21.70951280913415
+
+Rotation Average NEES: 64.33137984284465
+
+fr1 desk
+
+Translation Average NEES: 60.40113749011506
+
+Rotation Average NEES: 105.36408125491856
+
+fr1 desk2
+
+Translation Average NEES: 56.536957402794926
+
+Rotation Average NEES: 110.9844039603292
+
+fr1 room 
+
+Translation Average NEES: 19.81107198582873
+
+Rotation Average NEES: 55.49945876186048
 
 % 5
 \section{Comparison to FOVIS}
@@ -2971,10 +3111,6 @@ Therefore, we divide by 2. The reason we square it is beacuse of the covariance.
 %subsection{Trajectory Estimation}
 
 % Traj XYZ with fr1_xyz
-
-% Translation Traj XYZ separate axes with fr1_xyz
-
-% Rotation Traj XYZ separate axes with fr1_xyz
 
 % Translation RPE delta 30 with fr1_xyz
 
