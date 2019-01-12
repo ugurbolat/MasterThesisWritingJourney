@@ -6,6 +6,7 @@
 \documentclass[a4paper]{report}
 % ***************************PACKAGES***************************
 \usepackage{graphicx}
+\usepackage{graphbox}
 \usepackage{caption,setspace}
 \usepackage{subcaption}
 \captionsetup[figure]{width=0.7\textwidth,font={small}}
@@ -2912,14 +2913,46 @@ Therefore, we divide by 2. The reason we square it is beacuse of the covariance.
 
 \section{Simulation Environment}
 
-% Distribution of Feature Points in 2D 
-
 % Distribution of Point Clouds in 3D at p0
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth,natwidth=640,natheight=640]
+  {fig/eva_graphs/sim_at_p0.pdf}
+  \caption{asda}
+	\label{fig:2d_local_coords_in_world_coords}
+\end{figure}
+
+translated by $x=0.6m, y=0.6m, z=0.05m$ and rotated by -30 degrees around x and y axes.
 
 % Distribution of Point Clouds in 3D at p1
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth,natwidth=640,natheight=640]
+  {fig/eva_graphs/sim_at_p1.pdf}
+  \caption{asda}
+	\label{fig:2d_local_coords_in_world_coords}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth,natwidth=640,natheight=640]
+  {fig/eva_graphs/sim_at_p0p1.pdf}
+  \caption{asda}
+	\label{fig:2d_local_coords_in_world_coords}
+\end{figure}
+
 
 % 4
 \subsection{Estimation of Relative Pose and its Covariance}
+
+500 point clouds
+
+meanu = 0
+stdu = 5
+meanv = 0
+stdv = 5
+meand = 0
+stdd = [(0.0012 + 0.0019 * (d-0.4)**2)*10 for d in uvdwonoise1[:,2]]
 
 % Translation RPE with 3 sigma 
 \begin{figure}[H]
@@ -3003,12 +3036,12 @@ Rotation Average NEES: 47.72
 \begin{figure}[H]
 \begin{tabular}{ccc}
 \centering
-\subcaptionbox{asd}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/tum_fr1_xyz_boxplot_tbased_uv_err_std.pdf}} &
-\subcaptionbox{asd}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/tum_fr1_rpy_boxplot_tbased_uv_err_std}} &
-\subcaptionbox{asd}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/tum_fr1_room_boxplot_tbased_uv_err_std}} \\
-\subcaptionbox{asd}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/tum_fr1_360_boxplot_tbased_uv_err_std}} &
-\subcaptionbox{asd}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/tum_fr1_desk_boxplot_tbased_uv_err_std}} &
-\subcaptionbox{asd}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/tum_fr1_desk2_boxplot_tbased_uv_err_std}}
+\subcaptionbox{fr1 xyz}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/boxplot_tbased_uv_err_std_fr1_xyz.pdf}} &
+\subcaptionbox{fr1 rpy}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/boxplot_tbased_uv_err_std_fr1_rpy.pdf}} &
+\subcaptionbox{fr1 room}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/boxplot_tbased_uv_err_std_fr1_room.pdf}} \\
+\subcaptionbox{fr1 360}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/boxplot_tbased_uv_err_std_fr1_360.pdf}} &
+\subcaptionbox{fr1 desk}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/boxplot_tbased_uv_err_std_fr1_desk.pdf}} &
+\subcaptionbox{fr1 desk2}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/boxplot_tbased_uv_err_std_fr1_desk2.pdf}}
 \end{tabular}
 \caption{Remove Y axes title and Y axes thick from graphs!!!}
 \end{figure}
@@ -3066,11 +3099,11 @@ Rotation Average NEES: 52.094722966630314
 \begin{tabular}{ccc}
 \centering
 \subcaptionbox{fr1 xyz}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/tum_fr1_xyz_hist_nees.pdf}} &
-\subcaptionbox{fr1 rpy}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/tum_fr1_rpy_hist_nees}} &
-\subcaptionbox{fr1 room}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/tum_fr1_room_hist_nees}} \\
-\subcaptionbox{fr1 360h}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/tum_fr1_360_hist_nees}} &
-\subcaptionbox{fr1 desk}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/tum_fr1_desk_hist_nees}} &
-\subcaptionbox{fr1 desk2}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/tum_fr1_desk2_hist_nees}}
+\subcaptionbox{fr1 rpy}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/tum_fr1_rpy_hist_nees.pdf}} &
+\subcaptionbox{fr1 room}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/tum_fr1_room_hist_nees.pdf}} \\
+\subcaptionbox{fr1 360}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/tum_fr1_360_hist_nees.pdf}} &
+\subcaptionbox{fr1 desk}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/tum_fr1_desk_hist_nees.pdf}} &
+\subcaptionbox{fr1 desk2}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/tum_fr1_desk2_hist_nees.pdf}}
 \end{tabular}
 \caption{4 x 4}
 \end{figure}
@@ -3110,13 +3143,182 @@ Rotation Average NEES: 55.49945876186048
 
 %subsection{Trajectory Estimation}
 
-% Traj XYZ with fr1_xyz
+% Traj XYZ with fr2_desk Boxplot with fr2_desk
+\begin{figure}[H]
+\begin{tabular}{ccc}
+\centering
+\subcaptionbox{asd}{\includegraphics[width = 0.5\linewidth]{fig/eva_graphs/fovis_comp_3d_tum_fr2_desk.pdf}} &
+\subcaptionbox{asd}{\includegraphics[width = 0.45\linewidth]{fig/eva_graphs/fovis_comp_boxplot_tum_fr2_desk.pdf}}
+\end{tabular}
+\caption{Remove Y axes title and Y axes thick from graphs!!!}
+\end{figure}
 
-% Translation RPE delta 30 with fr1_xyz
 
-% Rotation RPE delta 30 with fr1_xyz
+fr2 desk
+calculating fovis translation RPE
+mean: 0.013413060298527842
+rmse: 0.015651093498115286
+max: 0.060168738165453865
+min: 0.0015853239858058925
+calculating covo translation RPE
+mean: 0.032921580019735774
+rmse: 0.042804535992902265
+max: 0.19313563936173195
+min: 0.004631325184238375
+calculating fovis rotation RPE
+mean: 0.013413060298527842
+rmse: 0.015651093498115286
+max: 0.060168738165453865
+min: 0.0015853239858058925
+calculating covo rotation RPE
+mean: 0.03839251177938236
+rmse: 0.047517212522977643
+max: 0.19877795280540297
+min: 0.005248769292285971
 
 % Boxplots with all datasets
+
+\begin{figure}[H]
+\begin{tabular}{ccc}
+\centering
+\subcaptionbox{fr1 xyz}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/fovis_comp_boxplot_tum_fr1_xyz.pdf}} &
+\subcaptionbox{fr1 rpy}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/fovis_comp_boxplot_tum_fr1_rpy.pdf}} &
+\subcaptionbox{fr1 room}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/fovis_comp_boxplot_tum_fr1_room.pdf}} \\
+\subcaptionbox{fr1 360}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/fovis_comp_boxplot_tum_fr1_360.pdf}} &
+\subcaptionbox{fr1 desk}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/fovis_comp_boxplot_tum_fr1_desk.pdf}} &
+\subcaptionbox{fr1 desk2}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/fovis_comp_boxplot_tum_fr1_desk2.pdf}}
+\end{tabular}
+\caption{4 x 4}
+\end{figure}
+
+
+fr1 xyz
+calculating fovis translation RPE
+mean: 0.018995324602472472
+rmse: 0.02403313402319976
+max: 0.065593459847535
+min: 0.001815310665833277
+calculating covo translation RPE
+mean: 0.03834305789811094
+rmse: 0.05127849445847839
+max: 0.13561281376705397
+min: 0.005325509432055075
+calculating fovis rotation RPE
+mean: 0.018995324602472472
+rmse: 0.02403313402319976
+max: 0.065593459847535
+min: 0.001815310665833277
+calculating covo rotation RPE
+mean: 0.05462429292188775
+rmse: 0.07357272314436371
+max: 0.1995429338363258
+min: 0.006293913001972797
+
+
+fr1 rpy
+calculating fovis translation RPE
+mean: 0.045671960247901454
+rmse: 0.05335015256909358
+max: 0.11636903642911761
+min: 0.008082721460018484
+calculating covo translation RPE
+mean: 0.032511270546770485
+rmse: 0.03687383943449597
+max: 0.07394256278218639
+min: 0.012565033639505804
+calculating fovis rotation RPE
+mean: 0.045671960247901454
+rmse: 0.05335015256909358
+max: 0.11636903642911761
+min: 0.008082721460018484
+calculating covo rotation RPE
+mean: 0.06202488385050518
+rmse: 0.0658567271817125
+max: 0.09727894084269101
+min: 0.01674730308431874
+
+
+fr1 desk
+calculating fovis translation RPE
+mean: 0.030267478865084466
+rmse: 0.04065592653459894
+max: 0.11611971532531572
+min: 0.002591864340283947
+calculating covo translation RPE
+mean: 0.05710168798830031
+rmse: 0.06654224080007558
+max: 0.16366511227765174
+min: 0.004206948818856475
+calculating fovis rotation RPE
+mean: 0.030267478865084466
+rmse: 0.04065592653459894
+max: 0.11611971532531572
+min: 0.002591864340283947
+calculating covo rotation RPE
+mean: 0.09124029836815122
+rmse: 0.10176352796997191
+max: 0.17677233368175765
+min: 0.012398507342695281
+
+fr1 desk2
+mean: 0.0833796716004891
+rmse: 0.0941072917682276
+max: 0.19380409650177396
+min: 0.030076704618902446
+calculating fovis rotation RPE
+mean: 0.047246368231133026
+rmse: 0.053317787265840424
+max: 0.11522939736968013
+min: 0.01217040413740998
+calculating covo rotation RPE
+mean: 0.1082168335357502
+rmse: 0.12295842349982163
+max: 0.2006600156800518
+min: 0.02509890681531765
+
+fr1 room
+calculating fovis translation RPE
+mean: 0.04468832507204012
+rmse: 0.05871273917155775
+max: 0.22862974643181294
+min: 0.004830130633002347
+calculating covo translation RPE
+mean: 0.0709401856404292
+rmse: 0.07910870035709944
+max: 0.16474081303147517
+min: 0.013424401978954378
+calculating fovis rotation RPE
+mean: 0.04468832507204012
+rmse: 0.05871273917155775
+max: 0.22862974643181294
+min: 0.004830130633002347
+calculating covo rotation RPE
+mean: 0.08688579567594938
+rmse: 0.10072158765329067
+max: 0.306431856943886
+min: 0.01014690321950457
+
+fr1 360
+calculating fovis translation RPE
+mean: 0.07318470847527077
+rmse: 0.08675154037418777
+max: 0.17697464685105907
+min: 0.021034527008431125
+calculating covo translation RPE
+mean: 0.10030503229439387
+rmse: 0.12398036290290936
+max: 0.39064513092833025
+min: 0.011719024323959245
+calculating fovis rotation RPE
+mean: 0.07318470847527077
+rmse: 0.08675154037418777
+max: 0.17697464685105907
+min: 0.021034527008431125
+calculating covo rotation RPE
+mean: 0.10159459504685436
+rmse: 0.124555741805544
+max: 0.32350394057869997
+min: 0.03109627848176771
 
 \chapter{Conclusion} \label{cp_conc}
 % ***************************CP7-EVALUATION***************************
