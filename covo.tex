@@ -2911,6 +2911,54 @@ Therefore, we divide by 2. The reason we square it is beacuse of the covariance.
 
 \section{Error Metrics for VO}
 
+\subsubsection{Relative Pose Error (RPE)}
+
+estimated trajectory $\mathbf{P}_{1:n} \in SE(3)$
+
+ground truth $\mathbf{G}_{1:n}\in SE(3)$
+
+\begin{equation}
+  \mathbf{E}_i := 
+  (\mathbf{G}_i^{-1} \mathbf{G}_{i+\Delta})^{-1} 
+  (\mathbf{P}_i^{-1}\mathbf{P}_{i+\Delta})
+\end{equation}
+
+\subsubsection{Mean of RPE}
+
+\begin{equation}
+  Mean(\mathbf{E}_{1:n}) :=  \frac{1}{n} \sum_{i=1}^{n} \mathbf{E}_i
+\end{equation}
+
+
+\subsubsection{Root Mean Squared Error (RMSE) of RPE}
+
+$m = n-\Delta$
+
+\begin{equation}
+  RMSE(\mathbf{E}_{1:n},\Delta) := \sqrt{\frac{1}{m} \sum_{i=1}^{m}||\mathbf{E}_i||^2}
+\end{equation}
+
+\begin{equation}
+  RMSE(\mathbf{E}_{1:n}) :=  \frac{1}{n} \sum_{\Delta=1}^{n}RMSE(\mathbf{E}_{1:n},\Delta)
+\end{equation}
+
+\subsubsection{Normalized Estimation Error Squared (NEES)}
+
+\begin{equation}
+  \epsilon_i = (\mathbf{x}_i - \hat{\mathbf{x}}_i)^T \mathbf{\Omega}_i^ (\mathbf{x}_i - \hat{\mathbf{x}}_i) 
+  = ||\mathbf{e}_i||^2_{\Omega_i}
+\end{equation}
+
+\subsubsection{Average Normalized Estimation Error Squared (ANEES)}
+
+
+\begin{equation}
+  \hat{\epsilon_i} =  \frac{1}{dn} \sum_{i=1}^{n} \epsilon_i = 
+  \frac{1}{n} \sum_{i=1}^{n} ||\mathbf{e}_i||^2_{\Omega_i} / d
+\end{equation}
+
+
+
 \section{Simulation Environment}
 
 % Distribution of Point Clouds in 3D at p0
@@ -2948,9 +2996,9 @@ translated by $x=0.6m, y=0.6m, z=0.05m$ and rotated by -30 degrees around x and 
 500 point clouds
 
 meanu = 0
-stdu = 5
+stdu = 7
 meanv = 0
-stdv = 5
+stdv = 7
 meand = 0
 stdd = [(0.0012 + 0.0019 * (d-0.4)**2)*10 for d in uvdwonoise1[:,2]]
 
@@ -2990,9 +3038,9 @@ stdd = [(0.0012 + 0.0019 * (d-0.4)**2)*10 for d in uvdwonoise1[:,2]]
 	\label{fig:2d_local_coords_in_world_coords}
 \end{figure}
 
-Translation Average NEES: 47.64
+Translation Average NEES: 15.64
 
-Rotation Average NEES: 47.72
+Rotation Average NEES: 15.72
 
 % Histogram of NEES
 \begin{figure}[H]
@@ -3087,11 +3135,45 @@ Rotation Average NEES: 47.72
 	\label{fig:2d_local_coords_in_world_coords}
 \end{figure}
 
-fr1 xyz
+% Without average by 3 (degree of freedom)
+%fr1 xyz
+%Translation Average NEES: 24.102167961194326
+%Rotation Average NEES: 52.094722966630314
+%fr1 360 
+%Translation Average NEES: 23.056611560549662
+%Rotation Average NEES: 75.33737874564399
+%fr1 rpy 
+%Translation Average NEES: 21.70951280913415
+%Rotation Average NEES: 64.33137984284465
+%fr1 desk
+%Translation Average NEES: 60.40113749011506
+%Rotation Average NEES: 105.36408125491856
+%fr1 desk2
+%Translation Average NEES: 56.536957402794926
+%Rotation Average NEES: 110.9844039603292
+%fr1 room 
+%Translation Average NEES: 19.81107198582873
+%Rotation Average NEES: 55.49945876186048
 
-Translation Average NEES: 24.102167961194326
-
-Rotation Average NEES: 52.094722966630314
+\begin{center}
+  \begin{tabular}{l|cc|cc}
+    \hline
+  & Translation ANEES & Status & Rotation ANEES & Status \\
+  \hline
+  fr1 xyz   & 8.10 & conservative & 5.69 & conservative \\
+  \hline
+  fr1 rpy   & 7.23 & conservative & 21.44 & overconfident \\
+  \hline
+  fr1 360   & 7.68 & conservative & 25.11 & overconfident \\
+  \hline
+  fr1 desk  & 20.13 & overconfident & 35.12 & overconfident \\
+  \hline
+  fr1 desk2 & 18.84 & overconfident & 36.99 & overconfident \\
+  \hline
+  fr1 room  & 6.60 & conservative & 18.49 & overconfident \\
+  \hline
+  \end{tabular}
+\end{center}
 
 % Histogram of NEES with all datasets!
 % BUG: Caption does not located under figures!
@@ -3107,36 +3189,6 @@ Rotation Average NEES: 52.094722966630314
 \end{tabular}
 \caption{4 x 4}
 \end{figure}
-
-fr1 360 
-
-Translation Average NEES: 23.056611560549662
-
-Rotation Average NEES: 75.33737874564399
-
-fr1 rpy 
-
-Translation Average NEES: 21.70951280913415
-
-Rotation Average NEES: 64.33137984284465
-
-fr1 desk
-
-Translation Average NEES: 60.40113749011506
-
-Rotation Average NEES: 105.36408125491856
-
-fr1 desk2
-
-Translation Average NEES: 56.536957402794926
-
-Rotation Average NEES: 110.9844039603292
-
-fr1 room 
-
-Translation Average NEES: 19.81107198582873
-
-Rotation Average NEES: 55.49945876186048
 
 % 5
 \section{Comparison to FOVIS}
@@ -3154,27 +3206,185 @@ Rotation Average NEES: 55.49945876186048
 \end{figure}
 
 
-fr2 desk
-calculating fovis translation RPE
-mean: 0.013413060298527842
-rmse: 0.015651093498115286
-max: 0.060168738165453865
-min: 0.0015853239858058925
-calculating covo translation RPE
-mean: 0.032921580019735774
-rmse: 0.042804535992902265
-max: 0.19313563936173195
-min: 0.004631325184238375
-calculating fovis rotation RPE
-mean: 0.013413060298527842
-rmse: 0.015651093498115286
-max: 0.060168738165453865
-min: 0.0015853239858058925
-calculating covo rotation RPE
-mean: 0.03839251177938236
-rmse: 0.047517212522977643
-max: 0.19877795280540297
-min: 0.005248769292285971
+\begin{center}
+  \begin{tabular}{lcccc}
+    \hline
+    & \multicolumn{2}{c}{FOVIS} & \multicolumn{2}{c}{COVO}\\
+    & Mean & RMSE & Mean & RMSE\\
+    \hline
+    fr1 xyz   & 0.0189 & 0.0240 & 0.0383 & 0.0512\\ 
+    \hline
+    fr1 rpy   & 0.0456 & 0.0533 & 0.0325 & 0.0368\\
+    \hline
+    fr1 360   & 0.0731 & 0.0867 & 0.1003 & 0.1239\\ 
+    \hline
+    fr1 desk  & 0.0302 & 0.0406 & 0.0571 & 0.0665\\
+    \hline
+    fr1 desk2 & 0.0472 & 0.0533 & 0.0833 & 0.0941\\
+    \hline
+    fr1 room  & 0.0446 & 0.0587 & 0.0709 & 0.0791\\
+    \hline
+    fr2 desk2 & 0.0134 & 0.0156 & 0.0329 & 0.0428 \\
+    \hline
+  \end{tabular}
+
+\end{center}
+
+%fr1 xyz
+%calculating fovis translation RPE
+%mean: 0.018995324602472472
+%rmse: 0.02403313402319976
+%max: 0.065593459847535
+%min: 0.001815310665833277
+%calculating covo translation RPE
+%mean: 0.03834305789811094
+%rmse: 0.05127849445847839
+%max: 0.13561281376705397
+%min: 0.005325509432055075
+%calculating fovis rotation RPE
+%mean: 0.018995324602472472
+%rmse: 0.02403313402319976
+%max: 0.065593459847535
+%min: 0.001815310665833277
+%calculating covo rotation RPE
+%mean: 0.05462429292188775
+%rmse: 0.07357272314436371
+%max: 0.1995429338363258
+%min: 0.006293913001972797
+%
+%
+%fr1 rpy
+%calculating fovis translation RPE
+%mean: 0.045671960247901454
+%rmse: 0.05335015256909358
+%max: 0.11636903642911761
+%min: 0.008082721460018484
+%calculating covo translation RPE
+%mean: 0.032511270546770485
+%rmse: 0.03687383943449597
+%max: 0.07394256278218639
+%min: 0.012565033639505804
+%calculating fovis rotation RPE
+%mean: 0.045671960247901454
+%rmse: 0.05335015256909358
+%max: 0.11636903642911761
+%min: 0.008082721460018484
+%calculating covo rotation RPE
+%mean: 0.06202488385050518
+%rmse: 0.0658567271817125
+%max: 0.09727894084269101
+%min: 0.01674730308431874
+%
+%
+%fr1 desk
+%calculating fovis translation RPE
+%mean: 0.030267478865084466
+%rmse: 0.04065592653459894
+%max: 0.11611971532531572
+%min: 0.002591864340283947
+%calculating covo translation RPE
+%mean: 0.05710168798830031
+%rmse: 0.06654224080007558
+%max: 0.16366511227765174
+%min: 0.004206948818856475
+%calculating fovis rotation RPE
+%mean: 0.030267478865084466
+%rmse: 0.04065592653459894
+%max: 0.11611971532531572
+%min: 0.002591864340283947
+%calculating covo rotation RPE
+%mean: 0.09124029836815122
+%rmse: 0.10176352796997191
+%max: 0.17677233368175765
+%min: 0.012398507342695281
+%
+%fr1 desk2
+%calculating fovis translation RPE
+%mean: 0.047246368231133026
+%rmse: 0.053317787265840424
+%max: 0.11522939736968013
+%min: 0.01217040413740998
+%calculating covo translation RPE
+%mean: 0.0833796716004891
+%rmse: 0.0941072917682276
+%max: 0.19380409650177396
+%min: 0.030076704618902446
+%calculating fovis rotation RPE
+%mean: 0.047246368231133026
+%rmse: 0.053317787265840424
+%max: 0.11522939736968013
+%min: 0.01217040413740998
+%calculating covo rotation RPE
+%mean: 0.1082168335357502
+%rmse: 0.12295842349982163
+%max: 0.2006600156800518
+%min: 0.02509890681531765
+%
+%fr1 room
+%calculating fovis translation RPE
+%mean: 0.04468832507204012
+%rmse: 0.05871273917155775
+%max: 0.22862974643181294
+%min: 0.004830130633002347
+%calculating covo translation RPE
+%mean: 0.0709401856404292
+%rmse: 0.07910870035709944
+%max: 0.16474081303147517
+%min: 0.013424401978954378
+%calculating fovis rotation RPE
+%mean: 0.04468832507204012
+%rmse: 0.05871273917155775
+%max: 0.22862974643181294
+%min: 0.004830130633002347
+%calculating covo rotation RPE
+%mean: 0.08688579567594938
+%rmse: 0.10072158765329067
+%max: 0.306431856943886
+%min: 0.01014690321950457
+%
+%fr1 360
+%calculating fovis translation RPE
+%mean: 0.07318470847527077
+%rmse: 0.08675154037418777
+%max: 0.17697464685105907
+%min: 0.021034527008431125
+%calculating covo translation RPE
+%mean: 0.10030503229439387
+%rmse: 0.12398036290290936
+%max: 0.39064513092833025
+%min: 0.011719024323959245
+%calculating fovis rotation RPE
+%mean: 0.07318470847527077
+%rmse: 0.08675154037418777
+%max: 0.17697464685105907
+%min: 0.021034527008431125
+%calculating covo rotation RPE
+%mean: 0.10159459504685436
+%rmse: 0.124555741805544
+%max: 0.32350394057869997
+%min: 0.03109627848176771
+%
+%fr2 desk
+%calculating fovis translation RPE
+%mean: 0.013413060298527842
+%rmse: 0.015651093498115286
+%max: 0.060168738165453865
+%min: 0.0015853239858058925
+%calculating covo translation RPE
+%mean: 0.032921580019735774
+%rmse: 0.042804535992902265
+%max: 0.19313563936173195
+%min: 0.004631325184238375
+%calculating fovis rotation RPE
+%mean: 0.013413060298527842
+%rmse: 0.015651093498115286
+%max: 0.060168738165453865
+%min: 0.0015853239858058925
+%calculating covo rotation RPE
+%mean: 0.03839251177938236
+%rmse: 0.047517212522977643
+%max: 0.19877795280540297
+%min: 0.005248769292285971
 
 % Boxplots with all datasets
 
@@ -3192,133 +3402,6 @@ min: 0.005248769292285971
 \end{figure}
 
 
-fr1 xyz
-calculating fovis translation RPE
-mean: 0.018995324602472472
-rmse: 0.02403313402319976
-max: 0.065593459847535
-min: 0.001815310665833277
-calculating covo translation RPE
-mean: 0.03834305789811094
-rmse: 0.05127849445847839
-max: 0.13561281376705397
-min: 0.005325509432055075
-calculating fovis rotation RPE
-mean: 0.018995324602472472
-rmse: 0.02403313402319976
-max: 0.065593459847535
-min: 0.001815310665833277
-calculating covo rotation RPE
-mean: 0.05462429292188775
-rmse: 0.07357272314436371
-max: 0.1995429338363258
-min: 0.006293913001972797
-
-
-fr1 rpy
-calculating fovis translation RPE
-mean: 0.045671960247901454
-rmse: 0.05335015256909358
-max: 0.11636903642911761
-min: 0.008082721460018484
-calculating covo translation RPE
-mean: 0.032511270546770485
-rmse: 0.03687383943449597
-max: 0.07394256278218639
-min: 0.012565033639505804
-calculating fovis rotation RPE
-mean: 0.045671960247901454
-rmse: 0.05335015256909358
-max: 0.11636903642911761
-min: 0.008082721460018484
-calculating covo rotation RPE
-mean: 0.06202488385050518
-rmse: 0.0658567271817125
-max: 0.09727894084269101
-min: 0.01674730308431874
-
-
-fr1 desk
-calculating fovis translation RPE
-mean: 0.030267478865084466
-rmse: 0.04065592653459894
-max: 0.11611971532531572
-min: 0.002591864340283947
-calculating covo translation RPE
-mean: 0.05710168798830031
-rmse: 0.06654224080007558
-max: 0.16366511227765174
-min: 0.004206948818856475
-calculating fovis rotation RPE
-mean: 0.030267478865084466
-rmse: 0.04065592653459894
-max: 0.11611971532531572
-min: 0.002591864340283947
-calculating covo rotation RPE
-mean: 0.09124029836815122
-rmse: 0.10176352796997191
-max: 0.17677233368175765
-min: 0.012398507342695281
-
-fr1 desk2
-mean: 0.0833796716004891
-rmse: 0.0941072917682276
-max: 0.19380409650177396
-min: 0.030076704618902446
-calculating fovis rotation RPE
-mean: 0.047246368231133026
-rmse: 0.053317787265840424
-max: 0.11522939736968013
-min: 0.01217040413740998
-calculating covo rotation RPE
-mean: 0.1082168335357502
-rmse: 0.12295842349982163
-max: 0.2006600156800518
-min: 0.02509890681531765
-
-fr1 room
-calculating fovis translation RPE
-mean: 0.04468832507204012
-rmse: 0.05871273917155775
-max: 0.22862974643181294
-min: 0.004830130633002347
-calculating covo translation RPE
-mean: 0.0709401856404292
-rmse: 0.07910870035709944
-max: 0.16474081303147517
-min: 0.013424401978954378
-calculating fovis rotation RPE
-mean: 0.04468832507204012
-rmse: 0.05871273917155775
-max: 0.22862974643181294
-min: 0.004830130633002347
-calculating covo rotation RPE
-mean: 0.08688579567594938
-rmse: 0.10072158765329067
-max: 0.306431856943886
-min: 0.01014690321950457
-
-fr1 360
-calculating fovis translation RPE
-mean: 0.07318470847527077
-rmse: 0.08675154037418777
-max: 0.17697464685105907
-min: 0.021034527008431125
-calculating covo translation RPE
-mean: 0.10030503229439387
-rmse: 0.12398036290290936
-max: 0.39064513092833025
-min: 0.011719024323959245
-calculating fovis rotation RPE
-mean: 0.07318470847527077
-rmse: 0.08675154037418777
-max: 0.17697464685105907
-min: 0.021034527008431125
-calculating covo rotation RPE
-mean: 0.10159459504685436
-rmse: 0.124555741805544
-max: 0.32350394057869997
-min: 0.03109627848176771
 
 \chapter{Conclusion} \label{cp_conc}
 % ***************************CP7-EVALUATION***************************
@@ -3339,56 +3422,48 @@ min: 0.03109627848176771
 % ***************************CP7-EVALUATION***************************
 \chapter{Appendices} \label{cp_appendices}
 
-\section{Cholesky Factorization}\label{sc_cholesky}
-
-\section{Quaternions}\label{sc_quaternions}
-
 \section{Rigid-Body Transformations} \label{sc_rigid_body_transformations}
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
-	{fig/ref_imgs/2d_local_coords_in_world_coords.png}
+	{fig/eva_graphs/append_p0.pdf}
   \caption{A Local Coordinate System in World Coordinate System}
-	\label{fig:2d_local_coords_in_world_coords}
+	\label{fig:3d_local_coords_in_world_coords}
 \end{figure}
+
+\subsubsection{Translation}
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
-	{fig/ref_imgs/2d_rotation.png}
-  \caption{Rotating the Local Coordinate System in World Coordinate System}
-	\label{fig:2d_rotation}
+  {fig/eva_graphs/append_p1_trans.pdf}
+  \caption{Translating the Local Coordinate System}
+	\label{fig:3d_translation}
 \end{figure}
+
+\subsubsection{Rotation with Quaternions}
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
-	{fig/ref_imgs/2d_translation.png}
-  \caption{Translating the Local Coordinate System in World Coordinate System}
-	\label{fig:2d_rotation}
+	{fig/eva_graphs/append_p2_rot.pdf}
+  \caption{Rotating the Local Coordinate System}
+	\label{fig:3d_rotation}
 \end{figure}
 
-
-
-
-\subsection{3D Rotation with Quaternions}
-
+\subsubsection{Transformation}
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
-	{fig/ref_imgs/2d_translation.png}
-  \caption{Translating the Local Coordinate System in World Coordinate System}
-	\label{fig:2d_rotation}
+	{fig/eva_graphs/append_p3_trans_rot.pdf}
+  \caption{Transforming (Translating and then Rotating) the Local Coordinate System}
+	\label{fig:3d_rotation}
 \end{figure}
 
 
 
-\subsection{3D Translation}
-
-
-\subsection{3D Transformation}
 
 \section{Least Squares}\label{sc_least_squares}
 
