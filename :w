@@ -1948,7 +1948,7 @@ how we detect and describe features section \ref{sb_sc_orb} in the first place.
 In ORB, FAST corner filter is performed by selecting pixel coordinates of an 
 interest point and comparing it with its surrounding pixels. In ideal case 
 where we match features in consecutive image perfectly, we would assume that 
-the average error is half pixel due to the quantization process of the RGB camera. 
+the average error is half pixel due to the dicretization process of the RGB camera. 
 However, in reality, we still have outliers even after applying RANSAC. 
 What we also know that we can set a certain RANSAC threshold keep the outliers 
 within certain error boundaries. If RANSAC holds its promise, we could 
@@ -2115,7 +2115,6 @@ In the following section, we will discuss about how to extend the current conic 
 model with depth uncertainty.
 
 \subsection{Depth Related Uncertainties} \label{sb_sc_depth_uncertainty}
-
 
 Modeling noise in depth measurements is more complicated than RGB camera. We 
 already discussed how structured IR light speckles are projected onto an object 
@@ -2349,9 +2348,6 @@ of the optimization algorithm but also enables us to estimate a covariance matri
 for the estimated relative pose. In the following sections, we will describe 
 how to estimate relative pose of a camera and calculate a covariance 
 of the estimated parameters (relative pose).
-
-\subsubsection{Propagation of UVZ Covariance to XYZ}
-WTF YOU FORGET ERROR PROPAGATION FOR PROJECTION FUNCTION!
 
 \section{Relative Pose Estimation with Uncertainties} \label{sc_rel_pose_est_w_uncertainty}
 
@@ -3015,34 +3011,16 @@ instance $i$:
 We also take an average of NEES (ANEES) over whole trajectory:
 
 \begin{equation}
-  d \hat{\epsilon} =  \frac{1}{n} \sum_{i=1}^{n} \epsilon_i = 
-  \frac{1}{n} \sum_{i=1}^{n} ||\mathbf{e}_i||^2_{\Omega_i}
+  \hat{\epsilon_i} =  \frac{1}{dn} \sum_{i=1}^{n} \epsilon_i = 
+  \frac{1}{n} \sum_{i=1}^{n} ||\mathbf{e}_i||^2_{\Omega_i} / d
 \end{equation}
 
-NOTE: find a synonym for it is important to note phrase!
+where $d$ is the number of freedom of degree that the state vector $\mathbf{x}$ has.
+Another metric when deciding on whether the estimator is consistent or not
+is to look at the distribution of NEES over trajectory. It must be
+the chi-square $\chi_d^2$ distribution.
 
-If the system is linear, has degree of freedom $d=1$ and gaussian noise, 
-then the expected value 
-$\hat{\epsilon}$ is 1. However, in practice, this does not hold. Therefore, 
-another metric when deciding on whether the estimator is consistent or not
-is to look at the distribution of NEES over trajectory, which is 
-distributed as a chi-square $\chi_d^2$ with $d$ degrees of freedom. 
-For an estimator with 3 degree of freedom, acceptance region is
-$\hat{\epsilon} \in [2.5,3.5]$ 
-when significance level $\alpha$ of $\chi_d^2$ 
-is chosen 2.5\% and 50 Monte Carlo runs according to [\cite{Shalom2001}, pp.234-235].
-It is important to note that 
-we did not implement Manto Carlo simulation for our simulation environment. 
-We only treat each estimation as an independent event by adding 
-random gaussian noise to the measurements. Thus, when evaluating 
-consistency of the estimator in simulation, we aim to get 
-$\hat{\epsilon_t}=3$ for translation and $\hat{\epsilon_q}=3$
-since both have 3 degree of freedom. On the other hand, when testing 
-the estimator with real-world data, we only take upper boundary of 
-acceptance region $\hat{\epsilon_t} \in [0, 3.5]$ and 
-$\hat{\epsilon_q} \in [0, 3.5]$ since it is 
-acceptable to have a conservative estimator rather than overconfident one.
-
+Talk about the expected ANEES values!
 
 \section{Simulation Environment}
 
@@ -3071,7 +3049,7 @@ will be comprised of the following steps:
     \hat{z}_{i}=z_i+\phi_z)$ where $\phi\sim\mathcal{N}(\mu,\sigma)$:
       \begin{itemize}
           \item The pixel noises are
-            assigned to $(\mu_u=0,\sigma_u=8)$ and $(\mu_v=0,\sigma_v=8)$. 
+            assigned to $(\mu_u=0,\sigma_u=7)$ and $(\mu_v=0,\sigma_v=7)$. 
           \item Whereas, 
             mean of depth noise is $\mu_z=0$ and standard deviation is chosen 
             with respect to feature points' distance to the camera.
@@ -3081,17 +3059,10 @@ will be comprised of the following steps:
         \end{itemize}
     \item For every measurements, convariance matrices 
       $(\mathbf{Q}_{uvz}^{0,1:500}, \mathbf{Q}_{uvz}^{1,1:500})$ are formed with 
-      the same standard deviations of the added noises, where  
-      DOUBLE-CHECK TO NOTATION!!!
-      $\mathbf{Q_{uvz}}^{(i)} = \mathbf{J_p}^T
-  \begin{bmatrix} 
-    \sigma_u^2(=8^2) & 0 & 0 \\ 
-    0 & \sigma_v^2(=8^2) & 0 \\
-    0 & 0 & (\sigma_z^{(i)}(z, \theta))^2
-  \end{bmatrix} \mathbf{J_p}$.
-
+      the same standard deviations $(\sigma_u=7,\sigma_v=7,\sigma_z^i (z,\theta))$ 
+      of the added noises.
     \item Perfectly matched noisy 3D feature point pairs along with their covariances 
-      are given to the optimizer that is discussed in \ref{sc_rel_pose_est_w_uncertainty} 
+      are given to optimizer algorithm that is discussed in \ref{sc_rel_pose_est_w_uncertainty} 
       to estimate $\mathbf{x^*}_{0,1}$ and $\mathbf{Q}_{\mathbf{t,q}}^{0,1}$.
     \item This whole process is repeated 1000 times.
 \end{itemize}
@@ -3157,7 +3128,7 @@ thumb that expresses 99.7\% probability as near certainty.
 % Translation RPE with 3 sigma 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.8\linewidth,natwidth=640,natheight=640]
+  \includegraphics[width=\linewidth,natwidth=640,natheight=640]
   {fig/eva_graphs/synt_trans_rpe_3sigma.pdf}
   \caption{asda}
   \label{fig:synt_trans_rpe_3sigma}
@@ -3170,7 +3141,7 @@ acceptable.
 % Rotation RPE with 3 sigma 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.8\linewidth,natwidth=640,natheight=640]
+  \includegraphics[width=\linewidth,natwidth=640,natheight=640]
   {fig/eva_graphs/synt_rot_rpe_3sigma.pdf}
   \caption{asda}
 	\label{fig:2d_local_coords_in_world_coords}
@@ -3179,105 +3150,76 @@ acceptable.
 The same behavior is observed for the rotation as well. This indicates that 
 the propagated covariances of the estimated poses based on the 
 proposed model produce statistically meaningful uncertainty with simulated data 
-if $3\sigma$ bounds are considered. However, $3\sigma$ bounds evaluations itself 
+if 3 sigma bounds are considered. However, 3 sigma bounds evaluations itself 
 is not enough to prove estimator's credibility. Thus, further evaluations are 
-done with NEES.
+needed.
 
 % 3
 \subsection{Evaluation of Estimated Covariances}
 
-Even though $3\sigma$ bounds confirm that our algorithm provides consistent 
-pose estimation given RPE is bounded, we need to check whether the 
-covariance of the estimated pose are being too optimistic or not.
-Hence, we run our simulation as described at the beginning of this section. 
-We get ANEES; i.e, 15.64 for translation and 15.72 for rotation. 
-We also illustrate the results in figure \ref{fig:test_hist_nees_1}.
-
-
 \begin{figure}[H]
 \begin{tabular}{ccc}
 \centering
-\subcaptionbox{NEES}{\includegraphics[width = 0.55\linewidth]{fig/eva_graphs/synt_nees.pdf}} &
-\subcaptionbox{Histogram of NEES}{\includegraphics[width = 0.40\linewidth]{fig/eva_graphs/synt_hist_nees.pdf}}
+\subcaptionbox{NEES}{\includegraphics[width = 0.45\linewidth]{fig/eva_graphs/synt_nees.pdf}} &
+\subcaptionbox{Histogram of NEES}{\includegraphics[width = 0.45\linewidth]{fig/eva_graphs/synt_hist_nees.pdf}}
 \end{tabular}
 \caption{Remove Y axes title and Y axes thick from graphs!!!}
-\end{figure}\label{fig:test_hist_nees_1}
+\end{figure}
 
-%Translation Average NEES: 15.64
-%Rotation Average NEES: 15.72
 
-These results show that the estimator is not consistent. This is because 
-the projection operation introduces non-linearity to the system and 
-we only approximate covariance of 3D feature points with first-order 
-taylor expansion. This linearization process does not work well with 
-large noises. In this case, [\cite{Shalom2001}, pp.395-397] 
-suggests couple of heuristic methods to make the estimator consistent.
-Among them, we apply multiplication of estimated covariance $\mathbf{Q_{t,q}}^{(k,k+1)}$
-by scaling factor $\phi$ after optimiziton.
 
+% 3.1
+%% Note: How does it look with error in both img optimization?
+
+% NEES and ANEES
 \begin{figure}[H]
-\begin{tabular}{ccc}
-\centering
-\subcaptionbox{NEES}{\includegraphics[width = 0.55\linewidth]{fig/eva_graphs/synt_nees_2.pdf}} &
-\subcaptionbox{Histogram of NEES}{\includegraphics[width = 0.40\linewidth]{fig/eva_graphs/synt_hist_nees_2.pdf}}
-\end{tabular}
-\caption{Remove Y axes title and Y axes thick from graphs!!!}
-\end{figure}\label{fig:test_hist_nees_2}
+  \centering
+  \includegraphics[width=\linewidth,natwidth=640,natheight=640]
+  {fig/eva_graphs/synt_nees.pdf}
+  \caption{asda}
+	\label{fig:2d_local_coords_in_world_coords}
+\end{figure}
 
-We find out that ANEES for translation and rotation becomes 2.7 and 2.69, 
-respectively when taking $\phi=4^2$ and the results are shown in figure 
-\ref{fig:test_hist_nees_2}. These values can be accepted as we consider 
-the estimator to be consistent for this setup.
+Translation Average NEES: 15.64
 
-%Translation Average NEES: 2.70
-%Rotation Average NEES: 2.69
+Rotation Average NEES: 15.72
+
+% Histogram of NEES
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth,natwidth=640,natheight=640]
+  {fig/eva_graphs/synt_hist_nees.pdf}
+  \caption{asda}
+	\label{fig:2d_local_coords_in_world_coords}
+\end{figure}
+
+
+% NEES and ANEES
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth,natwidth=640,natheight=640]
+{fig/eva_graphs/synt_nees_2.pdf}
+  \caption{asda}
+	\label{fig:2d_local_coords_in_world_coords}
+\end{figure}
+
+Translation Average NEES: 2.70
+
+Rotation Average NEES: 2.69
+
+% Histogram of NEES
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth,natwidth=640,natheight=640]
+{fig/eva_graphs/synt_hist_nees_2.pdf}
+  \caption{asda}
+	\label{fig:2d_local_coords_in_world_coords}
+\end{figure}
+
 
 \section{TUM RGB-D Dataset}
 
-TUM dataset \cite{Sturm2012a} provides an extensive bechmark capability for 
-RGB-D based Visual SLAM or VO systems. It consists of datasets that are 
-collected in two different indoor environment; i.e, fr1 refers to 
-datasets collected in an office $(6\times 6 m^2)$ and fr2 is colleced in an open spaced 
-garage $(10\times 12m^2)$. In our experiments, we choose a subset of datasets that are mainly 
-suitable for VO and has sufficient texture on the images. 
-The selected datasets are given in table \ref{tb:tum_dataset}.
-In addition, calibration parameters of RGB and depth images are validated 
-by the time-synchronized ground truth measurements recorded by a motion capture system.
-
-\begin{center}
-  \begin{tabular}{lccc}
-    \hline
-    Dataset & Duration & Avg. Trans. & Avg. Rot.\\
-     Name & [s] & Vel. [m/s] & Vel. [deg/s]\\
-    \hline
-    fr1 xyz   & 30 & 0.24 & 8.92\\
-    fr1 rpy   & 28 & 0.06 & 50.15\\
-    fr1 room  & 49 & 0.33 & 29.88\\
-    fr1 360   & 29 & 0.21 & 41.60\\
-    fr1 desk  & 23 & 0.41 & 23.33\\
-    fr1 desk2 & 25 & 0.43 & 29.31\\
-    fr2 desk  & 99 & 0.19 & 6.34\\
-    \hline
-    \end{tabular}
-  \end{center}\label{tb:tum_dataset}
-
-  In the following sections, we will use these datasets to validate 
-  our relative pose estimation and its covariance 
-  with regards to accuracy and consistency.
-
 \subsection{Discovering Effect of Outliers on Pixel Uncertainty}
-
-As discussed earlier in section \ref{sb_sc_pixel_uncertainty}, pixel 
-uncertainty caused by quantization operation is treated as half pixel. 
-Nevertheless, this error is itself not sufficient when choosing 
-standard deviation of pixel noise for covariance of 3D features 
-to be propagated through the \ref{} equation. Remember that 
-we still had outliers in feature matching even after applying RANSAC, 
-which we call them as fake inliers. We proposed to treat them as 
-inliers, but they will increase the pixel uncertainty. We also assume that 
-RANSAC will bound these fake inliers. Thus, we are interested in 
-determining the boundaries which we will set them as pixel uncertainties 
-We determine them using TUM RGB-D and the ground truth measurements.
 
 % Time-based error histogram with 20 frame discrete window
 % - Show that pixel errors are gaussian and stds are different along the path
@@ -3285,30 +3227,11 @@ We determine them using TUM RGB-D and the ground truth measurements.
 \begin{figure}[H]
   \makebox[\textwidth][c]{\includegraphics[width=1.4\linewidth,natwidth=640,natheight=640]
   {fig/eva_graphs/tum_fr1_xyz_tbased_hist_uv_err.pdf}}
-  \caption{explain the window}
-\end{figure}\label{fig:time_based_hist_pix_err}
+  \caption{asda}
+	\label{fig:2d_local_coords_in_world_coords}
+\end{figure}
 
-Let's remind ourselves with the procedures of the pipeline.
-To find the pixel error caused by fake inliers, we run our VO pipeline 
-up until the optimization part estimating the pose. 
-To do so, we first extracted features, then matched them and finally filtered outliers with RANSAC. 
-At this point, we have feature matches that includes fake inliers. 
-Now, instead of estimating the relative pose,
-we can identify boundaries of the fake inliers caused by RANSAC 
-by using ground truth data. With using translation and rotation information 
-from ground truth, we project features matches one on another. 
-Then, for some matches, we expect to get pixel errors to be greater than 1 as 
-they are the fake inliers.
-This test case is applied on every consecutive frame of the whole trajectory.
-Next, we illustrate the results in a time-based scheme to observe 
-how the pixel error changes throughout the trajectory. The illustration 
-gathered by 'fr1 xyz' dataset is given in figure \ref{fig:time_based_hist_pix_err}.
-As observed, pixels error mainly caused by fake inliers are distibuted as 
-gaussian and its standard deviation changes over the trajectory. To 
-see how it changes we draw the time-based standard deviation of the pixel errors 
-in figure \ref{fig:time_based_std_pix_err}.
 
-NOTE: THERE IS SOMETHING WRONG WITH THE NUMBERING OF FIGS.
 % Time-based std with 5 frame sliding window with fr1_xyz
 
 \begin{figure}[H]
@@ -3316,11 +3239,9 @@ NOTE: THERE IS SOMETHING WRONG WITH THE NUMBERING OF FIGS.
   \includegraphics[width=\linewidth,natwidth=640,natheight=640]
   {fig/eva_graphs/tum_fr1_xyz_tbased_uv_err_std.pdf}
   \caption{asda}
-\end{figure}\label{fig:time_based_std_pix_err}
+	\label{fig:2d_local_coords_in_world_coords}
+\end{figure}
 
-The goal is to run this test over many datasets so that we can find the largest 
-standard deviation. The result of these test are represented with 
-the boxplots in figure \ref{fig:boxplot_time_based_std_all_datasets}.
 
 % Boxplot of Time-based std with 5 frame sliding window for all datasets
 
@@ -3335,11 +3256,7 @@ the boxplots in figure \ref{fig:boxplot_time_based_std_all_datasets}.
 \subcaptionbox{fr1 desk2}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/boxplot_tbased_uv_err_std_fr1_desk2.pdf}}
 \end{tabular}
 \caption{Remove Y axes title and Y axes thick from graphs!!!}
-\end{figure}\label{fig:boxplot_time_based_std_all_datasets}
-
-To cover the worst case scenario, 
-we take these values as largest value of standard deviations of the pixel noise 
-when forming covariance matrix $\mathbf{Q_{uvz}}^{(i,k)}$.
+\end{figure}
 
 % 2
 
@@ -3373,27 +3290,15 @@ when forming covariance matrix $\mathbf{Q_{uvz}}^{(i,k)}$.
 % 1
 \subsection{Evaluation of Estimated Covariance}
 
-Similar to simulation data, we calculate NEES for covariance of the estimated 
-poses after running the VO algorithm 6 different datasets in TUM. 
-Note that we set standard deviation of pixel uncertainty according to 
-the largest value $\sigma_u=7$ and $\sigma_v=8$ 
-determined in the experimental analysis done in previous section.
-After each optimization, we scale resulting covariance $\mathbf{Q_{t,q}}^{(k,k+1)}$
-with the $\phi=4^2$ to compensate the errors due to the linearization.
-Under these parameterizations, we run the algorithm and calculate 
-histogram of NEES and ANEES for the selected datasets. 
-The resulting histograms are illustrated in \ref{fig:hist_nees_all_datasets} and 
-their ANEES are given in table \ref{tb:anees_all_datasets}.
 
-
-%% NEES and ANEES with fr1_xyz
-%\begin{figure}[H]
-%  \centering
-%  \includegraphics[width=\linewidth,natwidth=640,natheight=640]
-%  {fig/eva_graphs/tum_fr1_xyz_nees.pdf}
-%  \caption{asda}
-%	\label{fig:2d_local_coords_in_world_coords}
-%\end{figure}
+% NEES and ANEES with fr1_xyz
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth,natwidth=640,natheight=640]
+  {fig/eva_graphs/tum_fr1_xyz_nees.pdf}
+  \caption{asda}
+	\label{fig:2d_local_coords_in_world_coords}
+\end{figure}
 
 % Without average by 3 (degree of freedom)
 %fr1 xyz
@@ -3415,6 +3320,26 @@ their ANEES are given in table \ref{tb:anees_all_datasets}.
 %Translation Average NEES: 19.81107198582873
 %Rotation Average NEES: 55.49945876186048
 
+\begin{center}
+  \begin{tabular}{l|cc|cc}
+    \hline
+  & Translation ANEES & Status & Rotation ANEES & Status \\
+  \hline
+  fr1 xyz   & 1.55 & conservative & 2.48 & conservative \\
+  \hline
+  fr1 rpy   & 1.08 & conservative & 3.10 & overconfident \\
+  \hline
+  fr1 360   & 1.21 & conservative & 3.69 & overconfident \\
+  \hline
+  fr1 desk  & 2.88 & conservative & 4.99 & overconfident \\
+  \hline
+  fr1 desk2 & 2.72 & conservative & 5.30 & overconfident \\
+  \hline
+  fr1 room  & 0.96 & conservative & 2.65 & conservative \\
+  \hline
+  \end{tabular}
+\end{center}
+
 % Histogram of NEES with all datasets!
 % BUG: Caption does not located under figures!
 \begin{figure}[H]
@@ -3428,46 +3353,12 @@ their ANEES are given in table \ref{tb:anees_all_datasets}.
 \subcaptionbox{fr1 desk2}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/tum_fr1_desk2_hist_nees.pdf}}
 \end{tabular}
 \caption{4 x 4}
-\end{figure}\label{fig:hist_nees_all_datasets}
-
-We observe that covariance of the translation estimations are conversative, 
-which is acceptable in VO systems. However, covariance of the rotation estimation 
-result in being overconfident for 3 datasets; i.e., 'fr1 360', 'fr1 desk' and 'fr1 room'.
-Thus, we can say the estimator is \textit{inconsistent} for the rotation, 
-as opposed to the translation providing consistent covariance estimations.
-
-\begin{center}
-  \begin{tabular}{l|cc|cc}
-    \hline
-  & Translation ANEES & Status & Rotation ANEES & Status \\
-  \hline
-  fr1 xyz   & 1.55 & conservative & 2.48 & conservative \\
-  \hline
-  fr1 rpy   & 1.08 & conservative & 3.10 & conservative \\
-  \hline
-  fr1 360   & 1.21 & conservative & 3.69 & overconfident \\
-  \hline
-  fr1 desk  & 2.88 & conservative & 4.99 & overconfident \\
-  \hline
-  fr1 desk2 & 2.72 & conservative & 5.30 & overconfident \\
-  \hline
-  fr1 room  & 0.96 & conservative & 2.65 & conservative \\
-  \hline
-  \end{tabular}
-\end{center}\label{tb:anees_all_datasets}
-
+\end{figure}
 
 % 5
 \section{Comparison to FOVIS}
 
 %subsection{Trajectory Estimation}
-As for the accuracy of the estimated poses, we compare the proposed algorithm 
-with FOVIS, which is a defacto VO application since it produces very accurate 
-pose estimation with fast computations.
-To provide an illustration as to building trajectory from relative pose estimations, 
-we draw estimations results of 'fr2 desk' which is suitable to present drift effects 
-and it is given in \ref{fig:comp_fr2_desk} along with the boxplot representation
-of RPEs. 
 
 % Traj XYZ with fr2_desk Boxplot with fr2_desk
 \begin{figure}[H]
@@ -3477,11 +3368,7 @@ of RPEs.
 \subcaptionbox{asd}{\includegraphics[width = 0.45\linewidth]{fig/eva_graphs/fovis_comp_boxplot_tum_fr2_desk.pdf}}
 \end{tabular}
 \caption{Remove Y axes title and Y axes thick from graphs!!!}
-\end{figure}\label{fig:comp_fr2_desk}
-
-We run both algorithm for the 7 datasets and the resulting RMSEs of RPEs 
-are given in table \ref{tb:comp_all_dataset}. Note that we take $\Delta=30$ 
-frames while calculating RPEs.
+\end{figure}
 
 \begin{center}
   \begin{tabular}{lcc}
@@ -3503,13 +3390,192 @@ frames while calculating RPEs.
     \hline
     fr2 desk2 & 0.0156  & 0.0428 \\
     \hline
-  \end{tabular}\label{tb:comp_all_dataset}
+  \end{tabular}
+
 \end{center}
 
-We can say that FOVIS is more accurate than the proposed algorithm. 
-We can name number of reasons. FOVIS utilizes the keyframe style and different 
-outlier rejection algorithm and provides a better initial guess to its 
-optimizer after several refinement steps.
+
+%\begin{center}
+%  \begin{tabular}{lcccc}
+%    \hline
+%    & \multicolumn{2}{c}{FOVIS} & \multicolumn{2}{c}{COVO}\\
+%    & Mean & RMSE & Mean & RMSE\\
+%    \hline
+%    fr1 xyz   & 0.0189 & 0.0240 & 0.0383 & 0.0512\\ 
+%    \hline
+%    fr1 rpy   & 0.0456 & 0.0533 & 0.0325 & 0.0368\\
+%    \hline
+%    fr1 360   & 0.0731 & 0.0867 & 0.1003 & 0.1239\\ 
+%    \hline
+%    fr1 desk  & 0.0302 & 0.0406 & 0.0571 & 0.0665\\
+%    \hline
+%    fr1 desk2 & 0.0472 & 0.0533 & 0.0833 & 0.0941\\
+%    \hline
+%    fr1 room  & 0.0446 & 0.0587 & 0.0709 & 0.0791\\
+%    \hline
+%    fr2 desk2 & 0.0134 & 0.0156 & 0.0329 & 0.0428 \\
+%    \hline
+%  \end{tabular}
+%
+%\end{center}
+
+%fr1 xyz
+%calculating fovis translation RPE
+%mean: 0.018995324602472472
+%rmse: 0.02403313402319976
+%max: 0.065593459847535
+%min: 0.001815310665833277
+%calculating covo translation RPE
+%mean: 0.03834305789811094
+%rmse: 0.05127849445847839
+%max: 0.13561281376705397
+%min: 0.005325509432055075
+%calculating fovis rotation RPE
+%mean: 0.018995324602472472
+%rmse: 0.02403313402319976
+%max: 0.065593459847535
+%min: 0.001815310665833277
+%calculating covo rotation RPE
+%mean: 0.05462429292188775
+%rmse: 0.07357272314436371
+%max: 0.1995429338363258
+%min: 0.006293913001972797
+%
+%
+%fr1 rpy
+%calculating fovis translation RPE
+%mean: 0.045671960247901454
+%rmse: 0.05335015256909358
+%max: 0.11636903642911761
+%min: 0.008082721460018484
+%calculating covo translation RPE
+%mean: 0.032511270546770485
+%rmse: 0.03687383943449597
+%max: 0.07394256278218639
+%min: 0.012565033639505804
+%calculating fovis rotation RPE
+%mean: 0.045671960247901454
+%rmse: 0.05335015256909358
+%max: 0.11636903642911761
+%min: 0.008082721460018484
+%calculating covo rotation RPE
+%mean: 0.06202488385050518
+%rmse: 0.0658567271817125
+%max: 0.09727894084269101
+%min: 0.01674730308431874
+%
+%
+%fr1 desk
+%calculating fovis translation RPE
+%mean: 0.030267478865084466
+%rmse: 0.04065592653459894
+%max: 0.11611971532531572
+%min: 0.002591864340283947
+%calculating covo translation RPE
+%mean: 0.05710168798830031
+%rmse: 0.06654224080007558
+%max: 0.16366511227765174
+%min: 0.004206948818856475
+%calculating fovis rotation RPE
+%mean: 0.030267478865084466
+%rmse: 0.04065592653459894
+%max: 0.11611971532531572
+%min: 0.002591864340283947
+%calculating covo rotation RPE
+%mean: 0.09124029836815122
+%rmse: 0.10176352796997191
+%max: 0.17677233368175765
+%min: 0.012398507342695281
+%
+%fr1 desk2
+%calculating fovis translation RPE
+%mean: 0.047246368231133026
+%rmse: 0.053317787265840424
+%max: 0.11522939736968013
+%min: 0.01217040413740998
+%calculating covo translation RPE
+%mean: 0.0833796716004891
+%rmse: 0.0941072917682276
+%max: 0.19380409650177396
+%min: 0.030076704618902446
+%calculating fovis rotation RPE
+%mean: 0.047246368231133026
+%rmse: 0.053317787265840424
+%max: 0.11522939736968013
+%min: 0.01217040413740998
+%calculating covo rotation RPE
+%mean: 0.1082168335357502
+%rmse: 0.12295842349982163
+%max: 0.2006600156800518
+%min: 0.02509890681531765
+%
+%fr1 room
+%calculating fovis translation RPE
+%mean: 0.04468832507204012
+%rmse: 0.05871273917155775
+%max: 0.22862974643181294
+%min: 0.004830130633002347
+%calculating covo translation RPE
+%mean: 0.0709401856404292
+%rmse: 0.07910870035709944
+%max: 0.16474081303147517
+%min: 0.013424401978954378
+%calculating fovis rotation RPE
+%mean: 0.04468832507204012
+%rmse: 0.05871273917155775
+%max: 0.22862974643181294
+%min: 0.004830130633002347
+%calculating covo rotation RPE
+%mean: 0.08688579567594938
+%rmse: 0.10072158765329067
+%max: 0.306431856943886
+%min: 0.01014690321950457
+%
+%fr1 360
+%calculating fovis translation RPE
+%mean: 0.07318470847527077
+%rmse: 0.08675154037418777
+%max: 0.17697464685105907
+%min: 0.021034527008431125
+%calculating covo translation RPE
+%mean: 0.10030503229439387
+%rmse: 0.12398036290290936
+%max: 0.39064513092833025
+%min: 0.011719024323959245
+%calculating fovis rotation RPE
+%mean: 0.07318470847527077
+%rmse: 0.08675154037418777
+%max: 0.17697464685105907
+%min: 0.021034527008431125
+%calculating covo rotation RPE
+%mean: 0.10159459504685436
+%rmse: 0.124555741805544
+%max: 0.32350394057869997
+%min: 0.03109627848176771
+%
+%fr2 desk
+%calculating fovis translation RPE
+%mean: 0.013413060298527842
+%rmse: 0.015651093498115286
+%max: 0.060168738165453865
+%min: 0.0015853239858058925
+%calculating covo translation RPE
+%mean: 0.032921580019735774
+%rmse: 0.042804535992902265
+%max: 0.19313563936173195
+%min: 0.004631325184238375
+%calculating fovis rotation RPE
+%mean: 0.013413060298527842
+%rmse: 0.015651093498115286
+%max: 0.060168738165453865
+%min: 0.0015853239858058925
+%calculating covo rotation RPE
+%mean: 0.03839251177938236
+%rmse: 0.047517212522977643
+%max: 0.19877795280540297
+%min: 0.005248769292285971
+
+% Boxplots with all datasets
 
 \begin{figure}[H]
 \begin{tabular}{ccc}
