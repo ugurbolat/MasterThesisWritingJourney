@@ -24,11 +24,9 @@
 \usepackage{algorithm}
 \usepackage[noend]{algpseudocode}
 \usepackage{array}
-%\usepackage{subfig}
 
 
-
-% ***************************CONFIGS***************************
+% ***************************NEW COMMANDS***************************
 % for numbering per section
 \numberwithin{figure}{section}
 % removing ugly colored rectangles from references
@@ -70,14 +68,24 @@
 \newcommand*{\vertbar}{\rule[-1ex]{0.5pt}{2.5ex}}
 \newcommand*{\horzbar}{\rule[.5ex]{2.5ex}{0.5pt}}
 
+% ***************************ACRONYM AND SYMBOL DEFINITIONS*******************
 
-% ***************************ACRONYMS***************************
-\usepackage[toc, shortcuts]{glossaries}
-\makeglossaries
+\usepackage[acronym,nonumberlist,toc]{glossaries}
+\makenoidxglossaries
+% Acronyms
 \newacronym{vo}{VO}{Visual Odometry}
+\newacronym{slam}{SLAM}{Simultenous Localization and Mapping}
+\newacronym{rgbd}{RGB-D}{RGB Color Camera with Depth Sensor}
 
+% Symbols
+\newglossaryentry{angelsperarea}{
+  name = $a$ ,
+  description = The number of angels per unit area,
+}
 
+\renewcommand{\contentsname}{Table of Contents}
 
+% ***************************DOC***************************
 \begin{document}
 
 % ***************************TITLE***************************
@@ -121,8 +129,8 @@ Professorship of Process Automation
 % ***************************ABSTRACT***************************
 % Soft intro to the problem
 % talk about robustness
-  \textit{Robutness} of a robot 
-  can be defined as an ability to operate under \textit{uncertainty} 
+\textit{Robutness} of a robot 
+can be defined as an ability to operate under \textit{uncertainty} 
 without the occurrence of a downtime. There are well-designed robots whose task 
 is to solve defined problem without moving from its assembled position. 
 They are able to operate safely as uncertainty of operational components and 
@@ -155,7 +163,7 @@ On the other hand, there are papers that model the uncertainty of RGB-D cameras
 such as Kinect, but they applied their models on applications that are outside of VO. 
 The main goal of this work is to build such a VO system that it provides not only 
 relative pose estimations but also a covariance matrix of its estimated poses.
-We estimate the covarince matrix of the predicted pose 
+To achieve this goal, we estimate the covarince matrix of the predicted pose 
 by propogating metric uncertainty of 3D point features
 that are modeled with the sensor characteristics of a RGB-D camera.
 
@@ -165,24 +173,28 @@ that are modeled with the sensor characteristics of a RGB-D camera.
 \newpage
 
 
-% ***************************TABLE OF CONTENT ETC.***************************
+% ***************************FRONTEND STUFF***************************
+
+% Table of Contents
+\pagenumbering{roman}
 \tableofcontents
-\newpage
+\cleardoublepage
+\setcounter{page}{1}
 \listoffigures
+\addcontentsline{toc}{chapter}{\listfigurename}
 \listoftables
+\addcontentsline{toc}{chapter}{\listtablename}
 \newpage
-
-List of Symbols and Notation
-\newpage 
-
-List of Acronyms
-\printglossary[type=\acronymtype,title={Abbreviations}]
-\newpage
-
-Acknowledgement
+\printnoidxglossary[type=acronym,title={List of Abbreviations}]
+\printnoidxglossary[title=List of Symbols]
+\glsaddallunused
+\printacronyms
+\chapter*{Acknowledgement}
+\addcontentsline{toc}{chapter}{Acknowledgments}
 \newpage
 
 % ***************************DOCUMENT***************************
+\pagenumbering{arabic}
 
 % ***************************CP1-INTRO***************************
 \chapter{Introduction} \label{cp_intro}
@@ -197,8 +209,8 @@ Without a priori known landmark measurements, dead-reckoning systems are destine
 drift from its real position. Thus, the robot must build map of its environment 
 along with the previously seen landmarks. Then, it will have a chance to 
 recover from drifts by recoginizing the same landmarks in the same area 
-in different time. Infact, this problem in robotics is named as Simultenous 
-Localization and Mapping (SLAM). 
+in different time. Infact, this problem in robotics is named as 
+\acrfull{slam}. 
 % Where used?
 To solve SLAM problems, robots are equiped 
 with various kind of both dead-reckoning systems; e.g., IMU, wheel odometry and 
@@ -324,7 +336,7 @@ To be more specific,
 we can write the projection operation as a linear mapping function 
 in the following way if we utilize the homogenous coordinates:
 
-NOTE: NAME x,y,z indices for world and camera coords all below
+TODO: NAME x,y,z indices for world and camera coords all below
 
 \begin{equation}
   \begin{pmatrix}
@@ -362,7 +374,7 @@ NOTE: NAME x,y,z indices for world and camera coords all below
 This equation applies for the case when 3D points are 
 projected onto a plane where the principal point is the origin. 
 However, the common convention in partice 
-is to have the origin at the (not entirely sure) left-bottom corner not in the centre.
+is to have the origin at the (TODO: not entirely sure) left-bottom corner not in the centre.
 
 \begin{figure}[H]
 	\centering
@@ -597,7 +609,7 @@ Projected images captured by RGB cameras lack depth and angle
 information. To acquire these information, two main techniques are developed; 
 e.g., passive stereo cameras and active stereo cameras. For passive stereo cameras, 
 typically two synchronized cameras are placed horizontally with a known distance to each other. 
-Hence, one usually exploits the triangulation technique to calculate the depth. 
+%Hence, one usually exploits the triangulation technique to calculate the depth. 
 Whereas, for active stereo camera, one typically has one light projector and 
 one camera sensor. For example, in Kinect, a Infrared (IR) laser projects 
 structured IR speckle light pattern on a object, and then 
@@ -797,8 +809,8 @@ In noisy measurement case, the problem is usually solved with
 \textit{singular value decomposition (SVD)} with $n \geq 6$ measurement points. 
 This method is called the \textit{Direct Linear Transformation (DLT)}.
 Disadvantange of the DLT methods, it is still sensitive errors since 
-it only considers \textit{algebraic errors}, which are the residuals of 
-$\mathbf{Ap}$. 
+it only considers algebraic errors (that are the residuals of 
+$\mathbf{Ap}$). 
 
 While estimating the intrinsic and extrinsic parameters 
 that are in linear form with the DLT, 
@@ -1409,7 +1421,7 @@ determine parameters of the model. In homography $\mathbf{H}$ case, we need at l
 this linear system of equation. However, due to the noise, we require more than 
 4 point pairs but this makes the problem over-determined. Therefore, 
 we might find an approximated solution by solving least squares problem:
-With all that being said, we minimize the 
+With all that being said, we minimize so-called 
 \textit{algebraic distance error}:
 
 \begin{equation}
@@ -1512,7 +1524,7 @@ and its matches to estimate the camera motion.
 
 TODO: SWITCH K AND C INDICES ON TRANSLATION AND ROTATION RESERVE!
 
-Motion estimation is the core part of the VO system. After 
+Pose estimation is the core part of the VO system. After 
 extracting and matching features,
 we finally are ready to compute $\mathbf{T}_{k, k+1}$ transformation matrix. 
 The \textit{transformation matrix} corresponds to relative camera motion information between 
@@ -1778,7 +1790,7 @@ estimated and included in the optimazation problem.
 \chapter{Motivation} \label{cp_motivation}
 
 The essence of a mobile robot is autonomy. 
-To gain full autonomy, the robot first \textit{senses} its environment, then 
+A fully autonomous robot first \textit{senses} its environment, then 
 \textit{interprets} the collected data and finally \textit{acts} based on the insights 
 that it gathered over time.
 If we look at nature, throughout the evolution, 
@@ -1840,7 +1852,7 @@ of projected 2D points onto the image plane from 3D world using RGB camera is
 needed to be known.
 This quantization error refers also as a pixel noise 
 \cite{RichardHartley2003}
-which is assumed to be maximum one-pixel and normally distributed in literature.
+which is assumed to be maximum half pixel and normally distributed in literature.
 To represent the pixel uncertainty of features in 3D world, 
 the conic ray model \cite{Sola2007a} is used by taking advantage of the pinhole model of 
 a RGB camera. 
@@ -2703,7 +2715,7 @@ one can perform regular addition since $\R^3 x \R^3 \rightarrow \R^3$:
   \begin{bmatrix} \Delta x \\ \Delta y \\ \Delta z \end{bmatrix}
 \end{equation}
 
-NOTE:CHANGE $\R x \R$ to $\R\times \R$
+TODO: CHANGE $\R x \R$ to $\R\times \R$
 
 For rotating, however; the box-plus operation refers to 
 $SO(3) \times \R^3 \rightarrow SO(3)$ and one can rotate in its local space 
@@ -3116,7 +3128,7 @@ the proposed algorithm other VO. This corresponds to a drift per approximately
 The main focus of this thesis is to provide metric uncertainty of the relative 
 pose. We do this by propogating the uncertainty of the 3D features points 
 through the error model. In this case, it is critical to assess 
-consistency of estimated convariance values to gain trust for  
+consistency of estimated convariance values in order to use it safely in 
 filter-based or graph-based sensor fusion applications. 
 One of the good metrics to evaluate consistency is 
 to calculate Normalized Estimation Error Squared (NEES). This method measures 
@@ -3140,7 +3152,7 @@ We also take an average of NEES (ANEES) over whole trajectory:
   \frac{1}{n} \sum_{i=1}^{n} ||\mathbf{e}_i||^2_{\Omega_i}
 \end{equation}
 
-NOTE: find a synonym for it is important to note phrase!
+TODO: find a synonym for 'it is important to note' phrase!
 
 If the system is linear, has degree of freedom $d=1$ and gaussian noise, 
 then the expected value 
@@ -3428,7 +3440,7 @@ gaussian and its standard deviation changes over the trajectory. To
 see how it changes we draw the time-based standard deviation of the pixel errors 
 in figure \ref{fig:time_based_std_pix_err}.
 
-NOTE: THERE IS SOMETHING WRONG WITH THE NUMBERING OF FIGS.
+TODO: THERE IS SOMETHING WRONG WITH THE NUMBERING OF FIGS.
 % Time-based std with 5 frame sliding window with fr1_xyz
 
 \begin{figure}[H]
@@ -3714,7 +3726,7 @@ Finally, several limitations to this work need to be acknowledged.
 The simulation environment was built under the assumption that the 
 pixel and depth uncertainties are gaussian and there are no outliers in 
 feature matches. The fact that RANSAC is non-deterministic 
-causes to remain outliers that are greater than its acceptance 
+causes to remain outliers that are greater than RANSAC's acceptance 
 threshold. Once remaining outliers are treated as pseudo inliers, 
 pixel uncertainty grows, which then brings out issues in the linearizations.
 It is also obvious that setting the pixel uncertainty 
@@ -3722,8 +3734,8 @@ by the largest standard deviation value
 after running exhaustive tests 
 to determine how pseudo inliers' error are distributed throughout all trajectories 
 will not cover every corner cases. Thus, this problem requires more 
-sophisticated approaches.
-In contrast to our simulation environment, 
+sophisticated approaches if more adaptive covariance estimation is desired.
+Additionally, in contrast to our simulation environment, 
 the analysis being done for estimator's consistency with NEES 
 is usually performed in Monte Carlo simulation to introduce greater uncertainty 
 to the system.
@@ -3749,7 +3761,32 @@ TODO: open questions and future work
 
 \section{Rigid-Body Transformations} \label{sc_rigid_body_transformations}
 
+\textit{Rigid-body} refers to objects made of solid materials so deformation is 
+neglected. Thus, we idealize it by assuming that any given two points of 
+rigid-body remains constant in time regardless of external forces 
+applied on it. In $\R^3$ space, a rigid-body has 6 degree of freedom; i.e, 
+3 for the position $(x, y, z)$ and 3 for the orientation $(\alpha, \beta, \gamma)$.
+For a rigid-body, the motion is composed of a rotation around an axis and 
+a translation along an axis. 
+
+Let
+$p_0=[\mathbf{t}, \mathbf{q}]^T=[t_x, t_y, t_z, q_x, q_y, q_z, q_w]^T$
+be the initial pose of the frame that is fixed to the rigid-body 
+where $\mathbf{t}$ represents the position and $\mathbf{q}$ rotation.
+
 \subsubsection{Translation}
+
+One can translate the rigid-body to another position with a simple vector 
+addition operation:
+
+\begin{equation}
+\begin{aligned}
+  \mathbf{t}_1 &= \mathbf{t}_0 + \mathbf{t}_{01}\\
+  \begin{bmatrix} t_x^1 \\ t_y^1 \\ t_z^1 \end{bmatrix} & = 
+  \begin{bmatrix} t_x^0 \\ t_y^0 \\ t_z^0 \end{bmatrix} + 
+  \begin{bmatrix} t_x^{01} \\ t_y^{01} \\ t_z^{01} \end{bmatrix}
+\end{aligned}
+\end{equation}
 
 \begin{figure}[H]
 \begin{tabular}{ccc}
@@ -3763,6 +3800,31 @@ TODO: open questions and future work
 
 \subsubsection{Rotation with Quaternions}
 
+One can rotate the rigid-body to another orientation with the 
+quaternion product:
+
+\begin{equation}
+\begin{aligned}
+  \mathbf{q}_1 &= \mathbf{q}_{01} \otimes \mathbf{q}_0\\
+  \mathbf{q}_1 &= [\mathbf{q}_{01}]_L \mathbf{q}_0\\
+  \begin{bmatrix} 
+    q_w^{01} q_w^0 - q_x^{01} q_x^0 - q_y^{01} q_y^0 - q_z^{01} q_z^0  \\ 
+    q_w^{01} q_x^0 + q_x^{01} q_w^0 + q_y^{01} q_z^0 - q_z^{01} q_y^0  \\ 
+    q_w^{01} q_y^0 - q_x^{01} q_z^0 + q_y^{01} q_w^0 + q_z^{01} q_x^0  \\ 
+    q_w^{01} q_z^0 + q_x^{01} q_y^0 - q_y^{01} q_x^0 + q_z^{01} q_w^0  
+  \end{bmatrix} & = 
+  \begin{bmatrix} 
+    q_w^{01} - q_x^{01} - q_y^{01} - q_z^{01}  \\ 
+    q_w^{01} + q_x^{01} + q_y^{01} - q_z^{01}  \\ 
+    q_w^{01} - q_x^{01} + q_y^{01} + q_z^{01}  \\ 
+    q_w^{01} + q_x^{01} - q_y^{01} + q_z^{01}  
+  \end{bmatrix}
+  \begin{bmatrix} q_w^0 \\ q_x^0 \\ q_y^0 \\ q_z^0 \end{bmatrix}
+\end{aligned}
+\end{equation}
+
+where $[\mathbf{q}_{01}]_L$ is the left quaternion product in matrix form.
+
 \begin{figure}[H]
 \begin{tabular}{ccc}
 \centering
@@ -3775,6 +3837,20 @@ TODO: open questions and future work
 
 \subsubsection{Transformation}
 
+The most useful motion is the roto-translation motion, also called transformation, 
+which rotates the rigid-body and then tanslates it:
+
+\begin{equation}
+  \mathbf{t}_1 = \mathbf{q}_{01} \otimes \mathbf{t'}_0 \otimes \mathbf{q}^*_{01} + \mathbf{t'}_{01}
+\end{equation}
+
+\begin{equation}
+  \mathbf{q}_1 = \mathbf{q}_{01} \otimes \mathbf{q}_0\\
+\end{equation}
+
+where $\mathbf{t'}=[0, t_x, t_y, t_z]^T$ is the quaternion version of 
+a vector $\mathbf{t}$ with zero scalar part.
+
 \begin{figure}[H]
 \begin{tabular}{ccc}
 \centering
@@ -3783,8 +3859,6 @@ TODO: open questions and future work
 \end{tabular}
 \caption{}
 \end{figure}\label{fig:}
-
-
 
 
 \section{Least Squares}\label{sc_least_squares}
@@ -4288,14 +4362,75 @@ That being said, we can now summarize the algorithm into five steps:
 
 \section{Error Propagation Law} \label{sc_error_prop_law}
 
+In state estimation applications, sensor measurements and their uncertainty are 
+usually fused in order to keep the uncertainy of the estimated state vector bounded.
+The uncertainty is represented with a probability distribution, 
+which is desired to be distributed as Gaussian. 
+To estimate uncertainty of estimated state vector, 
+we map the probabilty distribution function of $X$, $p(X)$, 
+to the probabilty distribution function of $Y=f(X)$, $p(Y)$. This is called 
+\textit{error propagation law}. If $f(X)$ is a non-linear function, 
+linearization is required.
+
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
-	{fig/ref_imgs/error_propagation.png}
-	\caption{Error Propagation}
+	{fig/ref_imgs/error_propagation.jpg}
+  \caption{Error Propagation \cite{Arras1998b}}
   \label{fig:error_propagation}
 \end{figure}
 
+Suppose that $X\sim \mathcal{N}(\mu_x, \sigma_x)$ is distributed Gaussian 
+and we want to know how $\sigma$ probability bound 
+$[\mu_x-\sigma_x, \mu_x+\sigma_x]$ is propagated through $f(X)$.
+Approximation of $f(X)$ at $X=\mu_x$ can be represented with 
+a first-order Taylor expansion:
+
+\begin{equation}
+  Y \approx f(\mu_x) + \frac{\partial f}{\partial X}\bigg|_{X=\mu_x} (X-\mu_x) 
+\end{equation}
+
+By means of linearization, we are now able to determine $\mathcal{N}(\mu_y, \sigma_y)$ 
+with linear mapping:
+
+\begin{equation}
+  \mu_y = f(\mu_x)
+\end{equation}
+
+The interesting part is the standard deviation mapping since it 
+is used to describe the uncertainty:
+
+\begin{equation}
+  \sigma_y = \frac{\partial f}{\partial X}\bigg|_{X=\mu_x} \sigma_x
+\end{equation}
+
+It is important to note that propagated $(\mu_x, \sigma_x)$ are only 
+approximation to real mapping $f(X)$ function. To eliminate errors 
+caused by linearization, standard deviation $\sigma_x$ 
+should be small at known $\mu_x$ mean. 
+
+If $\mathbf{X}=(X_1,\dots,X_n) \in \R^n$ has multiple inputs with 
+multiple $f(\mathbf{X})=\mathbf{Y}=(Y_1,\dots,Y_m) \in \R^m$ outputs,
+we approximate with a first-order partial derivative, which is a Jacobian 
+matrix:
+
+\begin{equation}
+  \begin{aligned}
+    \mathbf{Y} & \approx f(\mu_1,\dots,\mu_n) + 
+    \sum_{i=1}^{n} [\frac{\partial f}{\partial X_i}(\mu_1,\dots,\mu_n)][X_i-\mu_i] \\
+    \mathbf{Y} & \approx f(\mathbf{X}_{\mu_x}) + \mathbf{J}(\mathbf{X}_{\mu_x}) (\mathbf{X} - \mathbf{X}_{\mu_x})
+  \end{aligned}
+\end{equation}
+
+
+Let's propagate errors for multivariant function $f(\mathbf{X})$ with its 
+Jacobian and covariance:
+
+\begin{equation}
+  \mathbf{Q}_y = \mathbf{J}(\mathbf{X}_{\mu_x})^T \mathbf{Q}_x \mathbf{J}(\mathbf{X}_{\mu_x})
+\end{equation}
+
+where $\mathbf{Q}$ is the covariance matrix that corresponds to uncertainty.
 
 
 \end{document}
