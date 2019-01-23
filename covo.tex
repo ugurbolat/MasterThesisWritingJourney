@@ -76,13 +76,54 @@
 \newacronym{vo}{VO}{Visual Odometry}
 \newacronym{slam}{SLAM}{Simultenous Localization and Mapping}
 \newacronym{rgbd}{RGB-D}{RGB Color Camera with Depth Sensor}
+\newacronym{imu}{IMU}{Inertial Measurement Unit}
+
 
 % Symbols
-\newglossaryentry{angelsperarea}{
-  name = $a$ ,
-  description = The number of angels per unit area,
+\newglossaryentry{2d_feature_pix_coord}{
+  name = \ensuremath{\mathbf{u}} ,
+  description = 2D point position on image plane 
 }
-
+\newglossaryentry{3d_point_cam_coords}{
+  name = {\ensuremath{\mathbf{X_c}}} ,
+  description = 3D point position in camera coordinate system
+}
+\newglossaryentry{3d_point_world_coords}{
+  name = $\mathbf{X_w}$ ,
+  description = 3D point position in world coordinate system
+}
+\newglossaryentry{instrinsic_rgb}{
+  name = {\ensuremath{\mathbf{K_{RGB}}}} ,
+  description = instrinsic matrix for RGB camera
+}
+\newglossaryentry{projection_rgb}{
+  name = {\ensuremath{\mathbf{P_{RGB}}}} ,
+  description = projection matrix for RGB camera
+}
+\newglossaryentry{transformation_rgb}{
+  name = {\ensuremath{\mathbf{T_{RGB}}}} ,
+  description = transformation matrix for RGB camera
+}
+\newglossaryentry{projection_depth}{
+  name = {\ensuremath{\mathbf{P_{IR}}}} ,
+  description = projection matrix for IR camera
+}
+\newglossaryentry{instrinsic_depth}{
+  name = {\ensuremath{\mathbf{K_{IR}}}} ,
+  description = instrinsic matrix for IR camera
+}
+\newglossaryentry{transformation_depth}{
+  name = {\ensuremath{\mathbf{T_{IR}}}} ,
+  description = transformation matrix for IR camera
+}
+\newglossaryentry{projection_func}{
+  name = {\ensuremath{\mathbf{F_{p}}}} ,
+  description = projection function
+}
+\newglossaryentry{back_projection_func}{
+  name = {\ensuremath{\mathbf{F_{bp}}}} ,
+  description = back-projection function
+}
 \renewcommand{\contentsname}{Table of Contents}
 
 % ***************************DOC***************************
@@ -129,43 +170,37 @@ Professorship of Process Automation
 % ***************************ABSTRACT***************************
 % Soft intro to the problem
 % talk about robustness
-\textit{Robutness} of a robot 
-can be defined as an ability to operate under \textit{uncertainty} 
-without the occurrence of a downtime. There are well-designed robots whose task 
-is to solve defined problem without moving from its assembled position. 
-They are able to operate safely as uncertainty of operational components and 
-of its controlled environment are modeled with substantial accuracy and precision. 
-However, once we build robots that move around and interact with real world, 
-number of unforseen events increse drastically. In such scenarios, robustness is crucial. 
-The way we increase robutness is to have intellegent agents and 
-accurate uncertainty models of their sensors and estimations. That being said, 
-this work focuses on the latter and 
-aims to investigate uncertainty of RGB-D camera sensor 
-in the context of Visual Odometry.
+\textit{Robustness} of a robot can be defined as an ability to operate under
+\textit{uncertainty} without the occurrence of a downtime. There are
+well-designed robots whose task is to solve a defined problem without moving
+from its assembled position.  They can operate safely as the uncertainty of
+operational components, and its controlled environment are modeled with
+substantial accuracy and precision.  However, once we build robots that move
+around and interact with the real world, number of unforeseen events increase
+drastically. In such scenarios, robustness is crucial.  The way we increase
+robustness is to have intelligent agents and accurate uncertainty models of
+their sensors and estimations. That being said, this work focuses on the latter
+and aims to investigate the uncertainty of RGB-D camera sensor in the context
+of Visual Odometry.
 
-So far, reseachers and engineers have developed 
-many RGB-D camera based VO applications.
-In filter-based or graph-based SLAM applications, 
-they are usually combined with other dead-reckoning and 
-landmark measurements 
-beacuse of the drift occuring in relative pose estimations over time.
-To do so, one should have reliable uncertainty model 
-of the sensors being measured so that 
-uncertainty of pose estimation can be estimated in the form of covariance matrix. 
-To my knowledge, there 
-are no open source VO softwares that provides such covarince matrices 
-for its pose estimations. Thus, the covariance matrix from VO are taken as 
-identity matrix. This does not offer 
-any meaningful information as to whether the estimation should have 
-certain importance comparing to other sensor measurments 
-during filtering or optimization process.
-On the other hand, there are papers that model the uncertainty of RGB-D cameras 
-such as Kinect, but they applied their models on applications that are outside of VO. 
-The main goal of this work is to build such a VO system that it provides not only 
-relative pose estimations but also a covariance matrix of its estimated poses.
-To achieve this goal, we estimate the covarince matrix of the predicted pose 
-by propogating metric uncertainty of 3D point features
-that are modeled with the sensor characteristics of a RGB-D camera.
+So far, researchers and engineers have developed many RGB-D camera based VO
+applications.  In filter-based or graph-based SLAM applications, they are
+usually combined with other dead-reckoning and landmark measurements because of
+the drift occurring in relative pose estimations over time.  To do so, one
+should have a reliable uncertainty model of the sensors being measured so that
+uncertainty of pose estimation can be estimated in the form of a covariance
+matrix.  To my knowledge, there is no open source VO software that provides
+such covariance matrices for its pose estimations. Thus, the covariance matrix
+from VO is taken as an identity matrix. This does not offer any meaningful
+information as to whether the estimation should have specific importance
+comparing to other sensor measurements during filtering or optimization
+process.  On the other hand, researchers model the uncertainty of RGB-D cameras
+such as Kinect, but they applied their models on applications that are outside
+of VO.  The primary goal of this work is to build such a VO system that it
+provides not only relative pose estimations but also a covariance matrix of its
+estimated poses.  To achieve this goal, we estimate the covariance matrix of
+the predicted pose by propagating metric uncertainty of 3D point features that
+are modeled with the sensor characteristics of an RGB-D camera.
 
 
 \end{abstract}
@@ -186,7 +221,7 @@ that are modeled with the sensor characteristics of a RGB-D camera.
 \addcontentsline{toc}{chapter}{\listtablename}
 \newpage
 \printnoidxglossary[type=acronym,title={List of Abbreviations}]
-\printnoidxglossary[title=List of Symbols]
+\printnoidxglossary[title=List of Symbols,sort=def]
 \glsaddallunused
 \printacronyms
 \chapter*{Acknowledgement}
@@ -199,79 +234,82 @@ that are modeled with the sensor characteristics of a RGB-D camera.
 % ***************************CP1-INTRO***************************
 \chapter{Introduction} \label{cp_intro}
 
+
 % General intro to the problem
-For a mobile robot to act autonomously in real world, the state of the robot 
-must be known accurately. We define this physical state by its \textit{pose}, meaning 
-its position and orientation. The current pose of the robot can be measured 
-by two ways; i.e., \textit{dead-reckoning} that measures \textit{relative} motion and 
-\textit{landmarks} that measures \textit{absolute} position which are known a priori. 
-Without a priori known landmark measurements, dead-reckoning systems are destined to 
-drift from its real position. Thus, the robot must build map of its environment 
-along with the previously seen landmarks. Then, it will have a chance to 
-recover from drifts by recoginizing the same landmarks in the same area 
-in different time. Infact, this problem in robotics is named as 
-\acrfull{slam}. 
-% Where used?
-To solve SLAM problems, robots are equiped 
-with various kind of both dead-reckoning systems; e.g., IMU, wheel odometry and 
-visual odometry and landmark measurements; e.g., GPS and RF-based positioning systems.
-SLAM problem has almost 30 years history \cite{Moravec1980} and vision 
-systems always had a great importance. Even though 
-some researchers \cite{Frese2010} consider SLAM
-to be solved, there are still open research questions in 
-terms of robustness, accuracy and real-time operation.
+For a mobile robot to act autonomously in the real world, the state of the
+robot must be known accurately. We define this physical state by its
+\textit{pose}, meaning its position and orientation. The current pose of the
+robot can be measured by two ways; i.e., \textit{dead-reckoning} that measures
+\textit{relative} motion and \textit{landmarks} that measures \textit{absolute}
+position which are known a priori.  Without priori-known landmark measurements,
+dead-reckoning systems are destined to drift from its real position. Thus, the
+robot must build a map of its environment along with the previously seen
+landmarks. Then, it will have a chance to recover from drifts by recognizing
+the same landmarks in the same area in different time. In fact, this problem in
+robotics is named as \acrfull{slam}.  SLAM problem has almost 30 years history
+\cite{Moravec1980} and vision systems always had great importance. Even though
+some researchers \cite{Frese2010} consider SLAM to be solved, there are still
+open research questions regarding robustness, accuracy and real-time operation.
+To solve SLAM problems, robots are equipped with various kind of both
+dead-reckoning systems; e.g., IMU, wheel odometry and visual odometry and
+landmark measurements; e.g., GPS and radio-based positioning systems.
 
 % What is VO?
-As being part of dead-reckoning systems, 
-VO provides the \textit{ego-motion} estimation of a robot by 
-exploiting only one or multiple cameras. The working principle of VO relies on 
-the idea that 
-if we had two subsequent images captured by the camera in 3D space would tell 
-us about a change in the camera's pose from one image to another as 
-changing patterns of objects' shapes or of pixels' intentisty occurs during motion.
-This change in the pose refers as \textit{relative pose}.
-With this in mind, for VO system to work accurately, the environment should be illuminated 
-properly, static and texture-rich.
-However, in real world, we deal with shadowed, dynamic and texture-poor 
-environments. Eventually, drifts will occur in VO. Hence, the good design of 
-a mobile robot should contain sufficient amount sensors along with their 
-known biases and calibration parameters. 
+As being part of dead-reckoning systems, VO provides the \textit{ego-motion}
+estimation of a robot by exploiting only one or multiple cameras. The working
+principle of VO relies on the idea that if we had two subsequent images
+captured by the camera in 3D space would tell us about a change in the camera's
+pose from one image to another as changing patterns of objects' shapes or
+pixels' intensity occurs during motion.  This change in the pose refers as
+\textit{relative pose}.  With this in mind, for the VO system to work
+accurately, the environment should be adequately illuminated, static and
+texture-rich.  However, in the real world, we deal with shadowed, dynamic and
+texture-poor environments. Eventually, drifts will occur in VO. Hence, the good
+design of a mobile robot should contain sufficient amount sensors along with
+their known biases and calibration parameters.
 
 % RGB-D Camera and VO?
-As opposed to camera, most dead-reckoning sensors are mostly built around 
-one specific purpose and
-output information that do not need further manipulations (except post-filtering). 
-Whereas, camera offers rich data by mapping 3D space onto 2D plane and the output data 
-are quantized pixels according to intensity of the illumination.
-This makes camera sensor a multi-purpose device and 
-one can build various kinds of computer vision applications. 
-Considering the potential, 
-computer vision researchers 
-proposed VO methods that are tailored to different type of environments.
-When designing a VO pipeline, 
-one should select the suitable algorithm and camera type based 
-on the operating enviroment. 
+As opposed to camera, most dead-reckoning sensors are mostly built around one
+specific purpose and output information that do not need further manipulations
+(except post-filtering).  Whereas, the camera offers rich data by mapping 3D
+space onto a 2D plane and the output data are quantized pixels according to the
+intensity of the illumination.  This type of data makes camera sensor a
+multi-purpose device and one can build various kinds of computer vision
+applications.  Considering the potential, computer vision researchers proposed
+VO methods that are tailored to the different type of environments.  When
+designing a VO pipeline, one should select a suitable algorithm and camera type
+based on the operating environment.
 % Why used? Advantages?
-As to camera types, RGB-D cameras based on 
-structured light (e.g., PrimeSense Carmine, Microsoft Kinect and Asus Xtion) 
-that are categorized as active stereo cameras are especially intriguing.
-They gave a rise to many 3D vision applications including VO. Even though 
-it has certain limitations; i.e., the depth accuracy being grown with distance 
-to the object or the properties of the projected objects' material, it offers a cheap 
-3D data, especially for indoor applications. As to algorithms, there are now many 
-open source VO softwares; e.g.,
-LIBVISO2 \cite{Geiger2011} and FOVIS \cite{Huanga2011}, that provide 
-relative pose estimation of a stereo camera. 
-The drawback of those early VO systems are that they do not provide any information  
-about how uncertain the relative predicted pose is, namely \textit{covariance matrix}. 
-That is why VO systems used in SLAM 
-are either titly-coupled with other sensors like IMU or given less importance when 
-combining with other sensors. 
-This introduces a disadvantage regarding robutness of the system since 
-we don't have information about uncertainty of pose estimations.
+As to camera types, RGB-D cameras based on structured light (e.g., PrimeSense
+Carmine, Microsoft Kinect, and Asus Xtion) that are categorized as active
+stereo cameras are especially intriguing.  These cameras gave rise to many 3D
+vision applications including VO. Even though it has certain limitations; i.e.,
+the depth accuracy being grown with distance to the object or the properties of
+the projected objects' material, it offers a cheap 3D data, especially for
+indoor applications. As to algorithms, there are now many open source VO
+software; e.g., LIBVISO2 \cite{Geiger2011} and FOVIS \cite{Huanga2011}, that
+provide relative pose estimation of a stereo camera.  The drawback of those
+early VO systems is that they do not give any information about how uncertain
+the relative predicted pose is, namely \textit{covariance matrix}.  That is why
+VO systems used in SLAM are either tightly-coupled with other sensors like IMU
+or given less importance when combining with other sensors.  This introduces a
+disadvantage regarding the robustness of the system since we don't have
+information about the uncertainty of pose estimations.  The objective of this
+thesis is to build a VO system that can provide metric uncertainty information
+after estimating a camera pose.
 
 % Outline the thesis?
-Outline the thesis?
+The overall structure of the thesis takes the form of six chapters, including
+this introductory chapter. In Chapter 2, we study the essential geometrical
+models and calibration techniques for an RGB-D camera. Then, Chapter 3 outlines
+the standard feature-based VO pipeline and explains the necessary image
+processing methods for building such a pipeline. In Chapter 4, we discuss how
+to model the uncertainty of an RGB-D camera and integrate this model into the
+VO pipeline so that the uncertainty of a pose estimation can be calculated.
+Afterward, we evaluate the accuracy and consistency of the proposed VO system
+with both simulated data and TUM RGB-D dataset in Chapter 5. Finally, the
+conclusion gives a summary and critique of the findings.
+
 
 \newpage
 
@@ -280,10 +318,11 @@ Outline the thesis?
 \chapter{Camera Models} \label{cp_cam_models}
 
 
-In this chapter, we will discuss two geometrical model for RGB-D camera and 
-how to calibare the camera. In principle, 
+In this chapter, we will discuss two geometrical model and calibration 
+methods for RGB-D camera.
+In principle, 
 a camera maps from a 3D world scene to a 2D image plane. We call this process 
-projection operation. Since the \acrshort{vo} systems process camera image 
+\textit{projection} operation. Since the VO systems process camera image 
 sequences, one has to model this projection operation accurately. One of the 
 basic camera modeling technique is the \textit{Pinhole Model} where the projection of 
 the 3D points are mapped on a 2D image plane.
@@ -293,14 +332,15 @@ different poses with monocular camera, they can't provide metric depth.
 In this thesis, we are interested 
 in cameras that offers metric depth using stereo cameras, more specificially 
 active stereo camera. One can model these active stereo cameras with 
-\textit{Triangulation Model}. However, these two models cannot be used 
+\textit{Triangulation Model}. That being said, these two models cannot be used 
 without having the camera to be \textit{calibrated} 
 since many anomalies occur in manufacturing. 
 
 \section{The Pinhole Model} \label{sc_pinhole}
 
 The light rays 
-are captured through the camera's lens onto an electronic plate (could be CCD or CMOS) 
+are captured through the camera's lens onto an electronic plate 
+(called \textit{image plane} in computer vision) 
 that convert light intensity to electrical signals. 
 The pinhole model is, on the other hand, an approximation which simplifies 
 our calculations.
@@ -310,33 +350,34 @@ so called \textit{principal axis}, of this
 coordinate system points out through the origin of the image plane and the 
 point where pierce through image plane is called the \textit{principal point}. 
 We can also see how other two axes; i.e., X and Y, are located in Figure-\ref{fig:pinhole} 
-and this is known as the \textit{Camera Coordinate System} $(x_{cam}, y_{cam}, z_{cam})$.
+and this is known as the \textit{camera coordinate system}.
 
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
-  {fig/ref_imgs/pinhole_model.png}
-  \caption{REMEMBER TO DRAW HORIZ/VERT Fx and Fy. The Pinhole Model}
+  {fig/drawings/pinhole_3d2d.pdf}
+  \caption{\textbf{The Pinhole Model:} $C$ is the camera centre and 
+  $\mathbf{p}$ is the principle point. 
+  A 3D point $\mathbf{X_c}$ in the camera coordinate system
+  is projected as a 2D point 
+$\mathbf{u}$ onto the image plane.}
 	\label{fig:pinhole}
 \end{figure}
 
 Thanks to geometrical propotion property, we can project 
-the 3D point $(X, Y, Z)^T$ in Euclidean space $\mathbb{R}^3$
-to the 2D point $(U,V)^T = (f_xX/Z, f_yY/Z)^T$ in Euclidean space $\mathbb{R}^2$, 
+the 3D point $\mathbf{X_c}=(X_c, Y_c, Z_c)^T$ in the camera coordinate system
+to the 2D point $\mathbf{u} = (f_xX_c/Z_c, f_yY_c/Z_c)^T$ on the image plane,
 where $f_x$ and $f_y$ are the \textit{focal lengths} 
 between the camera centre and the pricipal 
-point with respect to horizontal and vertical axis of the Camera Coordinate 
-System respectively.
+point with respect to horizontal and vertical axis of the 
+camera coordinate system respectively.
 After projection, we obtain a 2D 
-point that we represent on the 
-\textit{Image Coordinate Frame} $(u_{img},v_{img})$.
-
+point that we get 
+\textit{pixel coordinates} $\mathbf{u}=(u,v)^T$ on the image plane.
 To be more specific,
 we can write the projection operation as a linear mapping function 
 in the following way if we utilize the homogenous coordinates:
-
-TODO: NAME x,y,z indices for world and camera coords all below
 
 \begin{equation}
   \begin{pmatrix}
@@ -345,17 +386,17 @@ TODO: NAME x,y,z indices for world and camera coords all below
     1
   \end{pmatrix}
   \sim
-  Z
+  Z_{c}
   \begin{pmatrix}
-    f_xX/Z\\
-    f_yY/Z\\
+    f_x\frac{X_{c}}{Z_{c}}\\
+    f_y\frac{Y_{c}}{Z_{c}}\\
     1
   \end{pmatrix}
   =
   \begin{pmatrix}
-    f_xX\\
-    f_yY\\
-    Z
+    f_xX_{c}\\
+    f_yY_{c}\\
+    Z_{c}
   \end{pmatrix}
   =
   \begin{bmatrix}
@@ -364,9 +405,9 @@ TODO: NAME x,y,z indices for world and camera coords all below
     0 & 0 & 1 & 0\\
   \end{bmatrix}
   \begin{pmatrix}
-    X\\
-    Y\\
-    Z\\
+    X_{c}\\
+    Y_{c}\\
+    Z_{c}\\
     1
   \end{pmatrix}
 \end{equation} \label{eq:proj_func_w_f}
@@ -374,12 +415,12 @@ TODO: NAME x,y,z indices for world and camera coords all below
 This equation applies for the case when 3D points are 
 projected onto a plane where the principal point is the origin. 
 However, the common convention in partice 
-is to have the origin at the (TODO: not entirely sure) left-bottom corner not in the centre.
+is to have the origin at the left-bottom corner not in the centre.
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
-  {fig/ref_imgs/pinhole_offset.png}
+  \includegraphics[width=0.4\linewidth,natwidth=640,natheight=640]
+  {fig/drawings/pinhole_cam_offset.pdf}
 	\caption{Principle Point Offset}
 	\label{fig:pinhole_offset}
 \end{figure}
@@ -393,17 +434,17 @@ Thus, we get offsets, which can further be added into our function:
     1
   \end{pmatrix}
   \sim
-  Z
+  Z_c
   \begin{pmatrix}
-    (f_xX + Z c_x)/Z\\
-    (f_yY + Z c_y)/Z\\
+    \frac{f_x X_c + Z_c c_x}{Z_c}\\
+    \frac{f_y Y_c + Z_c c_y}{Z_c}\\
     1
   \end{pmatrix}
   =
   \begin{pmatrix}
-    f_xX + Z c_x\\
-    f_yY + Z c_y\\
-    Z
+    f_xX_c + Z_c c_x\\
+    f_yY_c + Z_c c_y\\
+    Z_c
   \end{pmatrix}
   =
   \begin{bmatrix}
@@ -412,9 +453,9 @@ Thus, we get offsets, which can further be added into our function:
     0 & 0 & 1 & 0\\
   \end{bmatrix}
   \begin{pmatrix}
-    X\\
-    Y\\
-    Z\\
+    X_c\\
+    Y_c\\
+    Z_c\\
     1
   \end{pmatrix}
 \end{equation} \label{eq:proj_func_w_f_c}
@@ -427,8 +468,8 @@ non-square pixels as seen in Figure-\ref{fig:skewed}.
 
 \begin{figure}[H]
 	\centering
-  \includegraphics[width=0.5\linewidth,natwidth=640,natheight=640]
-  {fig/ref_imgs/skew.png}
+  \includegraphics[width=0.4\linewidth,natwidth=640,natheight=640]
+  {fig/drawings/pinhole_skew.pdf}
   \caption{REMEMBER TO DRAW FOR X and Y.Skew and Non-Square Pixels}
 	\label{fig:skewed}
 \end{figure}
@@ -449,9 +490,9 @@ corresponding skew parameters $\eta_x$, $\eta_y$ and $s$:
     0 & 0 & 1 & 0\\
   \end{bmatrix}
   \begin{pmatrix}
-    X\\
-    Y\\
-    Z\\
+    X_c\\
+    Y_c\\
+    Z_c\\
     1
   \end{pmatrix}
   =
@@ -461,21 +502,20 @@ corresponding skew parameters $\eta_x$, $\eta_y$ and $s$:
     0 & 0 & 1 & 0\\
   \end{bmatrix}
   \begin{pmatrix}
-    X\\
-    Y\\
-    Z\\
+    X_c\\
+    Y_c\\
+    Z_c\\
     1
   \end{pmatrix}
 \end{equation} \label{eq:proj_func_w_square_pix_skew}
 
 Generally, the skewed pixels issues occurred in ealier versions of CCD cameras 
 and this is mostly fixed in new generation digital cameras. Therefore, 
-we can neglate this effect by taking $\eta_x=1$, $\eta_y=1$ and $s=0$.
-
-Next, we can extract:
+it is usually neglated by taking $\eta_x=1$, $\eta_y=1$ and $s=0$.
+At this point, we can extract the following matrix:
 
 \begin{equation}
-  \mathbf{K} = 
+  \mathbf{K_{RGB}} = 
   \begin{bmatrix}
     \alpha_x & s & c_x\\
     0 & \alpha_y & c_y\\
@@ -483,64 +523,66 @@ Next, we can extract:
   \end{bmatrix}
 \end{equation} \label{eq:k_matrix}
 
-The $\mathbf{K}$ matrix is called 
+The $\mathbf{K_{RGB}}$ is called 
 \textit{intrinsic parameters matrix}, which represents the characteristics of 
-a camera sensor. Note that, we 
+a camera sensor. One 
 can further reformulate the notation \ref{eq:proj_func_w_square_pix_skew} in more 
 compact form:
 
 \begin{equation}
-  \mathbf{x_{img}} = \mathbf{K}[\mathbf{I}|\mathbf{0}]\mathbf{X_{cam}}
+  \mathbf{u} = \mathbf{K_{RGB}}[\mathbf{I}|\mathbf{0}]\mathbf{X_{c}}
 \end{equation} \label{eq:simplyfied_proj_func}
 
 \begin{figure}[H]
 	\centering
   \includegraphics[width=\linewidth,natwidth=640,natheight=640]
-  {fig/ref_imgs/cam_model_rot_trans.png}
+  {fig/drawings/pinhole_world_to_cam.pdf}
   \caption{Camera Rotation and Translation}
   \label{fig:cam_model_rot_trans}
 \end{figure}
 
-Remember that, the Z-axis of the Camera Coordinate System aligns with the 
-principal axis that is \textit{local} to camera frame. In fact, we have 3D points that 
-we represent in the \textit{World Coordinate System} 
-which we refer as the \textit{global} frame. 
+Remember that, the Z-axis of the camera coordinate system aligns with the 
+principal axis that is \textit{local} to camera frame. In fact, we have measured 3D points that 
+we know their position in the \textit{world coordinate system} 
+which is also refer to the \textit{global frame}, as opposed to the camera coordinate system being 
+\textit{local frame}.
 These two coordinates systems 
 can be transformed one another by a rotation and a translation as it is 
-depicted in Figure-\ref{fig:cam_model_rot_trans} but we are interested in 
-converting from the World Coordinate to Camera Coordinate System in this case.
-To do so, we first perform series of rotations around each axis of the 
-cartesian coordinate system in Euclidean space by using 
+depicted in Figure-\ref{fig:cam_model_rot_trans} and we are interested in 
+converting from the world coordinate system to camera coordinate system in the case of projection operation.
+To do so, we perform series of rotations around each axis of the 
+cartesian coordinate system in $\R^3$ Euclidean space by using 
 \textit{rotation matrices} where $R_x, R_y, R_z \in SO(3)$ is the rotation group:
 
 \begin{equation}
-  R_x(\theta) = 
+  R_x(\alpha) = 
   \begin{bmatrix}
     1 & 0 & 0\\
-    0 & cos\theta & -sin\theta\\
-    0 & sin\theta & cos\theta
+    0 & cos\alpha & -sin\alpha\\
+    0 & sin\alpha & cos\alpha
   \end{bmatrix}
 \end{equation} \label{eq:rot_matrx_x}
 
 \begin{equation}
-  R_y(\theta) = 
+  R_y(\beta) = 
   \begin{bmatrix}
-    cos\theta & 0 & -sin\theta\\
+    cos\beta & 0 & -sin\beta\\
     0 & 1 & 0\\
-    sin\theta & 0 & cos\theta
+    sin\beta & 0 & cos\beta
   \end{bmatrix}
 \end{equation} \label{eq:rot_matrx_y}
 
 \begin{equation}
-  R_z(\theta) = 
+  R_z(\gamma) = 
   \begin{bmatrix}
-    cos\theta & -sin\theta & 0\\
-    sin\theta & cos\theta & 0\\
+    cos\gamma & -sin\gamma & 0\\
+    sin\gamma & cos\gamma & 0\\
     0 & 0 & 1
   \end{bmatrix}
 \end{equation} \label{eq:rot_matrx_z}
 
-One can concatenate all three rotations about axes z, y, x respectively:
+One can concatenate all three rotations about axes z, y, x respectively 
+(also called \textit{yaw, pitch, yaw}) by the matrix multiplication:
 
 \begin{equation}
   \mathbf{R} = \mathbf{R_z(\gamma)}\mathbf{R_y(\beta)}\mathbf{R_x(\alpha)}
@@ -565,7 +607,7 @@ We can also compound the rotation matrix and the translation vector into
 one matrix:
 
 \begin{equation}
-  \mathbf{T} =
+  \mathbf{T_{RGB}} =
   \begin{bmatrix}
     r_{11} & r_{12} & r_{13} & t_x\\
     r_{21} & r_{22} & r_{23} & t_y\\
@@ -573,35 +615,36 @@ one matrix:
   \end{bmatrix}
 \end{equation} \label{eq:transformation_matrix}
 
-The $\mathbf{T} \in \R^{4x3}$ matrix in fact represents 
-a \textit{rigid-body transformation}, which we call 
+The $\mathbf{T_{RGB}} \in \R^{4x3}$ matrix in fact represents 
+a \textit{transformation} from 3D position in world coordinate system to 
+camera coordatine system, which we call 
 \textit{extrinsic camera parameters}.
 
-Finally, we combine intrinsic $\mathbf{K}$ and 
-extrinsic $\mathbf{T}$ matrices to form the following notation: 
+Finally, we combine intrinsic $\mathbf{K_{RGB}}$ and 
+extrinsic $\mathbf{T_{RGB}}$ matrices for projection function 
+in the following form:
 
 \begin{equation}
-  \mathbf{x_{img}} = 
-  \mathbf{P}\mathbf{X_{world}} = 
-  \mathbf{K}\mathbf{T}\mathbf{X_{world}} = 
-  \mathbf{K}[\mathbf{R}|\mathbf{t}]\mathbf{X_{world}} =
-  \mathbf{K}\mathbf{X_{cam}}
+  \mathbf{u} = 
+  \mathbf{P_{RGB}}\mathbf{X_{w}} = 
+  \mathbf{K_{RGB}}\mathbf{T_{RGB}}\mathbf{X_{w}} = 
+  \mathbf{K_{RGB}}[\mathbf{R}|\mathbf{t}]\mathbf{X_{w}} =
+  \mathbf{K_{RGB}}\mathbf{X_{c}}
 \end{equation} \label{eq:simplyfied_proj_func_1}
 
 \begin{equation}
-  \mathbf{x_{img}} = \mathbf{F_{proj}}(\mathbf{X_{world}})
+  \mathbf{u} = \mathbf{F_{p}}(\mathbf{X_{w}})
 \end{equation} \label{eq:simplyfied_proj_func_2}
 
-where $\mathbf{F_{proj}}(\mathbf{X_{world}})$ is the 
+where $\mathbf{F_{p}}(\mathbf{X_{w}})$ is the 
 \textit{projective transformation function}, which takes 
-the 3D points in the World Coordinate System, transforms to 
-the Camera Coordinate Systems and then maps them into the Image 
-Coordinate Systems.
+the 3D points in the world coordinate system, transforms to 
+the camera coordinate systems and then maps them onto the image plane.
 
 To build any reliable computer vision application with digital cameras, it is 
-to important to find a good $\mathbf{P}$ \textit{projection matrix}. 
-The next section describes one of many numerical methods for estimationg this 
-matrix in literature.
+to important to find parameters of the $\mathbf{P_{RGB}}$ \textit{projection matrix}. 
+The next section describes one of many numerical methods for estimating them
+in literature.
 
 \section{The Triangulation Model} \label{sc_depth_model}
 
