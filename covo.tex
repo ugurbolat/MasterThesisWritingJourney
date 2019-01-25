@@ -346,9 +346,9 @@ image plane.
 	\centering
 	\includegraphics[width=0.65\linewidth,natwidth=640,natheight=640]
 	{fig/ref_imgs/kinect_pic.png}
-	\caption{Microsoft Kinect V1: Kinect is a RGB-D camera that has 640 
-	$\times$ 480 pixels spatial resolution, 0.8-4.0 $m$ depth range, 2-40 $mm$ 
-	depth resolution and 30 fps.}
+  \caption[Microsoft Kinect V1]{Microsoft Kinect V1 is a RGB-D camera that has 
+  640 $\times$ 480 pixels spatial resolution, 0.8-4.0 $m$ depth range, 2-40 
+  $mm$ depth resolution and 30 fps.}
 	\label{fig:kinect_pic}
 \end{figure}
 
@@ -380,12 +380,11 @@ the \textit{camera coordinate system}.
 	\centering
 	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
   {fig/drawings/pinhole_3d2d.pdf}
-  \caption{The Pinhole Model: $C$ is the camera centre and 
-  $\mathbf{p}$ is the principle point. 
-  A 3D point $\mathbf{X_c}$ in the camera coordinate system
-  is projected as a 2D point 
-$\mathbf{u}$ onto the image plane. Note that the camere coordinate system 
-is drawn according to right-hand rule.}
+  \caption[The Pinhole Model]{In the Pinhole Model, $C$ is the camera centre 
+  and $\mathbf{p}$ is the principle point. A 3D point $\mathbf{X_c}$ in the 
+  camera coordinate system is projected as a 2D point $\mathbf{u}$ onto the 
+  image plane. Note that the camere coordinate system is drawn according to 
+  right-hand rule.}
 	\label{fig:pinhole}
 \end{figure}
 
@@ -440,10 +439,10 @@ practice is to have the origin at the corner, instead of the centre.
 	\centering
   \includegraphics[width=0.4\linewidth,natwidth=640,natheight=640]
   {fig/drawings/pinhole_cam_offset.pdf}
-	\caption{We take OpenCV's pixel coordinate convention where 
-  the origin is located at the upper left corner. In order to 
-shift the origin from camera centre to the corner, 
-$c_x, c_y$ principle point offsets are added.}
+	\caption[Principle Point Offset]{We take OpenCV's pixel coordinate 
+	convention where the origin is located at the upper left corner. In order 
+	to shift the origin from camera centre to the corner, $c_x, c_y$ principle 
+	point offsets are added.}
 	\label{fig:pinhole_offset}
 \end{figure}
 
@@ -491,10 +490,10 @@ to non-square pixels as seen in figure \ref{fig:skewed}.
 	\centering
   \includegraphics[width=0.4\linewidth,natwidth=640,natheight=640]
   {fig/drawings/pinhole_skew.pdf}
-  \caption{Skews pixels occur in ealier versions of CCD cameras 
-    beacuse the camera's detector array is not orthogonal to the principle axis. 
-    This design issue is mostly fixed in modern camera and thus 
-  it is usually neglated by taking $\eta_x=1$, $\eta_y=1$ and $s=0$.}
+  \caption[Skewed Pixels]{Skewed pixels occur in earlier versions of CCD 
+  cameras because the camera's detector array is not orthogonal to the 
+  principle axis. This design issue is mostly fixed in modern camera and thus 
+  it is usually neglected by taking $\eta_x=1$, $\eta_y=1$ and $s=0$.}
 	\label{fig:skewed}
 \end{figure}
 
@@ -557,10 +556,11 @@ form:
 	\centering
   \includegraphics[width=\linewidth,natwidth=640,natheight=640]
   {fig/drawings/pinhole_world_to_cam.pdf}
-  \caption{The Z-axis of the camera coordinate system aligns with the 
-principal axis that is \textit{local} to camera frame. In fact, we have measured 3D points that 
-we know their position in the \textit{world coordinate system} 
-which is also refer to the \textit{global frame}, as opposed to the camera coordinate system refering to
+  \caption[Extrinsic Matrix]{The Z-axis of the camera coordinate system aligns 
+  with the principal axis that is \textit{local} to camera frame. In fact, we 
+  have measured 3D points that we know their position in the \textit{world 
+  coordinate system} which is also refer to the \textit{global frame}, as 
+  opposed to the camera coordinate system referring to
 \textit{local frame}.}
   \label{fig:cam_model_rot_trans}
 \end{figure}
@@ -668,7 +668,7 @@ camera coordinate systems and then maps them onto the image plane.
 \subcaptionbox{Barrel Distorted Image}{\includegraphics[width = 0.3\linewidth]{fig/drawings/pinhole_distort_1.pdf}}
 \subcaptionbox{Pincushion Distorted Image}{\includegraphics[width = 0.3\linewidth]{fig/drawings/pinhole_distort_2.pdf}}
 \end{tabular}
-\caption{All emitted 
+\caption[Radial Distortion]{All emitted 
   lights through the camera lens is expected to intersect at the same 
   focus point and the radial distortion is caused by having a defected lens 
   that causes the emitted lights focusing different points.
@@ -756,9 +756,10 @@ a different position.
 	\centering
   \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
   {fig/ref_imgs/kinect_depth_img.png}
-  \caption{On the left, the IR camera capture the patterns of speckles 
-  projected on an object. On the right, we see the resulting depth 
-image if diparity data is converted accordingly \cite{Khoshelham2012a}.}
+  \caption[Kinect's Depth Measurement]{On the left, the IR camera capture the 
+  patterns of speckles projected on an object. On the right, we see the 
+  resulting depth image if disparity data is converted accordingly 
+  \cite{Khoshelham2012a}.}
 	\label{fig:kinect_depth_img}
 \end{figure}
 
@@ -773,7 +774,7 @@ the depth.
 	\centering
   \includegraphics[width=0.65\linewidth,natwidth=640,natheight=640]
   {fig/drawings/triangulation.pdf}
-  \caption{The Depth Measurement Model}
+  \caption[The Depth Measurement Model]{The Depth Measurement Model}
 	\label{fig:triangulation_model}
 \end{figure}
 
@@ -810,7 +811,8 @@ depth is non-linear as shown in figure \ref{fig:depth_disparity_relation}.
 	\centering
   \includegraphics[width=0.6\linewidth,natwidth=640,natheight=640]
   {fig/ref_imgs/depth_disparity_relation.png}
-  \caption{Non-linear Relationship Between Inverse Depth and Disparity \cite{Smisek2011}}
+  \caption[Relationship Between Inverse Depth and Disparity]{Non-linear 
+  Relationship Between Inverse Depth and Disparity \cite{Smisek2011}}
 	\label{fig:depth_disparity_relation}
 \end{figure}
 
@@ -935,8 +937,9 @@ reality. Then, the problem becomes \textit{over-determined}.
 \subcaptionbox{RGB Images}{\includegraphics[width = 0.8\linewidth]{fig/ref_imgs/checkerboard_rgb.png}} \\
 \subcaptionbox{IR Images}{\includegraphics[width = 0.8\linewidth]{fig/ref_imgs/checkerboard_ir.png}}
 %\end{tabular}
-\caption{When calibrating RGB and IR camera, one should produce many measurement points 
-  by placing checker board at different orientation and different tilted 
+\caption[Checkboard Calibration for RGB and IR Camera]{When calibrating RGB 
+and IR camera with a checkerboard, one should produce many measurement points 
+by placing checker board at different orientation and different tilted 
 posture \cite{Karan2015}.}
 \end{figure}\label{fig:}
 
@@ -996,10 +999,10 @@ are corrected accordingly.
 	\centering
   \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
   {fig/ref_imgs/checkerboard_depth.png}
-  \caption{When calibrating the depth parameters, 
-  checkerboard should be placed at the different distances to the camera
-  so that we get enough measurement points, especially for fitting $m,n$
-parameters \cite{Karan2015}.}
+  \caption[Checkboard Calibration for Depth]{When calibrating the depth 
+  parameters, checkerboard should be placed at the different distances to the 
+  camera so that we get enough measurement points, especially for fitting 
+  $m,n$ parameters \cite{Karan2015}.}
   \label{fig:checkerboard_depth}
 \end{figure}
 
