@@ -24,7 +24,7 @@
 \usepackage{algorithm}
 \usepackage[noend]{algpseudocode}
 \usepackage{array}
-
+\usepackage{mathtools}
 
 % ***************************NEW COMMANDS***************************
 % for numbering per section
@@ -77,20 +77,28 @@
 \newacronym{slam}{SLAM}{Simultenous Localization and Mapping}
 \newacronym{rgbd}{RGB-D}{RGB Color Camera with Depth Sensor}
 \newacronym{imu}{IMU}{Inertial Measurement Unit}
+\newacronym{ir}{IR}{Infrared}
+\newacronym{dlt}{DLT}{Direct Linear Transformation}
 
 
 % Symbols
 \newglossaryentry{2d_feature_pix_coord}{
-  name = \ensuremath{\mathbf{u}} ,
-  description = 2D point position on image plane 
+  name = \ensuremath{\mathbf{u}^{(i,k)}, \mathbf{u_{RGB}}^{(i,k)}} ,
+  description = $i^{th}$ 2D feature point's pixel coordinates on $k^{th}$ RGB frame
+}
+\newglossaryentry{2d_feature_pix_coord_ir}{
+name = \ensuremath{\mathbf{u_{IR}}^{(i,k)}} ,
+  description = $i^{th}$ 2D feature point's pixel coordinates on $k^{th}$ IR frame
 }
 \newglossaryentry{3d_point_cam_coords}{
-  name = {\ensuremath{\mathbf{X_c}}} ,
-  description = 3D point position in camera coordinate system
+  name = {\ensuremath{\mathbf{X_c}^{(i,k)}}} ,
+  description = $i^{th}$ 3D feature point's position coordinates on $k^{th}$ frame 
+  in camera coordinate system
 }
 \newglossaryentry{3d_point_world_coords}{
-  name = $\mathbf{X_w}$ ,
-  description = 3D point position in world coordinate system
+name = $\mathbf{X_w}^{(i)}$ ,
+  description = $i^{th}$ 3D feature point's position coordinates
+  in world coordinate system
 }
 \newglossaryentry{instrinsic_rgb}{
   name = {\ensuremath{\mathbf{K_{RGB}}}} ,
@@ -120,10 +128,19 @@
   name = {\ensuremath{\mathbf{F_{p}}}} ,
   description = projection function
 }
-\newglossaryentry{back_projection_func}{
-  name = {\ensuremath{\mathbf{F_{bp}}}} ,
-  description = back-projection function
+\newglossaryentry{distortion_func}{
+  name = {\ensuremath{\mathbf{F_{d}}}} ,
+  description = distortion function
 }
+\newglossaryentry{distort_projection_func}{
+  name = {\ensuremath{\mathbf{F_{dp}}}} ,
+  description = projection function combined with distortion effect
+}
+\newglossaryentry{depth_func}{
+  name = {\ensuremath{F_d}} ,
+  description = function that converts diparity value to metric depth
+}
+
 \renewcommand{\contentsname}{Table of Contents}
 
 % ***************************DOC***************************
@@ -221,7 +238,7 @@ are modeled with the sensor characteristics of an RGB-D camera.
 \addcontentsline{toc}{chapter}{\listtablename}
 \newpage
 \printnoidxglossary[type=acronym,title={List of Abbreviations}]
-\printnoidxglossary[title=List of Symbols,sort=def]
+\printnoidxglossary[title=List of Notations,sort=def]
 \glsaddallunused
 \printacronyms
 \chapter*{Acknowledgement}
@@ -317,67 +334,70 @@ conclusion gives a summary and critique of the findings.
 
 \chapter{Camera Models} \label{cp_cam_models}
 
+In this chapter, we will discuss two geometrical model and calibration methods
+for RGB-D camera.  In principle, a camera maps from a 3D world scene to a 2D
+image plane. We call this process \textit{projection} operation. Since the VO
+systems process camera image sequences, one has to model this projection
+operation accurately. One of the basic camera modeling technique is the
+\textit{Pinhole Model} where the projection of the 3D points are mapped on a 2D
+image plane.  
 
-In this chapter, we will discuss two geometrical model and calibration 
-methods for RGB-D camera.
-In principle, 
-a camera maps from a 3D world scene to a 2D image plane. We call this process 
-\textit{projection} operation. Since the VO systems process camera image 
-sequences, one has to model this projection operation accurately. One of the 
-basic camera modeling technique is the \textit{Pinhole Model} where the projection of 
-the 3D points are mapped on a 2D image plane.
-While mapping a point from 3D to 2D space, we loose the depth information.
-Although there are ways to recover relative depth scale by taking images from 
-different poses with monocular camera, they can't provide metric depth. 
-In this thesis, we are interested 
-in cameras that offers metric depth using stereo cameras, more specificially 
-active stereo camera. One can model these active stereo cameras with 
-\textit{Triangulation Model}. That being said, these two models cannot be used 
-without having the camera to be \textit{calibrated} 
-since many anomalies occur in manufacturing. 
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.65\linewidth,natwidth=640,natheight=640]
+	{fig/ref_imgs/kinect_pic.png}
+	\caption{Microsoft Kinect V1: Kinect is a RGB-D camera that has 640 
+	$\times$ 480 pixels spatial resolution, 0.8-4.0 $m$ depth range, 2-40 $mm$ 
+	depth resolution and 30 fps.}
+	\label{fig:kinect_pic}
+\end{figure}
+
+While mapping a point from 3D space to 2D space, we lose the 
+depth information.  Although there are ways to recover relative depth scale by 
+taking images from different poses with a monocular camera, they can't provide 
+metric depth.  In this thesis, we are interested in cameras that offer metric 
+depth using stereo cameras, more specifically active stereo camera. One can 
+model these active stereo cameras with \textit{Triangulation Model}. That 
+being said, these two models cannot be used without having the camera to be 
+\textit{calibrated} since many anomalies occur in manufacturing.
+
 
 \section{The Pinhole Model} \label{sc_pinhole}
 
-The light rays 
-are captured through the camera's lens onto an electronic plate 
-(called \textit{image plane} in computer vision) 
-that convert light intensity to electrical signals. 
-The pinhole model is, on the other hand, an approximation which simplifies 
-our calculations.
-In this model, the camera centre sits behind the image plane.
-The Z-axis, 
-so called \textit{principal axis}, of this 
-coordinate system points out through the origin of the image plane and the 
-point where pierce through image plane is called the \textit{principal point}. 
-We can also see how other two axes; i.e., X and Y, are located in Figure-\ref{fig:pinhole} 
-and this is known as the \textit{camera coordinate system}.
+The light rays are captured through the camera's lens onto an electronic plate 
+(called \textit{image plane} in computer vision) that convert light intensity 
+to electrical signals.  The pinhole model is, on the other hand, an 
+approximation which simplifies this operation.  In this model, the camera 
+centre sits behind the image plane.  The Z-axis, so-called \textit{principal 
+axis}, of this coordinate system points out through the origin of the image 
+plane, and the point where pierce through image plane is called the 
+\textit{principal point} $\mathbf{p}$.  We can also see how other two axes; 
+i.e., X and Y, are located in figure \ref{fig:pinhole} and this is known as 
+the \textit{camera coordinate system}.
 
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
   {fig/drawings/pinhole_3d2d.pdf}
-  \caption{\textbf{The Pinhole Model:} $C$ is the camera centre and 
+  \caption{The Pinhole Model: $C$ is the camera centre and 
   $\mathbf{p}$ is the principle point. 
   A 3D point $\mathbf{X_c}$ in the camera coordinate system
   is projected as a 2D point 
-$\mathbf{u}$ onto the image plane.}
+$\mathbf{u}$ onto the image plane. Note that the camere coordinate system 
+is drawn according to right-hand rule.}
 	\label{fig:pinhole}
 \end{figure}
 
-Thanks to geometrical propotion property, we can project 
-the 3D point $\mathbf{X_c}=(X_c, Y_c, Z_c)^T$ in the camera coordinate system
-to the 2D point $\mathbf{u} = (f_xX_c/Z_c, f_yY_c/Z_c)^T$ on the image plane,
-where $f_x$ and $f_y$ are the \textit{focal lengths} 
-between the camera centre and the pricipal 
-point with respect to horizontal and vertical axis of the 
-camera coordinate system respectively.
-After projection, we obtain a 2D 
-point that we get 
-\textit{pixel coordinates} $\mathbf{u}=(u,v)^T$ on the image plane.
-To be more specific,
-we can write the projection operation as a linear mapping function 
-in the following way if we utilize the homogenous coordinates:
+Thanks to geometrical propotion property, we can project the 3D point 
+$\mathbf{X_c}=(X_c, Y_c, Z_c)^T$ in the camera coordinate system to the 2D 
+point $\mathbf{u} = (f_xX_c/Z_c, f_yY_c/Z_c)^T$ on the image plane, where 
+$f_x$ and $f_y$ are the \textit{focal lengths} between the camera centre and 
+the pricipal point with respect to horizontal and vertical axis of the camera 
+coordinate system respectively.  After projection, we obtain a 2D point  
+as \textit{pixel coordinates} $\mathbf{u}=(u,v)^T$ on the image plane.  To 
+be more specific, we can write the projection operation as a linear mapping 
+function in the following way if we utilize the homogeneous coordinates:
 
 \begin{equation}
   \begin{pmatrix}
@@ -412,20 +432,22 @@ in the following way if we utilize the homogenous coordinates:
   \end{pmatrix}
 \end{equation} \label{eq:proj_func_w_f}
 
-This equation applies for the case when 3D points are 
-projected onto a plane where the principal point is the origin. 
-However, the common convention in partice 
-is to have the origin at the left-bottom corner not in the centre.
+This equation applies for the case when 3D points are projected onto a plane 
+where the principal point is the origin.  However, the common convention in 
+practice is to have the origin at the corner, instead of the centre.
 
 \begin{figure}[H]
 	\centering
   \includegraphics[width=0.4\linewidth,natwidth=640,natheight=640]
   {fig/drawings/pinhole_cam_offset.pdf}
-	\caption{Principle Point Offset}
+	\caption{We take OpenCV's pixel coordinate convention where 
+  the origin is located at the upper left corner. In order to 
+shift the origin from camera centre to the corner, 
+$c_x, c_y$ principle point offsets are added.}
 	\label{fig:pinhole_offset}
 \end{figure}
 
-Thus, we get offsets, which can further be added into our function:
+Thus, we get offsets, which can further be added as:
 
 \begin{equation}
   \begin{pmatrix}
@@ -457,27 +479,29 @@ Thus, we get offsets, which can further be added into our function:
     Y_c\\
     Z_c\\
     1
-  \end{pmatrix}
-\end{equation} \label{eq:proj_func_w_f_c}
+  \end{pmatrix}\label{eq:proj_func_w_f_c}
+\end{equation} 
 
 where $c_x$ and $c_y$ are coordinates of the principal point \textbf{p}.
-
-In addition to pricipal offsets, inaccurately synchronized pixel-sampling 
-process can result in \textit{skewed pixels}. This camera imperfection leads to 
-non-square pixels as seen in Figure-\ref{fig:skewed}.
+In addition to principal offsets, an inaccurately synchronized pixel-sampling 
+process can result in \textit{skewed pixels}. This camera imperfection leads 
+to non-square pixels as seen in figure \ref{fig:skewed}.
 
 \begin{figure}[H]
 	\centering
   \includegraphics[width=0.4\linewidth,natwidth=640,natheight=640]
   {fig/drawings/pinhole_skew.pdf}
-  \caption{REMEMBER TO DRAW FOR X and Y.Skew and Non-Square Pixels}
+  \caption{Skews pixels occur in ealier versions of CCD cameras 
+    beacuse the camera's detector array is not orthogonal to the principle axis. 
+    This design issue is mostly fixed in modern camera and thus 
+  it is usually neglated by taking $\eta_x=1$, $\eta_y=1$ and $s=0$.}
 	\label{fig:skewed}
 \end{figure}
 
 We can scale the square pixels, having 1:1 pixel aspect ratio, with the 
 corresponding skew parameters $\eta_x$, $\eta_y$ and $s$:
 
-\begin{equation}
+\begin{equation} \label{eq:proj_func_w_square_pix_skew}
   \begin{pmatrix}
     U\\
     V\\
@@ -507,11 +531,8 @@ corresponding skew parameters $\eta_x$, $\eta_y$ and $s$:
     Z_c\\
     1
   \end{pmatrix}
-\end{equation} \label{eq:proj_func_w_square_pix_skew}
+\end{equation} 
 
-Generally, the skewed pixels issues occurred in ealier versions of CCD cameras 
-and this is mostly fixed in new generation digital cameras. Therefore, 
-it is usually neglated by taking $\eta_x=1$, $\eta_y=1$ and $s=0$.
 At this point, we can extract the following matrix:
 
 \begin{equation}
@@ -520,39 +541,39 @@ At this point, we can extract the following matrix:
     \alpha_x & s & c_x\\
     0 & \alpha_y & c_y\\
     0 & 0 & 1\\
-  \end{bmatrix}
-\end{equation} \label{eq:k_matrix}
+  \end{bmatrix}\label{eq:k_matrix}
+\end{equation} 
 
-The $\mathbf{K_{RGB}}$ is called 
-\textit{intrinsic parameters matrix}, which represents the characteristics of 
-a camera sensor. One 
-can further reformulate the notation \ref{eq:proj_func_w_square_pix_skew} in more 
-compact form:
+where $\mathbf{K_{RGB}}$ is called \textit{intrinsic matrix}, which represents 
+the characteristics of a camera sensor.  With this matrix, one can further 
+reformulate the notation \ref{eq:proj_func_w_square_pix_skew} in more compact 
+form:
 
-\begin{equation}
+\begin{equation}\label{eq:simplyfied_proj_func}
   \mathbf{u} = \mathbf{K_{RGB}}[\mathbf{I}|\mathbf{0}]\mathbf{X_{c}}
-\end{equation} \label{eq:simplyfied_proj_func}
+\end{equation} 
 
 \begin{figure}[H]
 	\centering
   \includegraphics[width=\linewidth,natwidth=640,natheight=640]
   {fig/drawings/pinhole_world_to_cam.pdf}
-  \caption{Camera Rotation and Translation}
+  \caption{The Z-axis of the camera coordinate system aligns with the 
+principal axis that is \textit{local} to camera frame. In fact, we have measured 3D points that 
+we know their position in the \textit{world coordinate system} 
+which is also refer to the \textit{global frame}, as opposed to the camera coordinate system refering to
+\textit{local frame}.}
   \label{fig:cam_model_rot_trans}
 \end{figure}
 
-Remember that, the Z-axis of the camera coordinate system aligns with the 
-principal axis that is \textit{local} to camera frame. In fact, we have measured 3D points that 
-we know their position in the \textit{world coordinate system} 
-which is also refer to the \textit{global frame}, as opposed to the camera coordinate system being 
-\textit{local frame}.
-These two coordinates systems 
-can be transformed one another by a rotation and a translation as it is 
-depicted in Figure-\ref{fig:cam_model_rot_trans} and we are interested in 
-converting from the world coordinate system to camera coordinate system in the case of projection operation.
-To do so, we perform series of rotations around each axis of the 
-cartesian coordinate system in $\R^3$ Euclidean space by using 
-\textit{rotation matrices} where $R_x, R_y, R_z \in SO(3)$ is the rotation group:
+Remember that we measure 3D points in the real-world with respect to the 
+camera centre.  Thus, these two coordinates systems, i.e., the camera and 
+world coordinate system, can be transformed one another by a rotation and a 
+translation as it is depicted in figure \ref{fig:cam_model_rot_trans} and we 
+are interested in converting from the world coordinate system to the camera 
+coordinate system in the context of projection operation.  To do so, we 
+perform series of rotations around each axis of the Cartesian coordinate 
+system in $\R^3$ Euclidean space by using \textit{rotation matrices} where 
+$R_x, R_y, R_z \in SO(3)$ is the rotation group:
 
 \begin{equation}
   R_x(\alpha) = 
@@ -560,8 +581,8 @@ cartesian coordinate system in $\R^3$ Euclidean space by using
     1 & 0 & 0\\
     0 & cos\alpha & -sin\alpha\\
     0 & sin\alpha & cos\alpha
-  \end{bmatrix}
-\end{equation} \label{eq:rot_matrx_x}
+  \end{bmatrix}\label{eq:rot_matrx_x}
+\end{equation} 
 
 \begin{equation}
   R_y(\beta) = 
@@ -569,8 +590,8 @@ cartesian coordinate system in $\R^3$ Euclidean space by using
     cos\beta & 0 & -sin\beta\\
     0 & 1 & 0\\
     sin\beta & 0 & cos\beta
-  \end{bmatrix}
-\end{equation} \label{eq:rot_matrx_y}
+  \end{bmatrix}\label{eq:rot_matrx_y}
+\end{equation} 
 
 \begin{equation}
   R_z(\gamma) = 
@@ -578,11 +599,11 @@ cartesian coordinate system in $\R^3$ Euclidean space by using
     cos\gamma & -sin\gamma & 0\\
     sin\gamma & cos\gamma & 0\\
     0 & 0 & 1
-  \end{bmatrix}
-\end{equation} \label{eq:rot_matrx_z}
+  \end{bmatrix}\label{eq:rot_matrx_z}
+\end{equation} 
 
-One can concatenate all three rotations about axes z, y, x respectively 
-(also called \textit{yaw, pitch, yaw}) by the matrix multiplication:
+Let's concatenate all three rotations about axes z, y, x respectively (also 
+called \textit{yaw, pitch, yaw}) by the matrix multiplication:
 
 \begin{equation}
   \mathbf{R} = \mathbf{R_z(\gamma)}\mathbf{R_y(\beta)}\mathbf{R_x(\alpha)}
@@ -591,20 +612,20 @@ One can concatenate all three rotations about axes z, y, x respectively
     r_{11} & r_{12} & r_{13}\\
     r_{21} & r_{22} & r_{23}\\
     r_{31} & r_{32} & r_{33}\\
-  \end{bmatrix}
-\end{equation} \label{eq:rot_matrix_derivation}
+  \end{bmatrix}\label{eq:rot_matrix_derivation}
+\end{equation} 
 
-Then, perform a translation $\mathbf{t} \in \R^{3x1}$:
+Then, we add a translation $\mathbf{t} \in \R^{3x1}$:
 
 \begin{equation}
   \mathbf{t} = 
   \begin{bmatrix}
     t_x \\ t_y \\ t_z
-  \end{bmatrix}
-\end{equation} \label{eq:translation}
+  \end{bmatrix}\label{eq:translation}
+\end{equation} 
 
-We can also compound the rotation matrix and the translation vector into 
-one matrix:
+For convenience, we stack the rotation matrix and the translation vector into 
+one:
 
 \begin{equation}
   \mathbf{T_{RGB}} =
@@ -612,285 +633,65 @@ one matrix:
     r_{11} & r_{12} & r_{13} & t_x\\
     r_{21} & r_{22} & r_{23} & t_y\\
     r_{31} & r_{32} & r_{33} & t_z\\
-  \end{bmatrix}
-\end{equation} \label{eq:transformation_matrix}
+  \end{bmatrix}\label{eq:transformation_matrix}
+\end{equation} 
 
-The $\mathbf{T_{RGB}} \in \R^{4x3}$ matrix in fact represents 
-a \textit{transformation} from 3D position in world coordinate system to 
-camera coordatine system, which we call 
-\textit{extrinsic camera parameters}.
+The $\mathbf{T_{RGB}} \in \R^{4x3}$ matrix in fact represents a 
+\textit{transformation} from 3D position in the world coordinate system to the 
+camera coordinate system, which we call \textit{extrinsic camera parameters}.  
+Finally, we combine intrinsic $\mathbf{K_{RGB}}$ and extrinsic 
+$\mathbf{T_{RGB}}$ matrices in the following form:
 
-Finally, we combine intrinsic $\mathbf{K_{RGB}}$ and 
-extrinsic $\mathbf{T_{RGB}}$ matrices for projection function 
-in the following form:
-
-\begin{equation}
+\begin{equation}\label{eq:simplyfied_proj_func_1}
   \mathbf{u} = 
   \mathbf{P_{RGB}}\mathbf{X_{w}} = 
   \mathbf{K_{RGB}}\mathbf{T_{RGB}}\mathbf{X_{w}} = 
   \mathbf{K_{RGB}}[\mathbf{R}|\mathbf{t}]\mathbf{X_{w}} =
   \mathbf{K_{RGB}}\mathbf{X_{c}}
-\end{equation} \label{eq:simplyfied_proj_func_1}
+\end{equation} 
 
-\begin{equation}
+where $\mathbf{P_{RGB}}$ is the \textit{projection matrix}. All of these 
+series of linear operations can be written as a function too:
+
+\begin{equation}\label{eq:simplyfied_proj_func_2}
   \mathbf{u} = \mathbf{F_{p}}(\mathbf{X_{w}})
-\end{equation} \label{eq:simplyfied_proj_func_2}
+\end{equation} 
 
-where $\mathbf{F_{p}}(\mathbf{X_{w}})$ is the 
-\textit{projective transformation function}, which takes 
-the 3D points in the world coordinate system, transforms to 
-the camera coordinate systems and then maps them onto the image plane.
-
-To build any reliable computer vision application with digital cameras, it is 
-to important to find parameters of the $\mathbf{P_{RGB}}$ \textit{projection matrix}. 
-The next section describes one of many numerical methods for estimating them
-in literature.
-
-\section{The Triangulation Model} \label{sc_depth_model}
-
-Projected images captured by RGB cameras lack depth and angle 
-information. To acquire these information, two main techniques are developed; 
-e.g., passive stereo cameras and active stereo cameras. For passive stereo cameras, 
-typically two synchronized cameras are placed horizontally with a known distance to each other. 
-%Hence, one usually exploits the triangulation technique to calculate the depth. 
-Whereas, for active stereo camera, one typically has one light projector and 
-one camera sensor. For example, in Kinect, a Infrared (IR) laser projects 
-structured IR speckle light pattern on a object, and then 
-the deformed light due to 3D geotmerty of the object are 
-captured with a monochrome IR camera from different 
-position (see figure-\ref{fig:kinect_depth_img}). 
+where $\mathbf{F_{p}}(\mathbf{X_{w}})$ is the \textit{projection function}, 
+which takes the 3D points in the world coordinate system, transforms to the 
+camera coordinate systems and then maps them onto the image plane.
 
 \begin{figure}[H]
-	\centering
-  \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
-  {fig/ref_imgs/kinect_depth_img.png}
-  \caption{Kinect Depth Image Construction}
-	\label{fig:kinect_depth_img}
-\end{figure}
+\begin{tabular}{ccc}
+\centering
+\subcaptionbox{Undistorted Image}{\includegraphics[width = 0.3\linewidth]{fig/drawings/pinhole_undistort.pdf}} &
+\subcaptionbox{Barrel Distorted Image}{\includegraphics[width = 0.3\linewidth]{fig/drawings/pinhole_distort_1.pdf}}
+\subcaptionbox{Pincushion Distorted Image}{\includegraphics[width = 0.3\linewidth]{fig/drawings/pinhole_distort_2.pdf}}
+\end{tabular}
+\caption{All emitted 
+  lights through the camera lens is expected to intersect at the same 
+  focus point and the radial distortion is caused by having a defected lens 
+  that causes the emitted lights focusing different points.
+  This makes the straight lines appear to be curved.}
+\end{figure}\label{fig:}
 
-Since we use Kinect in order to retrive depth information for our experiments, 
-we will be modeling active stereo vision principle even though the 
-basic principle behind them is the same mathematical model, which is 
-the \textit{triangulation model}. This model is another geometrical model that 
-takes advantages of similarity triangles to calculate the depth. 
-
-\begin{figure}[H]
-	\centering
-  \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
-  {fig/ref_imgs/kinect_depth_measurement.png}
-  \caption{Kinect's Depth Measurement}
-	\label{fig:uncertainty_matching}
-\end{figure}
-
-In this setup, 
-we again utilize the Camera Coordinate system similar to RGB camera
-and IR camera with $f$ focal length is placed by facing perpendicular to 
-the (principle axis) Z-axis at the origin. Then, IR laser projector is 
-also placed along the X-axis parallel to the IR camera with $b$ distance. 
-Additionally, we measure $d$ as a \textit{disparity} data and 
-the maximum range that can be measured refers to $Z_r$. Ultimately, we are 
-interested in finding $Z_i$ distance if depth information of point $k$ 
-is desired. For doing so, we build two useful relationships using similarity of triangles:
-
-
-\begin{equation}
-  \frac{D}{b} = \frac{Z_r - Z_i}{Z_r} \text{ and } \frac{d}{f} = \frac{D}{Z_i}
-\end{equation}
-
-If the depth camera paramters such as $(f, b, Z_r)$ is 
-calibrated and we measure $d$ disparity data, 
-we can easily extract $Z_i$ depth information with the following formula:
-
-\begin{equation}
-  Z_i = \frac{Z_r}{1+\frac{Z_r}{fb}d}
-\end{equation}\label{eq:depth_wo_disparity}
-
-Another important point to note is that Kinect or other depth cameras in pratice might 
-not provide the depth metric information directly. For instance, 
-Kinect provides us disparity image data that correspond to inverse depth 
-quantized with 11 bits and the relationship between disparity data and 
-real depth is non-linear as shown in \ref{fig:depth_disparity_relation}.
-
-\begin{figure}[H]
-	\centering
-  \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
-  {fig/ref_imgs/depth_disparity_relation.png}
-  \caption{Inverse Depth and Disparity Data Relationship}
-	\label{fig:depth_disparity_relation}
-\end{figure}
-
-Thus, we need to update depth equation \ref{eq:depth_wo_disparity} by 
-taking its inverse and 
-introducing denormalization factor replacing with $d$ with $md'+n$:
-
-\begin{equation}
-  Z_i^{-1} = (\frac{m}{fb})d' + (Z_r^{-1} + \frac{n}{fb})
-\end{equation}\label{eq:depth_w_disparity_reverse}
-
-To make it convenient to calculate, we can take its inverse again:
-
-\begin{equation}
-  Z_i = \frac{1}{(\frac{m}{fb})d' + (Z_r^{-1} + \frac{n}{fb})}
-\end{equation}\label{eq:depth_w_disparity}
-
-Now that we know how to get metric depth information $Z_i$ from disparity data by 
-utilizing the triangulation model, we can discuss 
-how
-$X_i$ and $Y_i$ 
-coordinates of the point $\mathbf{X_{world}}=[X_i, Y_i, Z_i]^T$ in World Coordinate System
-are projected as $\mathbf{x_{img}}=[u_k,v_k,1]^T$ pixel coordinates of the IR camera. 
-To do so, we require the similar projection function to RGB camera 
-(see section \ref{sb_sc_pinhole})
-consists of intrinsic and extrinsic camera parameters, but this time it is for 
-the IR camera:
-
-\begin{equation}
-  \mathbf{X_{world}} =
-  Z_i (\mathbf{P_{IR}^{-1}}\mathbf{X_{world}}) = 
-  Z_i (\mathbf{K_{IR}^{-1}}\mathbf{T_{IR}^{-1}}\mathbf{x_{img}})
-\end{equation} \label{eq:ir_cam_proj_func}
-
-
-%One can also retrive remaining $X_k$ and $Y_k$ coordinates of point $k$ in the Camera 
-%Coordinate system if coordinates of the principal point $(c_x, c_y)$ of the 
-%IR camera and its distortion paramaters $(\delta x, \delta y)$ are calibrated, and 
-%$u_k$ and $v_k$ coordinates of the point $k$ in the image plane is measured:
-%
-%\begin{equation}
-%\begin{aligned}
-%  X_k = -\frac{Z_k}{f} (u_k - c_x + \delta x)\\
-%  Y_k = -\frac{Z_k}{f} (v_k - c_y + \delta y)
-%\end{aligned}
-%\end{equation}
-
-To find related intrinsic parameters for RGB and depth camera, we will perform 
-calibration process in the following section.
-
-\section{RGB-D Camera Calibration} \label{sb_sc_rgb_calibration}
-
-The calibration process is a crucial part of any computer vision applications 
-and there are many sophisticated techniques to achieve accurately.
-However, it is important to note that full derivations of the calibration formulation 
-is not provided, but only the important points are given.
-Therefore, I refer readers to \cite{bla} for the rgb camera calibration and 
-to \cite{bla} for the depth camera calibration. 
-Since we are about to calibrate two cameras; i.e., RGB and depth, that we 
-used to register each 3D point cloud with a color, we assume that both camera's image 
-planes are aligned and it has 1:1 pixel correspondences. Under this assumption,
-let's start with RGB camera.
-
-\subsubsection{RGB Camera}
-
-Assuming that we project two 3D points onto our image plane
-like in Figure-\ref{fig:calibration_constraint},
-the visual angle between those pair of 3D points is equal to 
-the angle between its corresponding 2D points. This geometric constraints 
-allow us to build the calibration problem. Remember that the goal is to find 
-the projection matrix and we can build the problem in the following way:
-
-\begin{figure}[H]
-	\centering
-  \includegraphics[width=\linewidth,natwidth=640,natheight=640]
-  {fig/ref_imgs/calibration_dlt.png}
-  \caption{Inherit Constraint}
-  \label{fig:calibration_constraint}
-\end{figure}
-
-
-\begin{equation}
-  \mathbf{x_{img}} = 
-  \begin{pmatrix}
-    u_i\\
-    v_i\\
-    1
-  \end{pmatrix}
-  =
-  \mathbf{P}\mathbf{X_{world}} = 
-  \begin{bmatrix}
-    p_{00} & p_{01} & p_{02} & p_{03}\\
-    p_{10} & p_{11} & p_{12} & p_{13}\\
-    p_{20} & p_{21} & p_{22} & p_{23}
-  \end{bmatrix}
-  \begin{pmatrix}
-    X_i\\
-    Y_i\\
-    Z_i\\
-  \end{pmatrix}
-\end{equation} \label{eq:proj_matrix}
-
-Let's now distribute 
-the projection matrix onto the 3D point measurement to retrieve individual 
-pixel coordinates:
-
-\begin{equation}
-  u_i = 
-  \frac
-  {p_{00}X_i + p_{01}Y_i + p_{02}Z_i + p_{03}}
-  {p_{20}X_i + p_{21}Y_i + p_{22}Z_i + p_{23}}
-\end{equation} \label{eq:u_i}
-
-\begin{equation}
-  v_i = 
-  \frac
-  {p_{10}X_i + p_{11}Y_i + p_{12}Z_i + p_{13}}
-  {p_{20}X_i + p_{21}Y_i + p_{22}Z_i + p_{23}}
-\end{equation} \label{eq:v_i}
-
-
-Since $\mathbf{x_{img}}$ and $\mathbf{X_{world}}$ are known,
-we can find elements of the $\mathbf{p} = (p_{00}, p_{01}, \dots, p_{23})^T$ matrix 
-by solving $\mathbf{Ap=0}$ liner system of equations from \ref{eq:u_i} and \ref{eq:v_i}.
-
-For \textit{minimal solution} of this linear system of equations, 
-we need at least $n \geq 6$ measurement points to solve the problem as 
-the $\mathbf{P}$ matrix has 12 degree of freedom (11 if scale is ignored).
-Note that this accounts for having 
-noise-free measurement which does not hold in reality. Then, the problem 
-becomes \textit{over-determined}.
-
-In noisy measurement case, the problem is usually solved with
-\textit{singular value decomposition (SVD)} with $n \geq 6$ measurement points. 
-This method is called the \textit{Direct Linear Transformation (DLT)}.
-Disadvantange of the DLT methods, it is still sensitive errors since 
-it only considers algebraic errors (that are the residuals of 
-$\mathbf{Ap}$). 
-
-While estimating the intrinsic and extrinsic parameters 
-that are in linear form with the DLT, 
-another issue known as \textit{radial distortion} 
-has to take into account as well. This issue is caused by camera lens 
-and Figure-\ref{fig:cam_distortion} depicts this effect and the straight lines 
-appear to be curved. 
-
-\begin{figure}[H]
-	\centering
-  \includegraphics[width=0.3\linewidth,natwidth=640,natheight=640]
-  {fig/ref_imgs/cam_distortion.png}
-  \caption{Camera Distortion}
-  \label{fig:cam_distortion}
-\end{figure}
-
-This distortion has non-linear characteristics and we also 
-need to estimate the coefficients 
-$\kappa = (k_1, k_2, p_1, p_2, k_3)^T$ of the following polynomial:
-
+One last issue with regards to imperfect pixels is the \textit{radial 
+distortion}.  The distortion effect has non-linear characteristics. Thus, we 
+introduce polynomial function whose coefficients $\kappa = (k_1, k_2, p_1, 
+p_2, k_3)^T$ can be fitted by optimization. The polynomial function is given 
+as follows:
 
 \begin{equation}
 \begin{split}
-  x''_i = F_{dist}(x') = 
+  x'' = \mathbf{F_{d}}(x') = 
   x'(1+ k_1 r^2 + k_2 r^4 + k_3 r^6) + 2 p_1 x' y' + p_2 (r^2+2x'^2)\\
-  y''_i = F_{dist}(y') = 
+  y'' = \mathbf{F_{d}}(y') = 
   y'(1+ k_1 r^2 + k_2 r^4 + k_3 r^6) + p_1 (r^2+2y'^2) + 2p_2 x'y'\\
 \end{split}
 \end{equation}
 
-where $x' = X_{cam}/Z_{cam}$ and $y' = Y_{cam}/Z_{cam}$. 
-Note that, in \ref{eq:simplyfied_proj_func}, we first transform 
-3D points from World Coordinate to Camera Coordinate Systems with 
-extrinsic matrix and then we project them with the instrinsic matrix. 
-To improve our pinhole camera model, 
-we need to distort 3D points in the Camera Coordinate System before 
-multiplying with the intrinsic matrix:
+where $x' = X_{c}/Z_{c}$ and $y' = Y_{c}/Z_{c}$. Now, we can update the 
+projection function:
 
 \begin{equation}
   \begin{pmatrix}
@@ -900,59 +701,274 @@ multiplying with the intrinsic matrix:
   \end{pmatrix}
   =
   \begin{pmatrix}
-    f_x x'' + c_x\\
-    f_y y'' + c_y\\
+    \alpha_x x'' + sy''+ c_x\\
+    \alpha_y y'' + c_y\\
     1
   \end{pmatrix}
     =
-    F_{dist}\begin{pmatrix}
       \mathbf{K}
+      \mathbf{F_{d}}\begin{pmatrix}
       \begin{pmatrix}
-        X_{cam}\\
-        Y_{cam}\\
-        Z_{cam}\\
+        X_{c}/Z_{c}\\
+        Y_{c}/Z_{c}\\
         1
       \end{pmatrix}
     \end{pmatrix} 
     =
-    F_{dist}\begin{pmatrix}
-      \mathbf{K} [\mathbf{R}|\mathbf{t}]
+    \mathbf{K}
+    \mathbf{F_{d}}\begin{pmatrix}
+       [\mathbf{R}|\mathbf{t}]
       \begin{pmatrix}
-        X_{world}\\
-        Y_{world}\\
-        Z_{world}\\
+        X_{w}\\
+        Y_{w}\\
+        Z_{w}\\
         1
       \end{pmatrix}
-    \end{pmatrix}
-\end{equation} \label{eq:proj_func_w_f_c}
+    \end{pmatrix}\label{eq:proj_func_w_f_c}
+\end{equation} 
 
-Above operations introduce non-linearity, which cannot be solved by DLT.
-To get better accuracy at our projection matrix along with the distortion, 
-\textit{least squares estimation}, i.e., Levenberg-Marquardt, is perfomed.
+Let's combine projection and distortion function into one:
+
+\begin{equation}\label{eq:simplyfied_dist_proj_func}
+  \mathbf{u} = \mathbf{F_{dp}}(\mathbf{X_{w}})
+\end{equation} 
+
+
+To build any reliable computer vision application with digital cameras, it is 
+essential to find the parameters of the projection matrix and the radial 
+distortion.  The next section describes one of many numerical methods for 
+estimating them in literature.
+
+\section{The Triangulation Model} \label{sc_depth_model}
+
+Projected images captured by RGB cameras lack depth and angle information. To 
+acquire this information, two main techniques are developed; e.g., passive 
+stereo cameras and active stereo cameras. For passive stereo cameras, 
+typically two synchronized cameras are placed horizontally with a known 
+distance to each other. 
+Whereas, for an active stereo camera, one typically has one light projector 
+and one camera sensor. For example, in Kinect, an Infrared (IR) laser projects 
+structured IR speckle light pattern on an object, and then the deformed light 
+due to 3D geometry of the object is captured with a monochrome IR camera from 
+a different position.
 
 \begin{figure}[H]
 	\centering
-  \includegraphics[width=0.5\linewidth,natwidth=640,natheight=640]
-  {fig/ref_imgs/checkerboard_rgb.png}
-  \caption{Checkerboard RGB}
-  \label{fig:checkerboard_rgb}
+  \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
+  {fig/ref_imgs/kinect_depth_img.png}
+  \caption{On the left, the IR camera capture the patterns of speckles 
+  projected on an object. On the right, we see the resulting depth 
+image if diparity data is converted accordingly \cite{Khoshelham2012a}.}
+	\label{fig:kinect_depth_img}
 \end{figure}
 
-In practice, the checkerboard is used to get many good measurement points 
-as  we easily extract edge features from the image. Now, the DLT comes handy
-as we can use the DLT's result as an initial guess 
-in the least squares optimization problem.
+Since we use Kinect to retrieve depth information for our experiments, we will 
+be modeling active stereo vision principle even though the basic principle 
+behind them is the same mathematical model, which is the \textit{triangulation 
+model}. As shown in figure \ref{fig:triangulation_model}, this model is a 
+geometrical model that takes advantages of similarity triangles to calculate 
+the depth.
+
+\begin{figure}[H]
+	\centering
+  \includegraphics[width=0.65\linewidth,natwidth=640,natheight=640]
+  {fig/drawings/triangulation.pdf}
+  \caption{The Depth Measurement Model}
+	\label{fig:triangulation_model}
+\end{figure}
+
+In this setup, we again utilize the camera coordinate system similar to RGB 
+camera and IR camera with $f$ focal length is placed by facing perpendicular 
+to the (principle axis) Z-axis at the origin. Then, IR laser projector is also 
+placed along the X-axis parallel to the IR camera with $b$ distance.  
+Additionally, we measure $d$ as a \textit{disparity} data and the maximum 
+range that can be measured refers to $Z_r$. Ultimately, we are interested in 
+finding $Z_c$ distance if depth information of point $\mathbf{X_c}^{(i)}$ is 
+desired. For doing so, we build two useful relationships using similarity of 
+triangles:
+
 
 \begin{equation}
-  \argmin_{\mathbf{P_{RGB}} \rightarrow \mathbf{K_{RGB}}, \kappa_{RGB}, \mathbf{R_{RGB}}^{(i)}, \mathbf{t_{RGB}}^{(i)}}
-  \sum_{i=1:n} || \mathbf{x_{img}}^{(i)} - 
-  \mathbf{P_{RGB}} \mathbf{X_{world}}^{(i)} ||^2
-\end{equation}\label{eq:proj_lsq}
+  \frac{D}{b} = \frac{Z_r - Z_c}{Z_r} \text{ and } \frac{d}{f} = \frac{D}{Z_c}
+\end{equation}
 
-where we use known 
-$\mathbf{x}_i$ is the pixel coordinates of a feature on image plane and 
-$\mathbf{X}_i$ is the coordinates of a feature in World Coordinate system
-to identify the following parameters:
+If the depth camera parameters such as $f, b,$ and $Z_r$ is calibrated and we 
+get $d$ disparity data, we can easily extract $Z_c$ depth information with the 
+following formula:
+
+\begin{equation}\label{eq:depth_wo_disparity}
+  Z_c = \frac{Z_r}{1+\frac{Z_r}{fb}d}
+\end{equation}
+
+Another critical point to note is that Kinect or other depth cameras might not 
+provide the depth metric information directly in practice. For instance, 
+Kinect provides us disparity image data that correspond to inverse depth 
+quantized with 11 bits and the relationship between disparity data and real 
+depth is non-linear as shown in figure \ref{fig:depth_disparity_relation}.
+
+\begin{figure}[H]
+	\centering
+  \includegraphics[width=0.6\linewidth,natwidth=640,natheight=640]
+  {fig/ref_imgs/depth_disparity_relation.png}
+  \caption{Non-linear Relationship Between Inverse Depth and Disparity \cite{Smisek2011}}
+	\label{fig:depth_disparity_relation}
+\end{figure}
+
+Thus, we need to update depth equation \ref{eq:depth_wo_disparity} by taking 
+its inverse and introducing normalization factor replacing with $d$ with 
+$md'+n$:
+
+\begin{equation}\label{eq:depth_w_disparity_reverse}
+  Z_c^{-1} = (\frac{m}{fb})d' + (Z_r^{-1} + \frac{n}{fb})
+\end{equation}
+
+To make it convenient to calculate, we can take its inverse again:
+
+\begin{equation}\label{eq:depth_w_disparity}
+  Z_c = \frac{1}{(\frac{m}{fb})d' + (Z_r^{-1} + \frac{n}{fb})}
+\end{equation}
+
+The relationship between disparity data and metric depth measurement can be 
+written as a function in the following form:
+
+\begin{equation}\label{eq:ir_cam_proj_func}
+  Z_c
+  =
+  F_d(d')
+\end{equation} 
+
+
+Now that we know how to get metric depth information $Z_c$ from disparity data 
+by utilizing the triangulation model, we can briefly write down similar 
+projection operation for the IR camera.
+
+\begin{equation}\label{eq:ir_cam_proj_func}
+  \mathbf{u} 
+  =
+  %Z_i (\mathbf{P_{IR}^{-1}}\mathbf{u}) = 
+  \mathbf{K_{IR}} \mathbf{F_d} (\mathbf{T_{IR}}  \mathbf{X_{w}})
+\end{equation} 
+
+
+Keep in mind that we first need to calibrate the IR camera's intrinsic and 
+extrinsic paratemeters to find related depth related parameters, i.e., 
+$f,b,Z_r,m, n$. In the following section, we will discuss how calibration 
+processes are performed for RGB-D camera to measure quality data.
+
+\section{RGB-D Camera Calibration} \label{sb_sc_rgb_calibration}
+
+The calibration process is a crucial part of any computer vision applications, 
+and there are many sophisticated techniques to achieve accurately.  However, 
+it is important to note that full derivations of the calibration formulation 
+are not provided in this thesis, but only the important points are given.  
+Therefore, I refer readers to \cite{Zhang2000a}, \cite{Smisek2011}, 
+\cite{Karan2015} and \cite{Herrera2016a} for the details of a RGB-D camera 
+calibration.  Since we are about to perform 3 calibration operation: RGB 
+camera, IR camera, and depth measurement, we assume that both RGB and IR 
+camera's image planes are aligned for simplicity (in practice, one must 
+perform transformation $\mathbf{\prescript{\mathbf{IR}}{}T_{RGB}}$ between RGB 
+and IR camera if a feature from RGB camera used in IR camera) and they have 
+1:1 pixel correspondences. Under these assumptions, let's start with RGB and 
+IR camera.
+
+\subsubsection{RGB and IR Camera Calibration}
+
+We calibrate RGB and IR camera since they both project 3D space to 2D space, 
+but only measuring the different light spectrum. Thus, the calibration process 
+for the RGB camera that we will discuss applies for the IR Camera as well.  To 
+begin with, the simplest case which can help us to understand the calibration 
+process is that we assume that we know the exact position of 3D points in 
+world coordinate system and exact position of 2D points on the image plane.  
+One can build a constraint between them by exploiting the projection function:
+
+\begin{equation}
+  \mathbf{u_{RGB}}^{(i)} = 
+  \begin{pmatrix}
+    u^{(i)}\\
+    v^{(i)}\\
+    1
+  \end{pmatrix}
+  =
+  \mathbf{P_{RGB}}\mathbf{X_{w}} = 
+  \begin{bmatrix}
+    p_{00} & p_{01} & p_{02} & p_{03}\\
+    p_{10} & p_{11} & p_{12} & p_{13}\\
+    p_{20} & p_{21} & p_{22} & p_{23}
+  \end{bmatrix}
+  \begin{pmatrix}
+    X^{(i)}_w\\
+    Y^{(i)}_w\\
+    Z^{(i)}_w\\
+  \end{pmatrix}\label{eq:proj_matrix}
+\end{equation} 
+
+Let's now distribute the projection matrix onto the 3D point measurement to 
+retrieve individual pixel coordinates:
+
+\begin{equation}\label{eq:u_i}
+  u^{(i)} = 
+  \frac
+  {p_{00}X^{(i)}_w + p_{01}Y^{(i)}_w + p_{02}Z^{(i)}_w + p_{03}}
+  {p_{20}X^{(i)}_w + p_{21}Y^{(i)}_w + p_{22}Z^{(i)}_w + p_{23}}
+\end{equation} 
+
+\begin{equation}\label{eq:v_i}
+  v^{(i)} = 
+  \frac
+  {p_{10}X^{(i)}_w + p_{11}Y^{(i)}_w + p_{12}Z^{(i)}_w + p_{13}}
+  {p_{20}X^{(i)}_w + p_{21}Y^{(i)}_w + p_{22}Z^{(i)}_w + p_{23}}
+\end{equation} 
+
+
+Since $\mathbf{u}$ and $\mathbf{X_{w}}$ are known, we can find elements of the 
+$\mathbf{p} = (p_{00}, p_{01}, \dots, p_{23})^T$ matrix by solving 
+$\mathbf{Ap=0}$ liner system of equations from \ref{eq:u_i} and \ref{eq:v_i}.  
+For \textit{minimal solution} of this linear system of equations, we need at 
+least $n \geq 6$ measurement points to solve the problem as the 
+$\mathbf{P_{RGB}}$ matrix has 12 unknowns (11 if scale is ignored).  Note that 
+this accounts for having noise-free measurement which does not hold in 
+reality. Then, the problem becomes \textit{over-determined}.
+
+\begin{figure}[H]
+%\begin{tabular}{cc}
+\centering
+\subcaptionbox{RGB Images}{\includegraphics[width = 0.8\linewidth]{fig/ref_imgs/checkerboard_rgb.png}} \\
+\subcaptionbox{IR Images}{\includegraphics[width = 0.8\linewidth]{fig/ref_imgs/checkerboard_ir.png}}
+%\end{tabular}
+\caption{When calibrating RGB and IR camera, one should produce many measurement points 
+  by placing checker board at different orientation and different tilted 
+posture \cite{Karan2015}.}
+\end{figure}\label{fig:}
+
+
+In noisy measurement case, the problem is usually solved with \textit{singular 
+value decomposition (SVD)} with $n > 6$ measurement points.  This method is 
+called the \textit{Direct Linear Transformation (DLT)}.  Disadvantage of the 
+DLT methods, it is still sensitive errors since it only considers algebraic 
+errors (that are the residuals of $\mathbf{Ap}$).  Another drawback of DLT is 
+that it cannot compensate non-linearities of projection function due to the 
+radial distortions.  Thus, instead of DLT, the non-linear least squares 
+optimization is usually performed for the better accuracy:
+
+In practice, the checkerboard is used to get many good measurement points as 
+we can easily extract edge features from the image as 2D points.  Plus, we 
+also know the corresponding 3D positions in the world coordinate system.
+Also, we have prior knowledge about some of the parameters of intrinsic 
+matrix, e.g., pixels are squared, skew factor is trivial, optical center near 
+the center of the image. All of these can increase our chance for successful 
+convergence when optimizing:
+
+\begin{equation}\label{eq:proj_lsq}
+  \argmin_{\mathbf{F_{dp}} \rightarrow \mathbf{K_{RGB}}, \kappa_{RGB}, \mathbf{R_{RGB}}^{(i)}, \mathbf{t_{RGB}}^{(i)}}
+  \sum_{i=1:n} || \mathbf{u_{RGB}}^{(i)} - 
+  \mathbf{F_{dp}} (\mathbf{X_w}^{(i)}) ||^2
+\end{equation}
+
+where $\mathbf{F_{dp}}$ is the projection function along with distortion (see 
+notation \ref{eq:simplyfied_dist_proj_func}), $\mathbf{u}_{(i)}$ is the 
+measured pixel coordinates of a feature on image plane and 
+$\mathbf{X_w}_{(i)}i$ is the 3D coordinates of a feature in world coordinate 
+system to identify the following parameters:
 
 \begin{itemize}
   \item $\mathbf{K_{RGB}}$ is the intrinsic matrix for RGB camera, 
@@ -961,52 +977,54 @@ to identify the following parameters:
   \item $\mathbf{t_{RGB}}^{(i)}$ is the corresponding translation for RGB camera.
 \end{itemize}
 
-\subsubsection{Depth Camera}
+As mentioned earlier, we can apply the same optimization process for IR camera 
+to find $\mathbf{K_{IR}}$ intrinsic matrix for IR camera, $\kappa_{IR}$ 
+distortion coefficients for IR camera, $\mathbf{R_{IR}}^{(i)}$ corresponding 
+orientation for IR camera and $\mathbf{t_{IR}}^{(i)}$ corresponding 
+translation for IR camera.
 
-The depth camera almost has an identical procedure to RGB camera with minor 
-differences. 
-To begin with the calibration process, 
-we, similarly, capture the depth image of checkerboard at the same position 
-with RGB camera and detect the same features as shown in the following figure.
+
+\subsubsection{Depth Measurement Calibration}
+
+As we discussed in the previous section, disparity data for every pixel on IR 
+image corresponds to the metric depth information.  We can only build the 
+relationship between pixel coordinates of the IR image and disparity value 
+when the IR camera is calibrated and its $\mathbf{u_{IR}}$ pixel measurements 
+are corrected accordingly.
 
 \begin{figure}[H]
 	\centering
-  \includegraphics[width=0.5\linewidth,natwidth=640,natheight=640]
+  \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
   {fig/ref_imgs/checkerboard_depth.png}
-  \caption{Checkerboard Depth}
+  \caption{When calibrating the depth parameters, 
+  checkerboard should be placed at the different distances to the camera
+  so that we get enough measurement points, especially for fitting $m,n$
+parameters \cite{Karan2015}.}
   \label{fig:checkerboard_depth}
 \end{figure}
 
-The difference is, however, in the cost fuction of least squares equation. 
-For RGB camera, we minimize the error on the image plane (see \ref{eq:proj_lsq}) 
-by projecting 3D points in world onto image plane. Whereas, for depth camera, 
-we will minimize the error in the World Coordinate system since we need to 
-include depth $Z_i$ into the calibration process (remember \ref{eq:depth_w_disparity}).
-
+To get the disparity for $i^{th}$ feature point, a simple mask function can be 
+used:
 
 \begin{equation}
-  \argmin_{\mathbf{P_{IR}} \rightarrow \mathbf{K_{IR}}, \kappa_{IR}, \mathbf{R_{IR}}^{(i)}, \mathbf{t_{IR}}^{(i)}}
-  \sum_{i=1:n} || \mathbf{X_{world}}^{(i)} - 
-  Z_i (\mathbf{P_{IR}^{-1}} \mathbf{x_{img}}^{(i)}) ||^2
-\end{equation}\label{eq:proj_lsq}
+  d'^{(i)} = M(\mathbf{u_{IR}}^{(i)})
+\end{equation}
 
-where we use known 
-$\mathbf{x_{img}}^{(i)}$ is the pixel coordinates of the same feature on image plane and 
-$\mathbf{X_{world}}^{(i)}$ is the coordinates of the same feature in World Coordinate system
-to identify the following parameters:
+where $M$ is a function that return the disparity value at pixel coordinates 
+$\mathbf{u_{IR}}^{(i)}=[u_{IR}^{(i)},u_{IR}^{(i)}]^T$ of calibrated IR image.  
+Then, our one last step will be to convert disparity measurement to depth for 
+every feature on the checkboard and minimize the error between measured depth 
+$\hat{Z_c}=F_d(d')$ (see notation \ref{eq:ir_cam_proj_func}) and real depth 
+$Z_c$:
 
-\begin{itemize}
-  \item $\mathbf{K_{IR}}$ is the intrinsic matrix for IR camera, 
-  \item $\kappa_{IR}$ is the distortion coefficients for IR camera, 
-  \item $\mathbf{R_{IR}}^{(i)}$ is the corresponding orientation for IR camera and 
-  \item $\mathbf{t_{IR}}^{(i)}$ is the corresponding translation for IR camera.
-\end{itemize}
+\begin{equation}\label{eq:proj_lsq}
+  \argmin_{F_d \rightarrow f, b, Z_r, m, n}
+  \sum_{i=1:n} || Z_{c}^{(i)} - F_d(d'^{(i)})  ||^2
+\end{equation}
 
-
-The afromentioned calibration processes are well-studied problem in 
-computer vision literature. 
-Fortunately, there are many software libraries, such as OpenCV, 
-that offers such implementations.
+The calibration processes for cameras are a well-studied problem in computer 
+vision literature.  Fortunately, there are many open software libraries, such 
+as OpenCV, that offers such implementations.
 
 
 \chapter{Fundamentals of Visual Odometry} \label{cp_vo}
@@ -3928,7 +3946,7 @@ the objective function around initial guess $\mathbf{x}^0$ and iterate
 through the function using the \textit{Newton's methods} or its variations.
 For example,
 an optimal solution (or an interest point)
-Figure-\ref{fig:lsq_multivariable_function_example} is at the local
+figure \ref{fig:lsq_multivariable_function_example} is at the local
 minimum of the function that is highlighted as a red point cloud.
 
 \begin{figure}[H]
@@ -3987,7 +4005,7 @@ how the output of the model changes given the independent variable.
 
 To see this effect, 
 we draw a graph that is shown in
-Figure-\ref{fig:lsq_curve_fit_measurements}.
+figure \ref{fig:lsq_curve_fit_measurements}.
 
 \begin{figure}[H]
 	\centering
@@ -4046,7 +4064,7 @@ to any gradient decent based least squares solver. The method will try to find t
 \end{equation}
 
 To help our understanding, the objective function is drawn in
-Figure-\ref{fig:lsq_sum_of_squared_error_function}.
+figure \ref{fig:lsq_sum_of_squared_error_function}.
 As we can see, the based on the given $\mathbf{x}$ values, 
 the objective
 function $F(\mathbf{x})$ behave as follows:
@@ -4072,7 +4090,7 @@ operation results at $\mathbf{x}=(1.9,2.1)$.
 If we now place the optimization variables into our model function, we
 get the $g(\mathbf{x};a)=1.9+2.1a$ and a fitted line based on the given
 dataset in
-Figure-\ref{fig:lsq_curve_fit_operation}.
+figure \ref{fig:lsq_curve_fit_operation}.
 
 \begin{figure}[H]
 	\centering
