@@ -79,9 +79,39 @@
 \newacronym{imu}{IMU}{Inertial Measurement Unit}
 \newacronym{ir}{IR}{Infrared}
 \newacronym{dlt}{DLT}{Direct Linear Transformation}
+\newacronym{sift}{SIFT}{Scale-Invarient Feature Transform}
+\newacronym{surf}{SURF}{Speed-up Robust Features}
+\newacronym{fast}{FAST}{Feature From Accelerated Segment Test}
+\newacronym{brief}{BRIEF}{Binary Robust Independent Elementary Features}
+\newacronym{orb}{ORB}{Oriented FAST and Rotated BRIEF}
+\newacronym{ransac}{RANSAC}{Random Sample Consensus}
 
 
 % Symbols
+\newglossaryentry{cam_pose}{
+  name = \ensuremath{\mathbf{x}_k},
+  description = camera pose at $k^{th}$ frame
+}
+\newglossaryentry{cam_position}{
+  name = \ensuremath{\mathbf{p}_k},
+  description = camera position at $k^{th}$ frame in $\R^3$
+}
+\newglossaryentry{cam_orientation}{
+  name = \ensuremath{\mathbf{q}_k},
+  description = camera quaternion orientation at $k^{th}$ frame in $SO(3)$
+}
+\newglossaryentry{transformation}{
+  name = \ensuremath{\mathbf{T}_{k,k+1}},
+  description = camera transformation from $k^{th}$ to $k+1^{th}$ frame
+}
+\newglossaryentry{translation}{
+  name = \ensuremath{\mathbf{t}_{k,k+1}},
+  description = camera translation from $k^{th}$ to $k+1^{th}$ frame
+}
+\newglossaryentry{rotation}{
+  name = \ensuremath{\mathbf{q}_{k,k+1}},
+  description = camera rotation from $k^{th}$ to $k+1^{th}$ frame
+}
 \newglossaryentry{2d_feature_pix_coord}{
   name = \ensuremath{\mathbf{u}^{(i,k)}, \mathbf{u_{RGB}}^{(i,k)}} ,
   description = $i^{th}$ 2D feature point's pixel coordinates on $k^{th}$ RGB frame
@@ -140,7 +170,10 @@ name = $\mathbf{X_w}^{(i)}$ ,
   name = {\ensuremath{F_d}} ,
   description = function that converts diparity value to metric depth
 }
-
+\newglossaryentry{homography}{
+  name = {\ensuremath{\mathbf{H}}} ,
+  description = homography matrix
+}
 \renewcommand{\contentsname}{Table of Contents}
 
 % ***************************DOC***************************
@@ -1038,309 +1071,327 @@ as OpenCV, that offers such implementations.
 % - Moravec1980 - Obstacle Avoidance and Navigatio n in the Real World by a Seeing Robot Rover
 % - Matthies1987a - Error Modeling in Stereo Navigation
 % - Olson2003 - Rover navigation using stereo ego-motion
-First research in estimating camera ego-motion was done in 
-a PhD Thesis \cite{Moravec1980} in 1980s. He used a sliding camera as 
-a stereo fashion that captures images when the robot stopped after moving for some 
-small distance. Another early study, from Matthies and Shafer \cite{Matthies1987a}, 
-formulized the ego-motion estimation for stereo vison.
-The interest in VO peaked 
-after NASA's Mars expeditions with a rover in 2003 . 
-Reseachers and engineers in NASA JPL further improved the robutness of 
-their robots since it was a critical application \cite{Olson2003}.
+First research in estimating camera ego-motion was done in a Ph.D. Thesis 
+\cite{Moravec1980} in the 1980s. He used a sliding camera as a stereo fashion 
+that captures images when the robot stopped after moving for some small 
+distance. Another early study, from Matthies and Shafer \cite{Matthies1987a}, 
+formulated the ego-motion estimation for stereo vision. The interest in VO 
+peaked after NASA's Mars expeditions with a rover in 2003. Researchers and 
+engineers in NASA JPL further improved the robustness of their mobile robots 
+with the VO system \cite{Olson2003}.
 % First VO Paper
 % Nister2004 - Visual Odometry
 
-For the first time, Visual Odometry term was introduced in \cite{Nister2004} 
-by the computer vision researchers. 
-It estimates the transformation matrix by solving the P3P problem between consecutive frames.
-Nister also demonstrated a VO pipeline that became a defacto system configuration even 
-for today's VO applications.
-In computer vision, Structure from Motion (SFM), that tackles 3D reconstruction of 
-an environment with moving camera, is well-studied topic. For SFM, it is critical 
-to estimate camera pose accurately to build the 3D environment. VO 
-can be thought of subset problem of SFM. 
-The reason VO parted from SFM is 
-because VO systems started to empower other applications such SLAM and 
-are required to operate in real-time, all of which introduces 
-a great challenge. With the help of early robotics applications 
-in NASA and computer vision community, the VO became quite popular field. 
-That being said, two of the most influential papers were 
-\cite{Fraundorfer2012} and \cite{Scaramuzza2011}. By publishing these tutorials, 
-the authors gave researchers and engineers a design recipe for building the 
-right VO system since there is no such a system that works under any conditions.
-One can also find a survey of VO types, approaches and challenges in 
-\cite{Aqel2016}.
+In computer vision, Structure from Motion (SFM), that tackles 3D 
+reconstruction of an environment with moving camera, is a well-studied topic. 
+For SFM, it is critical to estimate camera pose accurately to build the 3D 
+environment. VO can be thought of subset problem of SFM. The reason VO parted 
+from SFM is that VO systems started to empower other applications such SLAM 
+and are required to operate in real-time, all of which introduces a great 
+challenge.
+
 % Surveys
-% - Fraundorfer2012 - Visual odometry: Part I: The First 30 Years and Fundamentals
-% - Scaramuzza2011 - Visual Odometry Part II: Matching,Robustness, Optimization, and Applications
-% - Aqel2016 - Review of visual odometry: types, approaches, challenges, and applications
+% - Fraundorfer2012 - Visual odometry: Part I: The First 30 Years and 
+%Fundamentals
+% - Scaramuzza2011 - Visual Odometry Part II: Matching,Robustness, 
+%Optimization, and Applications
+% - Aqel2016 - Review of visual odometry: types, approaches, challenges, and 
+%applications
+For the first time, Visual Odometry term was introduced in \cite{Nister2004}. 
+It estimates the transformation matrix by solving the P3P problem between 
+consecutive frames. Nister also demonstrated a VO pipeline that became a 
+defacto system configuration even for today's VO applications. With the help 
+of early robotics applications in NASA and computer vision community, the VO 
+became a quite popular field. That being said, two of the most influential 
+papers were \cite{Fraundorfer2012} and \cite{Scaramuzza2011}. By publishing 
+these tutorials, the authors gave researchers and engineers a design recipe 
+for building the VO system for different kind of environment settings since 
+there is no such a system that works under any conditions. One can also find a 
+survey of VO types, approaches and challenges in \cite{Aqel2016}.
 
 Over the years, research on VO is progressively increased and various types of 
-VO systems are proposed. Therefore, 
-VO systems can be categorized based on different phenomenas such as 
-camera sensor types and solver algorithms choice.
-One can utilize monucular or stereo cameras in order to capture images. 
-The stereo cameras are further grouped 
-into two category; i.e., active and passive cameras. For active camera, 
-besides color or monochrome camera, there is another camera such IR camera that measures the depth information. 
-For passive camera, the depth is calculated from two color or monochrome camera. 
-In the case of solver algorithms, one can group VO into two category; i.e.,
-feature-based and appearance-based.
+VO systems are proposed. Therefore, VO systems can be categorized based on 
+different phenomena such as camera sensor types and solver algorithms choice. 
+One can utilize monocular or stereo cameras to capture images. The stereo 
+cameras are further grouped into two categories; i.e., active and passive 
+cameras. For the active camera, besides color or monochrome camera, there is 
+another camera such IR camera that measures the depth information combination 
+with IR laser projector. For the passive camera, the depth is calculated from 
+two color or a monochrome camera. In the case of solver algorithms, one can 
+group VO into two categories; i.e., feature-based and appearance-based.
 
-The feature-based VO algorithms are interested in extracting distinct and  
-repeatable feature points from images and finding correspondences in 
-extracted features either between consecutive frames or keyframes. 
-Before estimating camera poses, 
-an important step for the feature-based alogrithms is to remove outliers 
-in feature matches with RANSAC \cite{Fischler1981}
-% Fischler1981 - RANSAC
-There are two popular open source feature-based VO tools; i.e., 
-LIBVISO2 \cite{Geiger2011} and FOVIS \cite{Huanga2011}.
-To explain LIBVISO2 briefly, 
-both simple blob and corner filters are used to extract features.
-The extracted features are filtered by non-maximum suppression to increase 
-the robustness of the matching process.
-Then, it calculates the depth information by triangulation technique as 
-it uses passive stereo camera. Finally, they minimize the reprojection error. 
-The reprojection error function is constructed by projection from 
-features on the left camera onto the right camera and vice-versa, 
-to estimate the pose. Note that RANSAC applied on feature matches to remove 
-outliers. On the other hand, FOVIS is more accurate and faster than 
-LIBVISO2 according to \cite{Fang2015a}.
+The feature-based VO algorithms are interested in extracting distinct and 
+repeatable feature points from images and finding correspondences in extracted 
+features either between consecutive frames or keyframes. The challenging part 
+in feature-based VO is to build a system that can match features across 
+different frames without errors. However, this does not hold in reality, so 
+one typically needs to remove these errors with outlier rejection algorithms 
+such as RANSAC \cite{Fischler1981b}. Among many VO systems, there are two 
+favorite open source feature-based VO tools which stand out; i.e., LIBVISO2 
+\cite{Geiger2011} and FOVIS \cite{Huanga2011}. Briefly, LIBVISO2 uses both 
+simple blob and corner filters to extract features. The extracted features are 
+filtered by non-maximum suppression to increase the robustness of the matching 
+process. Then, it calculates the depth information by triangulation technique 
+as it uses a passive stereo camera. Finally, it minimizes the reprojection 
+error. The reprojection error function is constructed by projection from 
+features on the left camera onto the right camera and vice-versa, to estimate 
+the pose. Note that RANSAC applied on feature matches to remove outliers. 
+Whereas, FOVIS is more accurate and faster than LIBVISO2 according to 
+\cite{Fang2015a}.
 % RGBD VO Comparisons
 %% - Angladon2017 - An evaluation of real-time RGB-D visual odometry algorithms on mobile devices
 % - Fang2015a - Experimental evaluation of RGB-D visual odometry methods
-FOVIS uses only FAST corner detectors to extract features. 
-For the matchings, FOVIS uses keyframe fashion instead of consective images to 
-reduce the drift.
-Instead of 
-using RANSAC for outlier rejection, it contructs 
+FOVIS uses only FAST corner detectors to extract features. For matching 
+features, FOVIS take advantage of keyframes instead of consecutive images to 
+reduce the drift. Instead of using RANSAC for outlier rejection, it constructs 
 a graph of consistent feature matches and updates the features that obey the 
-idea that 
-the Euclidean distance between two features at one time should match 
-their distance at another time. Finally, several refinement processes are applied 
-during motion estimation to improve accuracy.
+idea that the Euclidean distance between two features at one time should match 
+their distance at another time. Finally, several refinement processes are 
+applied during motion estimation to improve accuracy.
 % RGBD VO Implementations
 % - Geiger2011 - LIBVISO2 - StereoScan: Dense 3d Reconstruction in Real-time
 % - Huanga2011 - FOVIS - Visual Odometry and Mapping for Autonomous Flight Using an RGB-D Camera
 
-The biggest disadvantage of feature-based VO is that accuracy of the pose estimations 
-decreases if the operating environment lacks texture-rich scenes such as 
-corridors or the measured images are blurry due to fast motions. Thus, 
-appearance-based VO algorithms utilize the entire image instead of extracted features.
-Initially, Iterative Closest Point (ICP) \cite{Besl1992} 
-was used to minimize the geometrical error between 3D surfaces. There are 
-also various kinds of ICP algorithms 
-that offers to compute efficiently \cite{Rusinkiewicz2001}. Even though ICP 
-is useful for creating 3D shapes with point clouds, it is slower and less 
-accurate comparing to feature-based methods.
+The most significant disadvantage of feature-based VO is that the accuracy of 
+the pose estimations decreases if the operating environment lacks texture-rich 
+scenes such as corridors or the measured images are blurry due to fast 
+motions. Thus, appearance-based VO algorithms utilize the entire image instead 
+of extracted features. Initially, Iterative Closest Point (ICP) 
+\cite{Besl1992} was used to minimize the geometrical error between 3D 
+surfaces. Then, various kinds of ICP algorithms are built for improving 
+efficiency \cite{Rusinkiewicz2001}. Even though ICP is useful for creating 3D 
+shapes with point clouds, it is slower and less accurate compared to 
+feature-based methods.
 % - Besl1992 - First ICP Paper - A method for registration of 3-D shapes
 % - Rusinkiewicz2001 - ICP - Efficient Variants of the ICP Algorithm
-Then, another type of apperance-based approach, so-called Dense Visual Odometry (DVO) 
-\cite{Kerl2013a}, 
-was emerged by minimizing 
-the photometrical error based on the pixel intensity between consecutive frames. 
+Then, another type of appearance-based approach, so-called Dense Visual 
+Odometry (DVO) \cite{Kerl2013a}, was emerged by minimizing the photometrical 
+error based on the pixel intensity between consecutive frames. Although the 
+original techniques developed with appearance-based approaches produces less 
+accurate results, we can say that it recently started to gain popularity with 
+carefully designed hybrid methods, so-called Semi-Dense VO \cite{Zhou2017a}, 
+and it can outperform feature-based VO in some cases.
 % - Kerl2013a - DVO - Robust Odometry Estimation for RGB-D Cameras
 
-%% - Dryanovski2013 - CCNY - Fast Visual Odometry and Mapping from RGB-D Data
-%% - Fang2015a - DEMO - Real-time Depth Enhanced Monocular Odometry
-
-TODO: OUTLINE THE FOLLOWING SECTIONS. DESCRIBE VO PIPELINE BRIEFLY.
-
+In this chapter, we will focus on the standardized feature-based VO pipeline, 
+which will serve us as a foundational basis so that we comprehend the 
+algorithmic errors. Hence, We structured this chapter according to four main 
+components of the pipeline: (1) feature extraction, (2) feature matching, (3) 
+outlier rejection and (4) pose estimation. 
 
 \section{Feature Extraction} \label{sc_feature_extraction}
 
-Image features are a collection of regions of interest or of points of interest 
+Image features are a collection of regions of interest or points of interest 
 that describe the image. In this way, we compress the necessary information 
-from images so that we can achieve computationaly expensive task more efficiently.
-Points of interest, also called \textit{keypoints}, 
-are particularly valuable because their location in the image can be 
-measured accurately. This is useful for localization related tasks such as VO. 
+from images so that we can deal with computationally expensive image 
+processing tasks.  Points of interest, which also can be called as 
+\textit{keypoints}, \textit{features} or \textit{landmarks} interchangeably, 
+are particularly valuable because their location in the image can be measured 
+accurately. This is useful for localization-related tasks such as VO. 
 
-In feature-based VO, the critical task is to find good features. 
-What defines a good feature from others is that it is distinct, 
-repeatable, computationaly cheap and invariant to geometrical changes. 
-Obviously, one has many options to produce such image 
-feautes but two common methods that are widely used in VO systems are 
-blobs and corners. 
-Blobs are image patterns that contain distinct image response comparing to their 
-neighborhood pixels. Blobs take advantage of pixel intensity or color to 
-decide whether it has a distinct response or not.
-In the VO literature, SIFT\cite{}, SURF\cite{} or CENSURE\cite{} are popular 
-choices for detecting blob featurus.
-Corners are the meeting points where two or many edges intersect. Corners, 
-on the other hand, 
-take advantage of geometrical structure of an image. FAST\cite{}, Shi-Tomasi or 
-Haris\cite{} are widely used for detecting corners.
+In feature-based VO, the critical task is to find good features.  What defines 
+good features from others is that they are distinct, repeatable, 
+computationally cheap and invariant to geometrical changes.  One has many 
+options to produce such image , but two common methods in VO systems are blobs 
+and corners.  Blobs are image patterns that contain distinct image response 
+comparing to their neighborhood pixels. Blobs take advantage of pixel 
+intensity or color to decide whether it has a distinct response or not.  In 
+the VO literature, SIFT \cite{Lowe2004} and SURF \cite{Bay2008} are popular 
+choices for detecting blob features.  In contrast, corners are the meeting 
+points where two or many edges intersect.  Corners take advantage of the 
+geometrical structure of an image.  FAST \cite{Rosten2006} and Harris 
+\cite{Harris1988} are widely used for detecting corners.
 
-Fundemantally, a two-step process is needed to extract good features. 
-First, you take a response function called \textit{image filter}, 
-shift this filter through the image and save the one that have greater 
-response than your previously defined threshold as Keypoints. 
-This might a Gaussian filter for blobs or a 
-corner detector filter for corners. In the second step (optional), 
-you perform non-maxima 
-suppression on the resulting keypoints to find local minima of the function. 
-This step will help to remove similar keypoints and to choose the ones having 
-maximum confidence so that distinctiveness of the features are ensured.
+Fundamentally, a two-step process is needed to extract good features.  First, 
+you take a response function called \textit{image filter}, shift this filter 
+through the image and save the one that has greater response than your 
+previously defined threshold.  This might be a Gaussian filter for blobs or a 
+corner detector filter for corners. In the second step, you perform non-maxima 
+suppression on the resulting image features to find local minima of the 
+function.  This step will help to remove similar image features and to choose 
+the ones having maximum confidence so that distinctiveness of the features are 
+ensured.  Some VO might skip non-maxima suppression because of the efficiency 
+reasons.
 
-Inheritly, each feature detector has certain limitations and one has to 
-choose which detector to use depending on task objectives. Therefore, we may ask 
-the following question: 
-Does the localization envorinment involve more texture oriented objects like 
-floors, walls etc. or geometrical shapes like urban areas where many lines 
-exist?
-However, rule of thumb when choosing feature detector is that blobs 
+Inherently, each feature detector has certain limitations, and one has to 
+choose which detector to use depending on task objectives. Therefore, we may 
+ask the following question: Does the localization environment involve more 
+texture-oriented objects like floors, walls, etc. or geometrical shapes like 
+urban areas where many lines exist?  However, the rule of thumb is that blobs 
 are distinct but slow to compute and corners are fast to compute but less 
-distict. 
+distinct. 
 
 %\subsection{Feature Descriptor} \label{sb_sc_feature_descriptor}
 
-Extracting features is the very first step of VO. The next step is to 
-encode the detected keypoints into a format that we can perform comparison 
-or search operation among them. This is done by taking the neighboring pixels 
-around the keypoints and convert into a more compact form. For example, SIFT 
-, most well-known feature decsriptor, 
-creates a patch around a keypoint, divides this patch into smaller grids,
-calculate the gradient of each grid and 
-saves them as a histogram.
-This procedure makes feature descriptor 
-robust agaist scale or rotation changes. Then, one can use these descriptors for 
-various comparison operations such as matching or tracking in VO. However, we 
-utilize the ORB in our VO and will discuss its properties.
+After extracting features, one needs to encode the detected image features 
+into a format that we can perform comparison or search operation among them. 
+This is done by taking the neighboring pixels around the image features and 
+convert into a more compact form. For example, SIFT, most well-known feature 
+descriptor, creates a patch around an image feature, divides this patch into 
+smaller grids, calculate the gradient of each grid and saves them as a 
+histogram.  This procedure makes feature descriptor robust against scale or 
+rotation changes. Then, one can use these descriptors for various comparison 
+operations such as matching or tracking in VO. However, we utilize the ORB 
+that combines feature extraction and description process in our VO.s
 
 
 \subsubsection{ORB} \label{sb_sc_orb}
 
-One of the most strict requirements of VO is the real-time contraints since it is 
-expected to work at similar to low-level inertial sensors, i.e., accelerometer, gyroscopes etc. 
-As previously discussed, blobs detectors are computationaly expensive. Therefore, 
-corners based feature detector are more prevelant in VO. 
-\textit{ORB (oriented FAST and rotated BRIEF)} studied known issues of 
-FAST detector and BRIEF descriptor. Then, it combines them to compansate each 
-other's drawbacks. In the end,
-it perform as accurate as SIFT, plus faster. Here are steps on how to extract features 
-and create descriptors with ORB: 
+One of the most strict requirements of VO is the real-time constraints since 
+it is expected to work at similar to low-level inertial sensors, i.e., 
+accelerometer, gyroscopes, etc.  As previously discussed, blobs detectors are 
+computationally expensive. Therefore, corner-based feature detectors are more 
+prevalent in VO.  \textit{ORB} \cite{Rublee2011a} combines FAST detector 
+\cite{Rosten2006} and BRIEF descriptor \cite{M.2010} by tuning the necessary 
+parameters to produce robust and reproducible features.  In the end, it mostly 
+performs as accurate as SIFT, plus faster. Here are steps on how to extract 
+features and create descriptors with ORB: 
 
 \begin{enumerate}
   \item \textbf{Detect corners with FAST}: FAST take each pixel on 
-    the image and compare with its adjacent pixels. More specificially, 
-    ORB uses FAST-9, which takes a patch of discrete circular radius of $r=9$. 
-
+    the image and compare with its adjacent pixels. More specifically, 
+    ORB uses FAST-9, which takes a patch of a discrete circular radius of 
+    $r=9$. 
     \begin{figure}[H]
 	\centering
-  \includegraphics[width=0.6\linewidth,natwidth=640,natheight=640]
-  {fig/ref_imgs/fast.png}
-  \caption{FAST corners}
-  \label{fig:fast_corners}
-\end{figure}
+	  \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
+	  {fig/ref_imgs/fast.png}
+	\caption[FAST Corners]
+		{Point of interest or feature points are at the intersection of edges 
+		as seen for the $p,q$ and $r$ pixels and the blue lines correspond to 
+		the directions of the edges.For this figure, $r=4$ is taken 
+		\cite{Klette2014}.}
+	  \label{fig:fast_corners}
+	\end{figure}
 
-    If the 
-    selected pixel is $\pm t$ darker or brighter than adjacent pixels, 
-    we call it a corner, where $t$ is our empiric threshold.
+    The basic principle behind FAST is if the selected pixel $p$ is $\pm t$ 
+    darker or brighter than adjacent pixels $r\in{1,2,\dots,n}$, we call it a 
+    corner, where $t$ is our empiric threshold. Comparison pixel set $r$ is 
+    chosen as a circle around in figure \ref{fig:fast_corners}.
 
-\begin{equation}
-  M_c(p) = 
-  \sum_{r \in S_{bright}} |I_{p \rightarrow r} - I_p| - t \text{ or } 
-  M_c(p) = 
-  \sum_{r \in S_{dark}} |I_p - I_{p \rightarrow r}| - t)
-\end{equation}
-    We retrieve $M^c_{1:n}$ the set of corner candidates from 
-    comparing $I_{p\rightarrow x}$ the adjacent pixels around $I_p$ the target pixel.
+    \begin{equation}
+      S_{p \rightarrow r} = 
+      \begin{cases}
+        S_b, & I_{p \rightarrow r} \leq I_p - t \\
+        S_d, & I_p - t \leq I_{p \rightarrow r} \\
+        S_s, & otherwise
+      \end{cases}
+    \end{equation}
 
-  \item \textbf{Rank detected keypoint with Harris}: After FAST detection, 
-    we get many corner candidates around the interest point. However, 
-    FAST does not measure how good a corner is. Thus, we use Harris corner 
-    detector to rank corner candidates:
+    If a set of N contiguous pixels are either dark $S_d$ or bright $S_b$, we 
+    call interest point $p$ as a corner $\mathbf{u_c} = M_c(p)$, where $M_c$ 
+    is a function that returns the pixel coordinates of the corner pixel and N 
+    is another empiric parameter whose purpose is to ensure majority of the 
+    comparison either dark or bright.For more details about efficient ways to 
+    calculate FAST corners, I refer readers to \cite{Rosten2006}.
+
+	\item \textbf{Rank FAST corners with Harris}: After FAST detection, we 
+	might get many corner candidates around the interest point. However, FAST 
+	does not measure how good a corner is. Thus, we use Harris detector to 
+	rank corner candidates:
+  
     \begin{equation}
       \mathbf{A} = \sum_{x,y} w(x,y) 
       \begin{bmatrix}
         I_x^2 & I_xI_y \\ I_xI_y & I_y^2
       \end{bmatrix}
     \end{equation}
+    
     The $\mathbf{A}$ matrix is calculated by the $I_x$ and $I_y$ partial 
-    derivatives with respect to x and y direction and $w(x,y)$ weighting window.
+    derivatives with respect to $x$ and $y$ direction on the image plane and 
+    $w(x,y)$ weighting window.
 
     \begin{equation}
-      R^c = det(\mathbf{A}) - k(trace(\mathbf{A}))^2
+      R_c(\mathbf{A}) = det(\mathbf{A}) - k(trace(\mathbf{A}))^2
     \end{equation}
-    where $det(\mathbf{A}) = \lambda_1 \lambda_2$ and 
-    $trace(\mathbf{A}) = \lambda_1 + \lambda_2$.
-    Then, we use the resulting $\mathbf{A}$ to find a ranking score for each 
-    corner. Now, it is possible to take top N corners if desired.
+    
+    where $det(\mathbf{A}) = \lambda_1 \lambda_2$, $trace(\mathbf{A}) = 
+    \lambda_1 + \lambda_2$ and $k$ is an empiric tuning parameter. Then, we 
+    use the resulting $\mathbf{A}$ to find a ranking score for each corner. 
+    Now, it is possible to take top N corners from if desired.
 
-  \item \textbf{Calculate orientation of corners with image moments}: 
-    ORB uses BRIEF to create feature descriptors; however, BRIEF fails in 
-    rotated images. Therefore, ORB modifies the BRIEF by adding orientation 
-    information. To get orientation, an \textit{image moment} are calculated
-    for each patch $\mathbf{S_n}$:
+	\item \textbf{Calculate orientation of corners with image moments}: ORB 
+	uses BRIEF to create feature descriptors, but BRIEF fails in rotated 
+	images. Therefore, ORB modifies the BRIEF by adding orientation 
+	information. To get orientation, an \textit{image moment} are calculated 
+	for each patch $\mathbf{S}^{(n)}$:
 
     \begin{equation}
-      m_{a,b}(\mathbf{S_n}) = \sum_{x,y \in \mathbf{S_n}} x^a y^b I(x,y)
+    m_{a,b}(\mathbf{S}^{(n)}) = \sum_{x,y \in \mathbf{S}^{(n)}} x^a y^b I(x,y)
     \end{equation}
-    where $a + b$ defines the order of the moment and we need 
-    the moments of order one:
+    
+    where $a + b$ defines the order of the moment of $n^{th}$ patch and 
+    $I(x,y)$ is the intensity of the pixel at the corner. Next, we calculate 
+    the moments of order one: 
 
     \begin{equation}
-      m_{1,0}(\mathbf{S_n}) = \sum_{x,y \in \mathbf{S_n}} x \cdot I(x,y) \text{  ,  }
-      m_{0,1}(\mathbf{S_n}) = \sum_{x,y \in \mathbf{S_n}} y \cdot I(x,y)
-    \end{equation}
-
-    Then, we get the orientation of the patch $\mathbf{S_n}$:
-    \begin{equation}
-      \theta(\mathbf{S_n}) = atan2(m_{01}, m_{10})
+      m_{1,0}(\mathbf{S}^{(n)}) = \sum_{x,y \in \mathbf{S}^{(n)}} x \cdot I(x,y) \text{  ,  }
+      m_{0,1}(\mathbf{S}^{(n)}) = \sum_{x,y \in \mathbf{S}^{(n)}} y \cdot I(x,y)
     \end{equation}
 
-  \item \textbf{Form BRIEF descriptors with their corresponding orientation}:
-    Once the top N corners and their orientations are detected, descriptions 
-    can be formed with BRIEF. 
-
-\begin{figure}[H]
-	\centering
-  \includegraphics[width=\linewidth,natwidth=640,natheight=640]
-  {fig/ref_imgs/brief.png}
-  \caption{BRIEF pairs}
-  \label{fig:brief_pairs}
-\end{figure}
-
-
-    To do so, we randomly (normal distribution) 
-    selected 256 pairs $(p_i,q_i)$ 
-    inside the patch $\mathbf{S_n}$:
+    Then, we get the orientation of the patch $\mathbf{S}^{(n)}$:
+    
     \begin{equation}
-      \mathbf{S_n} = 
+      \theta(\mathbf{S}^{(n)}) = atan2(m_{0,1}, m_{1,0})
+    \end{equation}
+
+	\item \textbf{Form BRIEF descriptors with their corresponding 
+	orientation}: Once the top N corners and their orientations are detected, 
+	descriptions can be formed with BRIEF. 
+
+	\begin{figure}[H]
+		\centering
+	  \includegraphics[width=0.6\linewidth,natwidth=640,natheight=640]
+	  {fig/ref_imgs/brief.png}
+	  \caption[BRIEF Descriptor]{In order to form BRIEF descriptor, one needs 
+	  to create group of pixel pairs from patch $\mathbf{S}^{(n)}$. There are 
+	  two common ways to create pair. As seen in the left figure, we take the 
+	  feature point and pair with pixels around the circle patch. In the right 
+	  figure, another method where we pair randomly selected pixels can be 
+	  seen. ORB prefers the method on the right \cite{Klette2014}.}
+	  \label{fig:brief}
+	\end{figure}
+
+
+    To do so, we randomly (normal distribution) selected 256 pairs 
+    $(p^{(i)}=(u^{(i)},v^{(i)},q^{(j)}=(u^{(j)},v^{(j)}))$ inside the patch 
+    $\mathbf{S}^{(n)}$:
+    
+    \begin{equation}
+    \mathbf{S}^{(n)} = 
       \begin{pmatrix}
-      p_0, \dots, p_n\\
-      q_0, \dots, q_n
+        p^{(0)}, \dots, p^{(255)}\\
+        q^{(0)}, \dots, q^{(255)}
       \end{pmatrix}
     \end{equation}
-    Next, we rotate each $(\mathbf{p_i, q_i})$ pair points in 
-    $\mathbf{S_n}$ with the 
-    corresponding corner's orientation:
+    
+	Next, we rotate each $(\mathbf{p}^{(0:255)}, \mathbf{q}^{(0:255)})$ pair 
+	points in $\mathbf{S}^{(n)}$ with the corresponding corner's orientation:
+	
     \begin{equation}
-      \mathbf{p}_{i,\theta} = \mathbf{R}_{\theta}\mathbf{p_i} \text{ and } 
-      \mathbf{q}_{i,\theta} = \mathbf{R}_{\theta}\mathbf{q_i}
+      \mathbf{p}^{(i)}_{\theta} = \mathbf{R}_{\theta}\mathbf{p}^{(i)} \text{ and } 
+      \mathbf{q}^{(j)}_{\theta} = \mathbf{R}_{\theta}\mathbf{q}^{(j)}
     \end{equation}
-    where $p_i=(x_i, y_i)$ and $q_i=(x_i, y_i)$ are the pixel coordinates of 
-    the points.
-    It is important to note that authors \cite{} suggested to rotate each point in 
-    increments of 2$\pi$/30. Therefore, orientaion $\theta$ is mapped to 
-    nearest multiple of 2$\pi$/30.
-
-    To form steered (or rotated) BRIEF descriptors, we perform pixel density comparison:
-    between randomly selected pair points:
+    
+    It is important to note that the authors in \cite{Rublee2011a} suggested 
+    to rotate each point in increments of 2$\pi$/30. Therefore, orientation 
+    $\theta$ is mapped to nearest multiple of 2$\pi$/30. To form steered (or 
+    rotated) BRIEF descriptors, we compare pixel densities of pair points that 
+    are selected randomly:
+    
     \begin{equation*}
-      \tau(\mathbf{p_{i,\theta}},\mathbf{q_{i,\theta}}) := 
+      \tau(\mathbf{p}^{(i)}_{\theta},\mathbf{q}^{(j)}_{\theta}) := 
       \begin{cases}
-        1  & I(\mathbf{p_{i,\theta}}) < I(\mathbf{q_{i,\theta}}),\\
-        0  & I(\mathbf{p_{i,\theta}}) \geq I(\mathbf{q_{i,\theta}})
+        1  & I(\mathbf{p}^{(i)}_{\theta} < I(\mathbf{q}^{(j)}_{\theta}),\\
+        0  & I(\mathbf{p}^{(i)}_{\theta} \geq I(\mathbf{q}^{(j)}_{\theta})
       \end{cases}
     \end{equation*}
 
-    Finally, we sum comparison results with binary form to get the desctriptor 
-    of the patch $\mathbf{S_n}$:
+    Finally, we sum comparison results with binary form to get the descriptor  
+    of the patch $\mathbf{S}^{(n)}$:
+    
     \begin{equation}
-      \mathbf{D_n} = f(\mathbf{S_n}) := \sum_{1\leq i \leq n} 2^{i-1}\tau (\mathbf{p_{i,\theta}, q_{i,\theta}})
+      \mathbf{D}^{(n)} = f(\mathbf{S}^{(n)}) := \sum_{0\leq i,j \leq 255} 2^{i-1}\tau (\mathbf{p}^{(i)}_{\theta},\mathbf{q}^{(j)}_{\theta})
     \end{equation}
 
 \end{enumerate}
@@ -1353,97 +1404,98 @@ and create descriptors with ORB:
 
 Now that we know how to extract a distinct feature and to form a descriptor, 
 we can start building a relationship across images to estimate how the camera 
-moves. Remember that 
-the camera can procedure
-a video stream consisting of usually ranging from 30 to 60 frames per second. 
-The first task is to form a group of image pairs and to compute translation and rotation 
-information between each image pair, continuously. In literature, there are two ways to 
-select image pairs: 
-frame to frame or key frame to frame. In the former case, one pairs consecutive 
-frames across video stream. In the latter case, one selects a reference 
-frame and keep matching it with subsequent frames as long as the pair has 
-sufficient amount of feature matchings. The latter has certain advantages over 
-the former; however, we choose the former as we wish to model uncertainty 
-of our motion estimation algorithm as accurate as possible. 
+moves. Remember that the camera can procedure a video stream consisting of 
+usually ranging from 30 to 60 frames per second. The second task in VO after 
+extracting features is to form a group of image pairs information between each 
+image pair, continuously. In literature, there are two ways to select image 
+pairs: frame to frame or keyframe to frame. In the former case, one groups 
+consecutive frames across video stream. In the latter case, one selects a 
+reference frame and keep matching it with subsequent frames as long as the 
+pair has a sufficient amount of feature matchings. The latter has certain 
+advantages over the former; however, we choose the former as we wish to model 
+the uncertainty of our motion estimation algorithm as accurate as possible. 
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
-  {fig/ref_imgs/feature_matching.png}
-  \caption{Feature Mathces}
+	{fig/ref_imgs/covo_matches.png}
+	\caption[ORB Feature Mathces]
+	{An example feature matching scene from 
+	TUM RGB-D (freiburg xyz) dataset with ORB.}
 	\label{fig:feature_matchings}
 \end{figure}
 
-
-All being said, 
-let's assume we pair consecutive images
-$(\mathbf{I}_k, \mathbf{I}_{k+1})$. 
-In each image, we gather feature descriptors 
-$(\mathbf{D}_k^{1:n}, \mathbf{D}_{k+1}^{1:m})$ that pass through our ORB 
-filter. The goal is to find the feature correspondences based on their 
-rotated BRIEF descriptor values. Again, there are many efficient ways to 
-perform this matching task such as FLANN 
-(Fast Library for Approximate Nearest Neighbors). 
-Instead, in this thesis, we choose Brute-Force matching algorithm, which
-produces less outliers but it is less efficient in terms of time complexity.
-The Brute-Force, as its name states, is a straightforward technique
-that compares each $\mathbf{D}_{k}^{1:n}$ descriptors in $k^{th}$ image 
-with $\mathbf{D}_{k+1}^{1:m}$ descriptors in $k+1^{th}$ image by calculating 
+All being said, let's assume we pair consecutive images $(\mathbf{I}^{(k)}, 
+\mathbf{I}^{(k+1)})$. In each image, we gather feature descriptors 
+$(\mathbf{D}^{(1:n,k)}, \mathbf{D}^{(1:m,k+1)})$ that pass through our ORB 
+filter. The goal is to find the feature correspondences based on their rotated 
+BRIEF descriptor values. Again, there are many efficient ways to perform this 
+matching task such as FLANN (Fast Library for Approximate Nearest Neighbors). 
+Instead, in this thesis, we choose the Brute-Force matching algorithm, which 
+produces fewer outliers but it is less efficient in terms of time complexity. 
+The Brute-Force, as its name states, is a straightforward technique that 
+compares each $\mathbf{D}^{(1:n,k)}$ descriptors in $k^{th}$ image with 
+$\mathbf{D}^{(1:m,k+1)}$ descriptors in $k+1^{th}$ image by calculating 
 \textit{Hamming} distance:
 
 \begin{equation}
-  d_h(\mathbf{D}_{k}^i,\mathbf{D}_{k+1}^j) = \mathbf{D}_{k}^i \oplus \mathbf{D}_{k+1}^j
+  d_h(\mathbf{D}^{(i,k)},\mathbf{D}^{(j,k+1)}) = \mathbf{D}^{(i,k)} \oplus \mathbf{D}^{(j,k+1)}
 \end{equation}
 
-where $\oplus$ corresponds to an 'exclusive or' logic operation. After calculating 
-Hamming distances, the minimum distance are kept as best matches. On top of that, 
-we perform cross-check validation by ensuring that
-matches with value $(i,j)$ such that $i^{th}$ descriptor in image $k$ 
-has $j^{th}$ descriptor in image $k+1$ as the best match and vice-versa.
+where $\oplus$ corresponds to an 'exclusive or' logic operation. After 
+calculating Hamming distances, the minimum distance are kept as best matches. 
+On top of that, we perform cross-check validation by ensuring that matches 
+with value $(i,j)$ such that $i^{th}$ descriptor in image $k$ has $j^{th}$ 
+descriptor in image $k+1$ as the best match and vice-versa.
 
 
 \section{Outlier Rejection} \label{sb_sc_ransac}
 
-In reality, not all feature matches are correct and it is critical that we 
+In reality, not all feature matches are correct, and it is critical that we 
 detect wrong ones as the optimization algorithm that estimates the camera 
-motion is sensitive to even small number of wrong matches. In technical terms,
-we call these 
-wrong matches \textit{outliers} (or \textit{false positives}). Hence, 
-we need an algorithm to reject those outliers from \textit{inliers}. 
-The most common way is to use RANSAC, which is an abbreviation to 
-Random Sample Consensus. RANSAC is an interative algorithm which 
-fits desired model with presence of outliers by selecting subset of dataset 
-randomly and improving parameters of model each iteration. Note that 
-RANSAC works 
-well if at least half of the dataset contains inliers. 
+motion is sensitive to even a small number of wrong matches. In technical 
+terms, we call these wrong matches \textit{outliers} (or \textit{false 
+positives}). Hence, we need an algorithm to reject those outliers from 
+\textit{inliers}.  The most common way is to use RANSAC \cite{Fischler1981b}, 
+which is an abbreviation to Random Sample Consensus. RANSAC is an iterative 
+algorithm which fits the desired model with the presence of outliers by 
+selecting a subset of dataset randomly and improving parameters of model each 
+iteration. Note that RANSAC works well if at least half of the dataset 
+contains inliers.
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
-  {fig/ref_imgs/line_ransac_outlier.png}
-  \caption{Outlier Mathces}
+	\includegraphics[width=0.8\linewidth,natwidth=640,natheight=640]
+	{fig/drawings/ransac.pdf}
+	\caption[Outlier Rejection with RANSAC]
+	{RANSAC identifies the outliers by fitting the parameters of the 
+	homography iteratively.  For simplicity, the figure depicts the outlier 
+	rejection scenario with a simple line fitting example instead of 
+	homography. As seen in the figure, after the number of iteration $N=14$, 
+	RANSAC is able to fit line by excluding the outliers in the optimization 
+	process. Note that we can still have outliers within the RANSAC inlier 
+	threshold which is the area shaded with light blue color.} 
 	\label{fig:outlier_matches}
 \end{figure}
 
-In \ref{sb_sc_calibration}, we discussed how to model rotation and translation 
-motion along with the intrinsic matrix. Parameteres that we aim to 
-identify are elements of projection matrix in \ref{eq:proj_func_w_square_pix_skew}. 
-Similarly, the model being fitted in RANSAC case is elements of a 
-\textit{homography matrix}, 
-which transforms a 2D image point to another 2D image point.
-Remember that we have feature matches from image pairs. One of the pair is 
-the transformed version of the other pair. 
-We can model this relationship in the following way:
+In section \ref{sc_pinhole}, we discussed how to model rotation and 
+translation motion along with the intrinsic matrix. Parameters that we aim to 
+identify are elements of projection matrix in notation 
+\ref{eq:proj_func_w_square_pix_skew}.  Similarly, the model being fitted in 
+RANSAC case is elements of a \textit{homography matrix}, which transforms a 2D 
+image point to another 2D image point.  Remember that we have feature matches 
+from image pairs. One of the pair is the transformed version of the other 
+pair.  We can model this relationship in the following way:
 
 \begin{equation}
   k
   \begin{bmatrix}
-    u_i' \\ v_i' \\1
+    \hat{u}^{(i)} \\ \hat{v}^{(i)} \\1
   \end{bmatrix}
   =
   \mathbf{H}
   \begin{bmatrix}
-    u_i \\ v_i \\1
+    u^{(i)} \\ v^{(i)} \\1
   \end{bmatrix}
   =
   \begin{bmatrix}
@@ -1452,21 +1504,21 @@ We can model this relationship in the following way:
     h_{20} & h_{21} & h_{22}
     \end{bmatrix}
   \begin{bmatrix}
-      u_i \\ v_i \\1
+    u^{(i)} \\ v^{(i)} \\1
     \end{bmatrix}
   \end{equation}\label{eq:homography_full}
 
-The goal is to fit parameters of $\mathbf{H}$ with the selected subset of 
-the matching and our assumption is majority of selected point matchings 
-should be inliers. In this way, we can easily detect ourliers by testing 
-whether they fit to model parameters or not. To make \ref{eq:homography_full} 
-more obvious, we form linear system of equations:
+The goal is to fit parameters of $\mathbf{H}$ with the selected subset of the 
+matching under the condition where majority of selected point matchings are 
+inliers. In this way, we can easily detect outliers by testing whether they 
+fit to model parameters or not. To make notation \ref{eq:homography_full} more 
+obvious, we form linear system of equations:
 
 \begin{equation}
 \underbrace{
 \begin{bmatrix}
-  u_i & v_i & 1 & 0 & 0 & 0 & -u_i'u_i & -u_i'v_i -u_i'\\
-  0 & 0 & 0 & u_i & v_i & 1 & -v_i'u_i & -v_i'v_i -v_i'
+  u^{(i)} & v^{(i)} & 1 & 0 & 0 & 0 & -\hat{u}^{(i)}u^{(i)} & -\hat{u}^{(i)}v^{(i)} -\hat{u}^{(i)}\\
+  0 & 0 & 0 & u^{(i)} & v^{(i)} & 1 & -\hat{v}^{(i)}u^{(i)} & -\hat{v}^{(i)}v^{(i)} -\hat{v}^{(i)}
 \end{bmatrix}}_{\mathbf{A}}
 \underbrace{
 \begin{bmatrix}
@@ -1478,60 +1530,58 @@ more obvious, we form linear system of equations:
 \end{bmatrix}
 \end{equation}
 
-First step of RANSAC is to select a subset that contains 
-minimum number of matching points to 
-determine parameters of the model. In homography $\mathbf{H}$ case, we need at least 
-4 point pairs $(\mathbf{p}=(u_i,v_i),\mathbf{q}=(u_i',v_i'))$ to solve 
-this linear system of equation. However, due to the noise, we require more than 
-4 point pairs but this makes the problem over-determined. Therefore, 
-we might find an approximated solution by solving least squares problem:
-With all that being said, we minimize so-called 
-\textit{algebraic distance error}:
+The first step of RANSAC is to select a subset that contains a minimum number 
+of matching points to determine the parameters of the model. In homography 
+$\mathbf{H}$ case, we need at least 4 point pairs 
+$(\mathbf{u}=(u^{(i)},v^{(i)}),\mathbf{\hat{u}}=(\hat{u}^{(i)},\hat{v}^{(i)}))$
+ to solve this linear system of equation. However, due to the noise, we 
+require more than 4 point pairs, but this makes the problem over-determined. 
+Therefore, we might find an approximated solution by solving the least squares 
+problem: In doing so, we minimize so-called \textit{algebraic distance error}:
 
 \begin{equation}
 \argmin_h || \mathbf{Ah-0}||^2.
 \end{equation}
 
-In the second step, 
-after estimating $\mathbf{h}$ paramaters, we test every matchings that are 
-outside the subset which randomly selected at the first step whether 
-they fit to the model with the certain $\mathbf{d}$ threshold we define:
+In the second step, after estimating $\mathbf{h}$ parameters, we test every 
+matchings that are outside the subset which randomly selected at the first 
+step whether they fit to the model with the certain $\mathbf{d}$ threshold we 
+define:
 
 \begin{equation}
-  ||\mathbf{q} - \mathbf{H}\mathbf{p}||_2 > \mathbf{d} 
+  ||\mathbf{\hat{u}} - \mathbf{H}\mathbf{u}||^2 > d
 \end{equation}
 
-In the third step, we include the points 
-that passed our test procedure in the second step into our subset. In the 
-forth step, we have another test. In this test, we check whether the number of 
-matching points in our subset is large enough to prove that we include 
-majority of the inliers. If not, we go back to first step and repeat the 
-whole process again until we fulfill the fourth step. Here is the pseudo code 
-that summarize the algorithm:
+In the third step, we include the points that passed our test procedure in the 
+second step into our subset. In the fourth step, we have another test in which 
+we check whether the number of matching points in our subset is large enough 
+to prove that we include the majority of the inliers. If not, we go back to 
+the first step and repeat the whole process until we fulfill the fourth step. 
+The following listing summarizes the algorithm:
 
 \begin{algorithm}[H]
   \caption{Rejecting outlier matches with RANSAC}\label{algo_ransac}
 
   \textbf{Input} \\
-    \hspace*{\algorithmicindent}\textbf{S}: the smallest number of points\\
-    \hspace*{\algorithmicindent}\textbf{N}: the number of iteration\\
-    \hspace*{\algorithmicindent}\textbf{d}: the threshold used to identify a point which fits the model\\
-    \hspace*{\algorithmicindent}\textbf{T}: the number of nearby points to notify that there is a good fit\\
+    \hspace*{\algorithmicindent}S: the smallest number of points\\
+    \hspace*{\algorithmicindent}N: the number of iteration\\
+    \hspace*{\algorithmicindent}d: the threshold used to identify a point which fits the model\\
+    \hspace*{\algorithmicindent}T: the number of nearby points to notify that there is a good fit\\
   \textbf{Output} \\
-    \hspace*{\algorithmicindent}\textbf{C}: the (consensus) set of inliers \\
+    \hspace*{\algorithmicindent}C: the (consensus) set of inliers \\
   \begin{algorithmic}[1]
 
-    \Procedure{RANSAC}{\textbf{S,N,d,T}}\\
-      \While{iterations $<$ \textbf{N}}
-      \State select random sample subset of \textbf{S} points
-      \State estimate parameters to fit homography with \textbf{S}
-      \ForEach {points outside \textbf{S}}
+    \Procedure{RANSAC}{S,N,d,T}\\
+      \While{iterations $<$ N}
+      \State select random sample subset of S points
+      \State estimate parameters to fit homography with S
+      \ForEach {points outside S}
         \State calculate error between estimated point and measured point
-        \If {error $<$ \textbf{d}}
-          \State add point into \textbf{S}
+        \If {error $<$ d}
+          \State add point into S
         \EndIf
-        \If {\textbf{S} $>$ \textbf{T}}
-          \State return \textbf{C} $=$ \textbf{S}
+        \If {S $>$ T}
+          \State return C $=$ S
         \EndIf
       \EndFor
       \EndWhile
@@ -1540,314 +1590,312 @@ that summarize the algorithm:
 
 \end{algorithm} \label{algo:ransac}
 
-As it is seen in \ref{algo:ransac}, there are number of empiric parameters 
-that we need to define; $\mathbf{S,N,d,T}$. To make the algorithm as 
-efficient as possible, these parameters must be chosen carefully. As we 
-discussed, $\mathbf{S}$ is the subset of matchings that we randomly select and 
-initial value should at least 4 so that we can solve the least 
-squares problem. 
+As it is seen in \ref{algo:ransac}, there are four empiric parameters that we 
+need to define; S,N,d and T. In order to make the algorithm as efficient as 
+possible, these parameters must be chosen carefully. As we discussed, S is the 
+subset of matchings that we randomly select, and initial value should be at 
+least 4 so that we can solve the least squares problem. 
 
-For $\mathbf{N}$, it is insufficient to iterate 
-through every matching points. Thus, we at least select $\mathbf{N}$ 
-number of mathcing points with respect to following condition:
+For N, it is insufficient to iterate through every matching points. Thus, we 
+at least select N number of matching points with respect to following 
+condition:
 
 \begin{equation}
-  \mathbf{N} = log(1-p)/log(1-(1-\epsilon)^s)
+  \text{N} = log(1-p)/log(1-(1-\epsilon)^s)
 \end{equation}
 
-where $p=0.99$ is the probability of covering all inliers, $s$ is the 
-minimum number of iteration that 
-probability of choosing a subset with only outliers 
-and $\epsilon$ is the probability that a matching is an outlier.
+where $p=0.99$ is the probability of covering all inliers, $s$ is the minimum 
+number of iteration that likelihood of choosing a subset with only outliers 
+and $\epsilon$ is the probability that the match is an outlier.
 
-For $\mathbf{d}$, it is chosen empirically if distribution of outliers is unknown. If 
-it is known, i.e, Gaussian with mean $\mu$ and $\sigma$, threshold should 
-be $d=5.99\sigma^2$ so that there is a 95\% probability that the point is an inlier.
+For d, it is chosen empirically if the distribution of outliers is unknown. If 
+it is known, i.e., Gaussian with mean $\mu$ and $\sigma$, the threshold should 
+be $d=5.99\sigma^2$ so that there is a 95\% probability that the point is an 
+inlier.
 
-For $\mathbf{T}$, we might have a case that we reach expected ratio of inliers; thus 
-we don't have to iterate through $N$ number of times. We can terminate it 
-ealier if the following condition is satisfied:
+For T, we might have a case where we reach the expected ratio of inliers; thus 
+we don't have to iterate through N number of times. That means we can 
+terminate it earlier if the following condition is satisfied:
 
 \begin{equation}
-  \mathbf{T} = (1-\epsilon)n
+  \text{T} = (1-\epsilon)n
 \end{equation}
 
 where $n$ is the total number of matching points.
 
-It is crucial 
-to note that we may still have outliers after 
-RANSAC.
-However, 
-our motion estimation will be greatly improved since 
-majority of the outliers are removed.
-Finally, we will discuss how we can utilize the carefully selected features 
-and its matches to estimate the camera motion.
+It is crucial to note that we may still have outliers after RANSAC.  However, 
+our motion estimation will be greatly improved since the majority of the 
+outliers are removed.  Finally, we will discuss how we can utilize the 
+carefully selected features and its matches to estimate the camera motion.
 
 
 \section{Pose Estimation} \label{sc_motion_estim}
 
-TODO: SWITCH K AND C INDICES ON TRANSLATION AND ROTATION RESERVE!
-
-Pose estimation is the core part of the VO system. After 
-extracting and matching features,
-we finally are ready to compute $\mathbf{T}_{k, k+1}$ transformation matrix. 
-The \textit{transformation matrix} corresponds to relative camera motion information between 
-two images that are recorded in different poses (see figure-\ref{fig:transformation_ij}).
-Let's assume; we have 
-consecutive camere poses $\mathbf{x}_k^c = [\mathbf{p}_k^c, \mathbf{q}_k^c]$ and 
-$\mathbf{x}_{k+1}^c = [\mathbf{p}_{k+1}^c, \mathbf{q}_{k+1}^c]$ where 
-$\mathbf{p}^c = [p_x, p_y, p_z]^T$ is the position of the camera in $\R^3$
-and $\mathbf{q}^c = [q_w, q_x, q_y, q_z]^T$ is 
-the orientation of the camera in quaternion form in $SO(3)$. 
-Notice that, in camera model chapter 
-\ref{cp_cam_models}, we used rotation matrix to represent orientations, 
-which made it covenient to combine intrinsic matrix and extrinsic matrix 
-(rotation and translation) into a single projection matrix 
-(refer to notation \ref{eq:simplyfied_proj_func})
-so that 
-we optimize for paramaters of the single matrix. On the other hand, when 
-estimating relative motion, we use quaternions to represent orientations, 
-which is less intuitive way but 
-has certain advantage over rotation matrix such as requiring less storage.
-Additionally, we can represent the transformation 
-$\mathbf{T}_{k,k+1}$ $(= [\mathbf{t}_{k,k+1},\mathbf{q}_{k,k+1}])$ between two camera poses 
-$(\mathbf{x}_k,\mathbf{x}_{k+1})$ with the rotation $\mathbf{q}_{k,k+1}$ in $SO(3)$  
-and the translation $\mathbf{t}_{k,k+1}$ in $\R^3$.
-
-\begin{figure}[H]
-	\centering
-  \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
-  {fig/ref_imgs/transformation_ij.png}
-  \caption{GIVE EX FOR TRANSFORMATION TWO CAM POSES Transformation between Two Images}
-	\label{fig:transformation_ij}
-\end{figure}
-
-That being said, one can formulate the transformation $\mathbf{T}$ 
-between two camera pose. Let's first find the camera position:
+Pose estimation is the core part of the VO system. After extracting and 
+matching features, we finally are ready to compute \textit{transformation} 
+information. The transformation corresponds to relative camera motion between 
+two images that are recorded in different poses (see 
+figure-\ref{fig:transformation_ij}). Let's assume; we have consecutive camera 
+poses $\mathbf{x}_{k} = [\mathbf{p}_k, \mathbf{q}_k]$ and $\mathbf{x}_{k+1} = 
+[\mathbf{p}_{k+1}, \mathbf{q}_{k+1}]$ where $\mathbf{p} = [p_x, p_y, p_z]^T$ 
+is the position of the camera in $\R^3$ and $\mathbf{q} = [q_w, q_x, q_y, 
+q_z]^T$ is the orientation of the camera in quaternion form in $SO(3)$.  
+Notice that, in camera model chapter \ref{cp_cam_models}, we use rotation 
+matrix to represent orientations, which made it convenient to combine 
+intrinsic matrix and extrinsic matrix into a single projection matrix (see 
+notation \ref{eq:simplyfied_proj_func}) so that we optimize for parameters of 
+the single matrix. On the other hand, when estimating relative motion, we use 
+quaternions to represent orientations, which is less intuitive way but has 
+certain advantage over rotation matrix such as requiring less storage.  As a 
+result, we can represent the transformation $\mathbf{T}_{k,k+1}$ $(= 
+[\mathbf{t}_{k,k+1},\mathbf{q}_{k,k+1}])$ between two camera poses 
+$(\mathbf{x}_k,\mathbf{x}_{k+1})$ with the rotation $\mathbf{q}_{k,k+1}$ in 
+$SO(3)$  and the translation $\mathbf{t}_{k,k+1}$ in $\R^3$. That being said, 
+one can formulate the transformation $\mathbf{T}_{k,k+1}$ between two camera 
+pose if the initial pose $\mathbf{x}_{0}$ is known. Then, let's first find the 
+camera position:
 
 \begin{equation}
   \mathbf{p}_{k+1} = 
-  \mathbf{q}_{k,k+1} \otimes \mathbf{p}_k^c \otimes \mathbf{q_{k,k+1}}^* + 
+\mathbf{q}_{k,k+1} \otimes \mathbf{p}_k \otimes \mathbf{q}_{k,k+1}^* + 
   \mathbf{t}_{k,k+1}
 \end{equation}
 
-where $\mathbf{q}_{k,k+1} \otimes \mathbf{p}_k \otimes \mathbf{q_{k,k+1}}^*$ is the 
-\textit{hamilton product} that is used to rotate the camera position at the $k^{th}$ pose 
-and $\mathbf{t}_{k,k+1}$ is 
-the simple vector addition that is used to translate the camera position. Next, 
-the camera orientation can be found as follows:
+where $\mathbf{q}_{k,k+1} \otimes \mathbf{p}_k \otimes \mathbf{q}_{k,k+1}^*$ 
+is the \textit{hamilton product} that rotates the camera position at the 
+$k^{th}$ pose and $\mathbf{t}_{k,k+1}$ is the simple vector addition that 
+translates the camera position. Next, the camera orientation can be found as 
+follows:
 
 \begin{equation}
-  \mathbf{q}_{k+1}^c = 
-  \mathbf{q}_{k,k+1} \otimes \mathbf{q}_{k}^c
+  \mathbf{q}_{k+1} = 
+  \mathbf{q}_{k,k+1} \otimes \mathbf{q}_{k}
 \end{equation}
 
-where $\mathbf{q}_{k,k+1}^c \otimes \mathbf{q}_{k}$ is the product of two 
-quaternions that the former is the rotation and that the latter is the orientation 
-of the camera at the $k^{th}$ pose.
+where $\mathbf{q}_{k,k+1} \otimes \mathbf{q}_{k}$ is the product of two 
+quaternions that the former is the rotation and that the latter is the 
+orientation of the camera at the $k^{th}$ pose.
 
 \begin{figure}[H]
 	\centering
   \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
-  {fig/ref_imgs/cam_trajectory.png}
-  \caption{Camera Trajectory}
-	\label{fig:cam_trajectory}
+  {fig/drawings/rel_pose.pdf}
+  \caption[Trajectory From Relative Pose]
+  {VO estimates the ego-motion of the camera by relative poses estimated from  
+  image pairs. Thus, it assumes that the initial pose $p_0$ of the camera is 
+  known. Transformation $T_{0,1}$ from one image to another corresponds to the 
+  camera movement from one position to another. As long as VO is able to 
+  detect a sufficient number of features, it keeps estimating relative 
+  transformations. With all of these transformations, one can build a 
+  trajectory $(T_{0,1}, \dots, T_{98,99})$ which the camera follows.}
+	\label{fig:transformation_ij}
 \end{figure}
 
-
-The ultimate goal in VO is to compute transformation
-$\mathbf{T}_{k,k+1}=[\mathbf{t}_{k,k+1},\mathbf{q}_{k,k+1}]$ in multiple consecutive 
-images and concatenate them to build a trajectory of the camera.
-As a consequence, we can track any agent on which the camera is placed rigidly. 
-For example, concatenated transformation $\mathbf{T}_{0:n}$ 
-can be used to calculate $n^{th}$ camera pose that is relative to the initial pose:
-
+The ultimate goal in VO is to compute transformation $\mathbf{T}_{k,k+1}$ in 
+multiple consecutive images and concatenate them to build a trajectory of the 
+camera. As a consequence, we can track any agent on which the camera is placed 
+rigidly. For example, concatenated transformation $\mathbf{T}_{0,n}$ can be 
+used to calculate $n^{th}$ camera pose that is relative to the initial pose:
 
 \begin{equation}
-  \mathbf{p}_{n}^c = 
+  \mathbf{p}_{n} = 
   \mathbf{q}_{n, n-1} \otimes (\dots
   (\mathbf{q}_{2,1} \otimes
-  (\mathbf{q}_{1,0} \otimes \mathbf{p}_0^c \otimes \mathbf{q_{1,0}}^* + \mathbf{t}_{1,0})
+  (\mathbf{q}_{1,0} \otimes \mathbf{p}_0 \otimes \mathbf{q_{1,0}}^* + \mathbf{t}_{1,0})
   \otimes \mathbf{q}_{2,1}^* + \mathbf{t}_{2,1})
   \dots) \otimes \mathbf{q}_{n, n-1}^* +\mathbf{t}_{n, n-1} 
 \end{equation}
 
 \begin{equation}
-  \mathbf{q}_{n}^c = 
-  \mathbf{q}_{n,n-1} \otimes \dots \otimes \mathbf{q}_{2,1} \otimes \mathbf{q}_{1,0} \otimes \mathbf{q}_{0}^c 
+  \mathbf{q}_{n} = 
+  \mathbf{q}_{n,n-1} \otimes \dots \otimes \mathbf{q}_{2,1} \otimes \mathbf{q}_{1,0} \otimes \mathbf{q}_{0} 
 \end{equation}
 
-To find transformation, we take advantage of image features as they can 
-inform us how the camera moves if we detect them across multiple frames.
-All the afromentioned step such as feature extraction and feature matchings 
-are performed so that we 
-can compute relative motion.
-Similar to projection matrix \ref{eq:proj_lsq} in camere calibration, we utilize 
-the least squares method for estimating the best approximate transformation information
-due to the noise. Several methods available in literature to create 
-relationship between feature points that we detect across different image frames. 
-%and we will discuss it in the next section.
+To find transformation, we take advantage of image features as they can inform 
+us how the camera moves if we detect them across multiple frames.  All the 
+aforementioned step such as feature extraction and feature matchings are 
+performed so that we can compute relative motion.  Similar to projection 
+matrix \ref{eq:proj_lsq} in camera calibration, we utilize the least squares 
+method for estimating an approximated transformation information due to the 
+noise. 
 
 %\subsection{Relative Pose Estimation Techniques}
 %\label{sb_sc_relative_camera_pose_estimation_techniques}
 
-So far, we discussed how we can process images so that we have adequate 
+So far, we discussed how we could process images so that we have adequate 
 information to compute camera pose. However, we only mentioned 2D image 
-features. To esimate the pose in 3D world, we require corresponding 
-depth information for features. Note that there are methods that 
-retrieve relative scale information using only 2D image features and its epipolar 
-constraints with monocular cameras, 
-but we are interested in having a metric depth information rather 
-than relative scale in this thesis. Therefore, we have two common choices in terms 
-of camera types: Stereo Camera or RGBD Camera. In our experiments, we experimented 
-on RGBD Camera to retrieve the depth information.
+features. To estimate the pose in the 3D world, we require corresponding depth 
+information for features. Note that there are methods that retrieve relative 
+scale information using only 2D image features and its epipolar constraints 
+with monocular cameras, but we are interested in having metric depth 
+information rather than relative scale in this thesis. Therefore, we have two 
+common choices regarding camera types: Stereo Camera or RGB-D Camera. In our 
+experiments, we experimented on RGB-D Camera to retrieve the depth information.
 
-At this point, one generally has two ways to compute relative camere poses.
-and the reason we have different kinds of way to compute transformation arises from 
-the cost function we define for the least squres problem. In the end, all we wish to 
-find a good model for our optimization problem so that we settle on the 
-best possible local minimum.
-The design choice for cost function comes from the fact that we build 
-our cost function either on $\R^2$ space (image plane) or $\R^3$ space 
-(Camere Coordinate system).
-Therefore, in VO literature, 
-there are 2 different cost functions for modeling the least problem:
+At this point, one generally has two ways to compute relative camera poses.  
+and the reason we have different kinds of way to compute transformation arises 
+from the cost function we define for the least squares problem. In the end, 
+all we wish to find a good model for our optimization problem so that we 
+settle on the best possible local minimum.  The design choice for cost 
+function comes from the fact that we build our cost function either on $\R^2$ 
+space (image plane) or $\R^3$ space (camera coordinate system).  Therefore, in 
+VO literature, there are two different cost functions for modeling the least 
+problem:
+
 \begin{itemize}
   \item 3D-to-2D correspondences,
   \item 3D-to-3D correspondences.
 \end{itemize}
-The 2D term refers to 2D points that are in the image plane and that we call 
-them keypoints in section-\ref{sb_sc_feature_descriptor}. 
-Whereas the 3D term refers to 3D points that are in the Camera Coordinate 
-System and that we call them point clouds in section-\ref{sb_sc_feature_descriptor}.
 
-TODO: DEFINE ONE TERM FOR POINT CLOUD, FEATURE POINT OR LANDMARK. IT IS CONFUSING!
 
-Note that this thesis does not engage with 2D-to-2D correspondences method since it is 
-used in monocular camera; thus it will not be discussed here. On the other hand, 
-we will discuss and compare 3D-to-2D correspondences and 3D-to-3D correspondences. 
-In the motivation chapter \ref{cp_motivation}, 
-I state the reasons why I chose 3D-to-3D even though it is not a common choice 
-in VO literature.
+The 2D term refers to 2D image features. Whereas, the 3D term refers to 3D 
+point features that composed of back-projection of 2D features and depth 
+information.  Note that this thesis does not engage with 2D-to-2D 
+correspondences method since it is used in monocular camera; thus it will not 
+be discussed here. On the other hand, we will discuss and compare 3D-to-2D 
+correspondences and 3D-to-3D correspondences.  Although 3D-to-2D 
+correspondences outperform 3D-to-3D correspondences in VO, we show the 
+accuracy of 3D-to-3D correspondences can be significantly improved if the 
+uncertainty of the 3D point features is modeled properly and used in the 
+optimization process.  On the plus side, this technique allows us to propagate 
+the uncertainty of the 3D feature points to get the uncertainty of estimated 
+pose.  With being said, let's explain both methods.
 
 
 \subsubsection{3D-to-2D Correspondences}
 
-Rememeber that,
-after feature matching step for the consecutive image frames, we have only
-2D-to-2D keypoint correspondences information and 
-the transformation which we wish to compute is in $\R^3$. Therefore, we require 
-transformation involving in 3D feature points.
-That being said, we can estimate transformation 3D-to-2D Correspondences in four steps:
+Remember that, after feature matching step for the consecutive image frames, 
+we have only2D-to-2D correspondences information and the transformation which 
+we wish to compute is in $\R^3$. Therefore, we require transformation 
+involving in 3D point features. That being said, we can estimate 
+transformation 3D-to-2D Correspondences in four steps:
 
 \begin{enumerate}
-  \item back-project 2D keypoints from $k+1^{th}$ frame to 3D feature points
-  \item back-transform the back-projected 3D feature point from $k+1^{th}$ frame towards $k^{th}$ frame
-  \item reproject the back-transformed 3D feature point onto the $k^{th}$ image plane 
-  \item minimize 2D \textit{reprojection error} along with all feature matches
+  \item Back-project 2D image features from $k+1^{th}$ frame to form 3D point features,
+  \item Back-transform 3D point features from $k+1^{th}$ frame towards $k^{th}$ frame 
+    with transformation matrix,
+  \item Reproject the back-transformed 3D point features onto the $k^{th}$ image plane, 
+  \item Minimize 2D Euclidean distance error between reprojected and measured 2D image features.
 \end{enumerate}
 
 \begin{figure}[H]
 	\centering
-  \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
-  {fig/ref_imgs/min_euclidean_error.png}
-  \caption{Minimize Reprojection Error}
+  \includegraphics[width=0.9\linewidth,natwidth=640,natheight=640]
+  {fig/drawings/3d_to_2d.pdf}
+  \caption[3D-to-2D Correspondences]{Assuming that we have two frames taken in 
+  the different poses. What 3D-to-2D correspondences method does is that it 
+  takes the pixel $\mathbf{u}^{(i,k+1)}$ measurement from $k+1^{th}$ 
+  back-projects to get the 3D point feature, then rotates and translates with 
+  the transformation information, and projects the 3D feature to the 2D 
+  feature as $\mathbf{\hat{u}}^{(i,k)}$ on image plane at $k^{th}$ frame. 
+  Afterward, one will get Euclidean error distance $d_k \in \R^2$ between the 
+  reprojected pixel and the measured pixel. This behavior applies for 
+  reprojecting image from $k^{th}$ to $k+1^{th}$ frame to calculate $d_{k+1}$. 
+  For the sake of efficiency, most VO algorithms assume that measurement 
+  errors occur in only one image pair and only uses $d_k$ to minimize the 
+  error, but not both $d_k+d_{k+1}$. This might decrease the accuracy of the 
+  pose estimation.}
 	\label{fig:min_geometric_error}
 \end{figure}
 
 
-To illustrate the 
-situation more clearly, let's assume we have a 3D feature point 
-$\mathbf{X}_i=[x, y, z]^T$ in Camera Coordinate System and we measure 
-the projections of this exact feature point as 2D keypoint features, 
-$\mathbf{x}_i^k=[u_i^k,v_i^k]^T$ and $\mathbf{x}_i^{k+1}=[u_i^{k+1}, v_i^{k+1}]^T$ 
-on subsequent camera poses $k^{th}$ and $k+1^{th}$ respectively. What we also know is that 
-we can back-project measured 2D keypoints to 3D feature points using projection 
-matrix \ref{eq:simplyfied_proj_func_1} that we estimated in calibration process. 
-Note that, since we measure 3D feature points with respect to Camera coordinate system, 
-we are not interested in extrinsic matrix but only intrinsic. Now, 
-let's write again projection function that converts 3D feature 
-points to 2D image keypoints:
-$
-\mathbf{x}_i = 
-  \mathbf{K}\mathbf{X}_i
-  $.
-One can also back-project 2D image keypoints to 3D feature points:
-$
-  \mathbf{K}^T\mathbf{x}_{i} = 
-  \mathbf{X}_{i} 
-  $.
-
-Now, we can formulate the four steps of 3D-to-2D correspondences as follows:
+To formulate the problem more clearly, let's assume we have a 3D point feature 
+$\mathbf{X_c}^{(i)}=[x, y, z]^T$ in camera coordinate system and we measure 
+the projections of this exact feature point as a 2D image feature, 
+$\mathbf{u}^{(i,k)}=[u,v]^T$ and $\mathbf{u}^{(i,k+1)}=[u,v]^T$ on subsequent 
+camera poses $k^{th}$ and $k+1^{th}$ respectively. What we also know is that 
+we can back-project measured 2D image features as 3D point features using 
+projection matrix (see notation \ref{eq:simplyfied_proj_func_1}) and depth 
+information. Let's write again projection function that converts 3D point 
+features to 2D image features: $\mathbf{u}^{(i)} = \mathbf{K}\mathbf{X}^{(i)}$.
+One can also back-project 2D image features to 3D point features 
+$\mathbf{K}^T\mathbf{u}^{(i)} = \mathbf{X}^{(i)} $. Now, we can formulate the 
+previously discussed four steps of 3D-to-2D correspondences as follows:
 
 \begin{enumerate}
-  \item $\mathbf{X}_{i}^{k+1} = \mathbf{K}^T\mathbf{x}_{i}^{k+1}$
-  \item $\mathbf{X}_i^{k'} = f(\mathbf{t}_{k,k+1}, \mathbf{q}_{k,k+1}, \mathbf{X}_i^{k+1}) = 
-    \mathbf{q}_{k,k+1} \otimes \mathbf{X}_i^{k+1} \otimes \mathbf{q}_{k,k+1}^* + \mathbf{t}_{k,k+1} $
-  \item $\mathbf{x}_i^{k'} = \mathbf{K}\mathbf{X}_i^{k'}$
-  \item minimize $\sum_i||\mathbf{x}_i^k - \mathbf{x}_i^{k'}||^2$ where $\mathbf{x}_i^k$, $\mathbf{x}_i^{k'} \in \R^2$
+  \item $\mathbf{X}^{(i,k+1)} = \mathbf{K}^T\mathbf{u}^{(i,k+1)}$
+  \item $\mathbf{\hat{X}}^{(i,k)} = f(\mathbf{t}_{k,k+1}, \mathbf{q}_{k,k+1}, \mathbf{X}^{(i,k+1)}) = 
+    \mathbf{q}_{k,k+1} \otimes \mathbf{X}^{(i,k+1)} \otimes \mathbf{q}_{k,k+1}^* + \mathbf{t}_{k,k+1} $
+  \item $\mathbf{\hat{u}}^{(i,k)} = \mathbf{K}\mathbf{\hat{X}}^{(i,k)}$
+  \item minimize $\sum_i||\mathbf{u}^{(i,k)} - \mathbf{\hat{u}}^{(i,k)}||^2$ where 
+    $\mathbf{u}^{(i,k)}$, $\mathbf{\hat{u}}^{(i,k)} \in \R^2$
 \end{enumerate}
 
 The second and third steps can be encapsulated to a function $f$ so that 
-we formulate the whole optimization problem in the following form:
+we form the problem as an optimization problem in the following form:
 
 \begin{equation}
-  \argmin_{\mathbf{t}_{k,k+1}, \mathbf{q}_{k,k+1}}
-  \sum_i||\mathbf{x}_i^k - f(\mathbf{t}_{k,k+1}, \mathbf{q}_{k,k+1}, \mathbf{X}_i^{k+1})||^2
+  \argmin_{\mathbf{T^*}_{k,k+1} = [\mathbf{t^*}_{k,k+1}, \mathbf{q^*}_{k,k+1}]}
+  \sum_i||\mathbf{x}^{(i,k)} - f(\mathbf{t}_{k,k+1}, \mathbf{q}_{k,k+1}, \mathbf{X}^{(i,k+1)})||^2
 \end{equation}
 
-This method works considerably well in practice. In VO literature \cite{}, 
-it is also reported that it performs better than 3D-to-3D correspondences.
 
 \subsubsection{3D-to-3D Correspondences}
 
-Another way of modeling the cost function is to utilize only 3D feature point 
-correspondences and one can estimate transformation with 3D-to-3D correspondences in three steps:
+Another way of modeling the cost function is to utilize only 3D point features 
+correspondences, and one can estimate transformation with 3D-to-3D 
+correspondences in three steps:
 
 \begin{enumerate}
-  \item back-project both 2D keypoints from $k^{th}$ and $k+1^{th}$ frames to 3D feature points
-  \item back-transform the back-projected 3D feature point from $k+1^{th}$ frame
-  \item minimize 3D \textit{euclidean distance} along with all feature matches
+  \item Back-project both 2D image features from $k^{th}$ and $k+1^{th}$ 
+  frames as 3D point features, 
+  \item Back-transform the back-projected 3D point features from $k+1^{th}$ 
+  frame,
+  \item Minimize 3D Euclidean error distance between back-transformed and 
+  measured 3D point features.
 \end{enumerate}
 
 \begin{figure}[H]
 	\centering
-  \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
-  {fig/ref_imgs/min_euclidean_error.png}
-  \caption{Minimize Euclidean Error}
+	\includegraphics[width=0.9\linewidth,natwidth=640,natheight=640]
+	{fig/drawings/3d_to_3d.pdf}
+	\caption[3D-to-3D Correspondences]
+	{3D-to-3D correspondences method calculates the Euclidean error distance 
+	in 
+	3D space. For example, all image features 
+	$\mathbf{u}^{(i,k)},\mathbf{u}^{(i,k+1)}$ from both frames are 
+	back-projected to get 3D point features 
+	$\mathbf{X}^{(i,k)},\mathbf{X}^{(i,k+1)}$. Then, $\mathbf{X}^{(i,k+1)}$ is 
+	rotated and translated with the transformation information 
+	$\mathbf{T}_{k,k+1}$ to align the same 3D point feature 
+	$\mathbf{\hat{X}}^{(i,k)}$ with respect to $k^{th}$ camera's centre.In 
+	this 
+	way, one can calculate the Euclidean distance error $d_k \in \R^3$.Reverse 
+	behavior applies on moving features from $k^{th}$ to $k+1^{th}$ frame to 
+	calculate $d_{k+1}$ as well.}
 	\label{fig:min_euclidean_error}
 \end{figure}
 
 
-Similar illustrations that we previously did for 3D-to-2D correspondences applies 
-for the 3D-to-3D correspondences as well but only with few changes. 
-Let's again assume that we have two corresponding 2D keypoint features,
-$\mathbf{x}_i^k$ and $\mathbf{x}_i^{k+1}$. However, rather minimizing error on 
-2D image plane, we want to minimize them on 3D Camera coordinate system. Therefore, 
-we need to back-project both keypoint features. With that in mind, 
-we can formulate the three steps of 3D-to-3D correspondences as follows:
+The similar formulation that we previously did for 3D-to-2D correspondences 
+applies for the 3D-to-3D correspondences as well but only with few changes. 
+Let's again assume that we have two corresponding 2D image features, 
+$\mathbf{u}^{(i,k)}$ and $\mathbf{u}^{(i,k+1)}$. However, rather than 
+minimizing error on the 2D image plane, we want to minimize them on 3D space. 
+Therefore, we need to back-project both image features. With that in mind, we 
+can formulate the three steps of 3D-to-3D correspondences as follows:
 
 \begin{enumerate}
-  \item $\mathbf{X}_{i}^{k+1} = \mathbf{K}^T\mathbf{x}_{i}^{k+1}$ and 
-    $\mathbf{X}_{i}^{k} = \mathbf{K}^T\mathbf{x}_{i}^{k}$ 
-  \item $\mathbf{X}_i^{k'} = f(\mathbf{t}_{k,k+1}, \mathbf{q}_{k,k+1}, \mathbf{X}_i^{k+1}) = 
-    \mathbf{q}_{k,k+1} \otimes \mathbf{X}_i^{k+1} \otimes \mathbf{q}_{k,k+1}^* + \mathbf{t}_{k,k+1}$
-  \item minimize $\sum_i||\mathbf{X}_i^k - \mathbf{X}_i^{k'}||^2$ where $\mathbf{X}_i^k$, $\mathbf{X}_i^{k'} \in \R^3$
+  \item $\mathbf{X}^{(i,k+1)} = \mathbf{K}^T\mathbf{u}^{(i,k+1)}$ and 
+    $\mathbf{X}^{(i,k)} = \mathbf{K}^T\mathbf{u}^{(i,k)}$ 
+  \item $\mathbf{\hat{X}}^{(i,k)} = f(\mathbf{t}_{k,k+1}, \mathbf{q}_{k,k+1}, \mathbf{X}^{(i,k+1)}) = 
+    \mathbf{q}_{k,k+1} \otimes \mathbf{X}^{(i,k+1)} \otimes \mathbf{q}_{k,k+1}^* + \mathbf{t}_{k,k+1}$
+  \item minimize $\sum_i||\mathbf{X}^{(i,k)} - \mathbf{\hat{X}}^{(i,k)}||^2$ where $\mathbf{X}^{(i,k)}$, $\mathbf{\hat{X}}^{(i,k+1)} \in \R^3$
 
 \end{enumerate}
 
-The second step can be encapsulated to a function $g$ to form the optimization 
+The second step can be encapsulated to a function $f$ to form the optimization 
 problem:
 
 \begin{equation}
-  \argmin_{\mathbf{t}_{k,k+1}, \mathbf{q}_{k,k+1}}
-  \sum_i||\mathbf{X}_i^k - f(\mathbf{t}_{k,k+1}, \mathbf{q}_{k,k+1}, \mathbf{X}_i^{k+1})||^2
+  \argmin_{\mathbf{T^*}_{k,k+1} = [\mathbf{t}_{k,k+1}, \mathbf{q}_{k,k+1}]}
+  \sum_i||\mathbf{X}^{(i,k)} - f(\mathbf{t}_{k,k+1}, \mathbf{q}_{k,k+1}, \mathbf{X}^{(i,k+1)})||^2
 \end{equation}\label{eq:3d_to_3d_rel_pose_est}
 
-In VO literature, this method is usually discarded since 
-it performs poorly comparing to 3D-to-2D correspondences.
-However, we prove that it can be improved if feature covariances are properly 
-estimated and included in the optimazation problem.
+In VO literature, this method is usually discarded since it performs poorly 
+comparing to 3D-to-2D correspondences. However, we prove that it can be 
+improved if feature covariances are properly estimated and included in the 
+optimization problem.
 
 
 % ***************************CP3-MOTIVATION***************************
