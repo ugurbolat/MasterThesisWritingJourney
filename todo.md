@@ -39,8 +39,8 @@ Thesis Feebacks from Sven
 + [x] Move the LSQ on manifold to the Appendices
 
 # C6 - Evaluation
-* [ ] Editting
-* [ ] Improve your reasoning
+* [x] Editting
+* [x] Improve your arguments
 
 # C7 - Conc
 * [ ] Editting

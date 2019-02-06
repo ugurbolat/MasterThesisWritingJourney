@@ -1667,7 +1667,7 @@ one can formulate the transformation $\mathbf{T}_{k,k+1}$ between two camera
 pose if the initial pose $\mathbf{x}_{0}$ is known. Then, let's first find the 
 camera position:
 
-\begin{equation}
+\begin{equation}\label{eq:translation_cam}
   \mathbf{p}_{k+1} = 
 \mathbf{q}_{k,k+1} \otimes \mathbf{p}_k \otimes \mathbf{q}_{k,k+1}^* + 
   \mathbf{t}_{k,k+1}
@@ -1679,7 +1679,7 @@ $k^{th}$ pose and $\mathbf{t}_{k,k+1}$ is the simple vector addition that
 translates the camera position. Next, the camera orientation can be found as 
 follows:
 
-\begin{equation}
+\begin{equation}\label{eq:rotation_cam}
   \mathbf{q}_{k+1} = 
   \mathbf{q}_{k,k+1} \otimes \mathbf{q}_{k}
 \end{equation}
@@ -1906,7 +1906,7 @@ problem:
 \end{equation}\label{eq:3d_to_3d_rel_pose_est}
 
 In VO literature, this method is usually discarded since it performs poorly 
-comparing to 3D-to-2D correspondences. However, we prove that it can be 
+comparing to 3D-to-2D correspondences. However, we proved that it can be 
 improved if feature covariances are properly estimated and included in the 
 optimization problem.
 
@@ -2275,12 +2275,13 @@ To convert disparity image space to camera coordinate system, we utilize the
 error propagation low. In this respect, we need the partial derivative of the
 back-projection function:
 
-\begin{equation} \mathbf{J_{bp}}(\mathbf{u}) = \frac{\partial
+\begin{equation} \label{eq:jacob_back_proj}
+  \mathbf{J_{bp}}(\mathbf{u}) = \frac{\partial
 \mathbf{F_{bp}}(\mathbf{u})}{\partial \mathbf{u}}  = \begin{bmatrix}
 \frac{z}{f_x} & 0 & (\frac{u}{f_x} - \frac{c_x}{f_x}) \\ 0 & \frac{z}{f_y} &
 (\frac{v}{f_y} - \frac{c_y}{f_y}) \\ 0 & 0 & 1 \end{bmatrix} \end{equation}
 
-Then, we propogate the pixel covariances as follows:
+Then, we propagate the pixel covariances as follows:
 
 \begin{equation} \mathbf{Q_{xyz}} = \mathbf{J_{bp}}(\mathbf{u})^T
 \mathbf{Q_{uvz}} \mathbf{J_{bp}}(\mathbf{u}) \end{equation}
@@ -2643,7 +2644,9 @@ matched features from $k^{th}$ and $k+1^{th}$ consecutive frames,
 (\sigma_z^{(i)}(z, \theta))^2 \end{bmatrix} \mathbf{J_{bp}}(\mathbf{u}^{(i,k)})
 \in \R^{3x3} \end{aligned} \end{equation}
 
-is the covariance matrix for the $i^{th}$ matched feature from $k^{th}$ frame,
+is the covariance matrix for the $i^{th}$ matched feature from $k^{th}$ frame 
+where $\mathbf{J_{bp}}^T(\mathbf{u}^{(i,k)})$ is the Jacobian matrix of 
+back-project function (see notation \ref{eq:jacob_back_proj}).
 
 \begin{equation} \begin{aligned} & \mathbf{Q}_{\mathbf{tq},k,k+1}  =
 \begin{bmatrix} \sigma_{t_x}^2 & 0 & 0 & 0 & 0 & 0 \\ 0 & \sigma_{t_y}^2 & 0 &
@@ -2665,11 +2668,11 @@ $\mathbf{r_b}^{(i)}$ and $\mathbf{r_f}^{(i)}$ for one feature match (see
 notation \ref{eq:residuals_w_back_and_forward}).  Therefore, we divide by 2 to
 average. The reason we square it is because of the covariance.
 
-Finally, let's summarize this chapter.  At first, we provided a literature
-background for an error-aware VO. We argued that all the related work being
+Finally, let's summarize this chapter. At first, we provided a literature
+background for an error-aware VO. Then, we argued that all the related work being
 done did not use feature uncertainty to produce metric pose covariance. With
 this motivation, we gave a recipe for building an error-aware VO which we call
-CoVO. Then, we explained how we include feature and depth-related noise models
+CoVO. Afterwards, we explained how we include feature and depth-related noise models
 into the optimization process so that we propagate a covariance matrix for the
 estimated relative camera pose. In the next chapter, we will evaluate the
 proposed CoVO algorithm with simulated and real-world data. 
@@ -2677,52 +2680,20 @@ proposed CoVO algorithm with simulated and real-world data.
 \chapter{Evaluation} \label{cp_evaluation}
 % ***************************CP5-EVALUATION***************************
 
-Computer vision applicatons like VO require many approximations and linearization 
-techniques in order to cope with its dynamic nature for the sake of efficiency.
-In practice, many corner cases might occur, no matter how 
-good such estimation algorithms are modeled. It is therefore critical 
-to verify such systems. Considering that 
-the proposed error-aware VO algorithm outputs two information: 
-relative pose estimation and its covariance estimation, 
-this chapter will be mainly built around two following questions 
-that I am going ask:
+Computer vision applications such as VO require many approximations and linearization techniques to cope with its dynamic nature for the sake of efficiency.  In practice, many corner cases might occur, no matter how good such estimation algorithms are modeled. It is therefore critical to verify such systems, especially in the real-world environment.  Considering that the proposed error-aware VO algorithm outputs two information: relative pose estimation and its covariance estimation, this chapter will mainly build around two following questions that I am going ask:
 
-\begin{enumerate}
-  \item What is the \textit{accuracy} of relative pose estimations?
-  \item How \textit{consistent} do the algorithm estimate 
-    covariance of its pose?
-\end{enumerate}
+\begin{enumerate} \item What is the \textit{accuracy} of relative pose estimations?  \item How \textit{consistent} do the algorithm estimate covariance of its pose?  \end{enumerate}
 
-In order to tackle with these questions, simulation environment will 
-used to validate the model at first. Then, RGB-D datasets will be used 
-to test the algorithm in real-worl environment.
+In order to tackle these questions, simulation environment will be used to validate the model at first. Then, TUM RGB-D datasets will be used to test the algorithm in real-world scenarios.
 
 \section{Error Metrics}
 
-There are already 
-well-established error evaluation methods in literature so I 
-am going to follow them in order to better 
-understand characteristics of the proposed algorithm.
-If we want to apply these methods on our algorithm, we need to have 
-the ground truth pose sequences $\mathbf{x}_{1:n} \in SE(3)$ for 
-comparing with the estimated pose sequences $\mathbf{x^*}_{1:n} \in SE(3)$. 
-In our calculations, we asumme that both pose sequences are
-time-synchronized, equally sampled and have the same length $n$.
-However, it is important to note that none of these assumptions are hold 
-so we need to be aware of the error caused by these issues. 
+There are already well-established error evaluation methods in literature so I am going to follow them to better understand the characteristics of the proposed algorithm.  If we want to apply these methods on our algorithm, we need to have the ground truth pose sequences $\mathbf{x}_{1:n} \in SE(3)$ for comparing with the estimated pose sequences $\mathbf{x^*}_{1:n} \in SE(3)$.  In our calculations, we assume that both pose sequences are time-synchronized, equally sampled and have the same length $n$.  However, it is important to note that none of these assumptions is held so in reality and we need to be aware of the error caused by these issues.  We attempt to minimize these issues by linearly interpolating the ground truth.
+
 
 \subsubsection{Relative Pose Error}
 
-For evaluating the accuracy of a VO algorithm, it is better 
-calculate the relative pose error rather than comparing with the 
-absolute (whole) estimated trajectory. This is also refered as Relative 
-Pose Error (RPE). 
-On the other hand, some VO estimate a relative pose by frame-to-frame and 
-some VO by keyframes. 
-To able to compare all kinds of VO with each other, a fixed time interval 
-$\Delta$ is chosen to calculate the local accuracy of the pose estimation. 
-In this way, we take local drifts into account to compare both types of VO algorithms.
-Thus, we defined RPE at time instance $i$ as follows:
+For evaluating the accuracy of a VO algorithm, it is better to calculate the relative pose error rather than comparing with the absolute (whole) estimated trajectory. This is also referred to Relative Pose Error (RPE).  On the other hand, some VO estimate a relative pose with frame-to-frame and some VO with keyframes.  To able to compare all kinds of VO with each other, a fixed time interval $\Delta$ is chosen for measuring the local accuracy of the pose estimation.  In this way, we take small local drifts into account to compare both types of VO algorithms.  Let's define RPE at time instance $i$ as follows:
 
 \begin{equation}
   \mathbf{E}_i := 
@@ -2730,14 +2701,8 @@ Thus, we defined RPE at time instance $i$ as follows:
   (\mathbf{x^*}_i^{-1}\mathbf{x^*}_{i+\Delta})
 \end{equation}
 
-One can take a mean of all $E_{1:n}$ RPE, but this hides 
-the effect of outliers when $n$ is large.
-Instead , we calculate Root Mean Error Squared (RMSE) which compresses the 
-error with much more information since it takes mean deviation of the error.
-%\subsubsection{Root Mean Squared Error of RPE}
-RMSE will show how the mean deviation of the error. For doing so,
-$m = n - \Delta$ number of RPE are required to be calculated 
-among $n$ pose sequences,:
+One can take a mean of all $E_{1:n}$, but this hides the effect of outliers when $n$ is large.  Instead, we calculate Root Mean Error Squared (RMSE) which encodes the error with much more information since it takes mean deviation of the error into account.
+In other words, RMSE will show how the mean deviation of the error.  To calculate RMSE, $m = n - \Delta$ number of RPE are required among $n$ pose sequences:
 
 \begin{equation}
   RMSE(\mathbf{E}_{1:n},\Delta) := \sqrt{\frac{1}{m} \sum_{i=1}^{m}||\mathbf{E}_i||^2}
@@ -2751,25 +2716,14 @@ Then, we take a mean of all RMSE over whole trajectory:
 
 It is important to note that we take $\Delta=1$ when we want to know 
 a drift per frame. This is useful when comparing simulation results with 
-real world experiments for the same algorithm. 
+real-world experiment results for the same algorithm such as CoVO itself. 
 Conversely, we take $\Delta=30$ when comparing 
-the proposed algorithm other VO. This corresponds to a drift per approximately 
+the proposed algorithm other VO such as FOVIS. This case corresponds to a drift per approximately 
 1 second.
 
 \subsubsection{Normalized Estimation Error Squared}
 
-The main focus of this thesis is to provide metric uncertainty of the relative 
-pose. We do this by propogating the uncertainty of the 3D features points 
-through the error model. In this case, it is critical to assess 
-consistency of estimated convariance values in order to use it safely in 
-filter-based or graph-based sensor fusion applications. 
-One of the good metrics to evaluate consistency is 
-to calculate Normalized Estimation Error Squared (NEES). This method measures 
-the credibility of the provided covariance and it helps us to decide whether 
-the predicted uncertainty values are optimisic or pessimistic.
-One can calculate NEES if $\mathbf{x}_i$ real pose, $\hat{\mathbf{x}_i}$ predicted 
-pose and $\Omega_i = \mathbf{Q}_i^{-1}$ information matrix are known at time 
-instance $i$:
+The main focus of this thesis is to provide metric uncertainty of the relative pose estimations. We can estimate dynamic covariances thanks to propagation property of the feature covariances based on the conic ray error model. In this respect, it is critical to assess the consistency of estimated covariance values to use them safely in sensor fusion applications.  One of the good metrics to evaluate consistency is to calculate Normalized Estimation Error Squared (NEES). This method measures the credibility of the provided covariance, and it helps us to decide whether the predicted uncertainty values are optimistic or pessimistic.  One can calculate NEES if $\mathbf{x}_i$ real pose, $\hat{\mathbf{x}_i}$ predicted pose and $\Omega_i = \mathbf{Q}_i^{-1}$ information matrix are known at time instance $i$:
 
 \begin{equation}
   \epsilon_i = (\mathbf{x}_i - \mathbf{x^*}_i)^T \mathbf{\Omega}_i (\mathbf{x}_i - \mathbf{x^*}_i) 
@@ -2778,158 +2732,151 @@ instance $i$:
 
 %\subsubsection{Average Normalized Estimation Error Squared (ANEES)}
 
-We also take an average of NEES (ANEES) over whole trajectory:
+For comparison reasons, we also take an average of NEES (ANEES) over whole trajectory:
 
 \begin{equation}
   d \hat{\epsilon} =  \frac{1}{n} \sum_{i=1}^{n} \epsilon_i = 
   \frac{1}{n} \sum_{i=1}^{n} ||\mathbf{e}_i||^2_{\Omega_i}
 \end{equation}
 
-TODO: find a synonym for 'it is important to note' phrase!
-
-If the system is linear, has degree of freedom $d=1$ and gaussian noise, 
+If the system is linear, has degree of freedom $d=1$ and Gaussian noise, 
 then the expected value 
-$\hat{\epsilon}$ is 1. However, in practice, this does not hold. Therefore, 
-another metric when deciding on whether the estimator is consistent or not
-is to look at the distribution of NEES over trajectory, which is 
-distributed as a chi-square $\chi_d^2$ with $d$ degrees of freedom. 
-For an estimator with 3 degree of freedom, acceptance region is
-$\hat{\epsilon} \in [2.5,3.5]$ 
-when significance level $\alpha$ of $\chi_d^2$ 
-is chosen 2.5\% and 50 Monte Carlo runs according to [\cite{Shalom2001}, pp.234-235].
-It is important to note that 
-we did not implement Manto Carlo simulation for our simulation environment. 
-We only treat each estimation as an independent event by adding 
-random gaussian noise to the measurements. Thus, when evaluating 
-consistency of the estimator in simulation, we aim to get 
-$\hat{\epsilon_t}=3$ for translation and $\hat{\epsilon_q}=3$
-since both have 3 degree of freedom. On the other hand, when testing 
-the estimator with real-world data, we only take upper boundary of 
-acceptance region $\hat{\epsilon_t} \in [0, 3.5]$ and 
-$\hat{\epsilon_q} \in [0, 3.5]$ since it is 
-acceptable to have a conservative estimator rather than overconfident one.
+$\hat{\epsilon}$ is 1. 
 
+However, in practice, this does not hold. Therefore, besides ANEES, another metric when deciding on whether the estimator is consistent or not is to look at the distribution of NEES over trajectory.  It is expected that it is distributed as a chi-square $\chi_d^2$ with $d$ degrees of freedom.  For an estimator with 3 degrees of freedom, acceptance region is $\hat{\epsilon} \in [2.5,3.5]$ when significance level $\alpha$ of $\chi_d^2$ is chosen 2.5\% and 50 Monte Carlo runs according to [\cite{Shalom2001}, pp.234-235].  Thus, when evaluating the consistency of the estimator in simulation, we aim to get $\hat{\epsilon_t}=[2.5,3.5]$ for the translation and $\hat{\epsilon_q}=[2.5,3.5]$ for the rotation since both have 3 degrees of freedom. On the other hand, when testing the estimator with real-world data, we only take upper boundary of acceptance region $\hat{\epsilon_t} \in [0, 3.5]$ and $\hat{\epsilon_q} \in [0, 3.5]$ since it is acceptable to have a conservative estimator rather than overconfident one.
 
-\section{Simulation Environment}
+\section{Simulation Environment}\label{sc_sim_env}
 
 Before testing the proposed algorithm, we will validate the relative 
-pose estimation and its covariance with the simulated data. To do so, 
+pose estimation, and its covariance with the simulated data. Hence, 
 we create a 3D simulation environment that consists of a camera pose, 
-3D feature points and their confidence ellipsoids. Our test scenario 
+3D point features and their confidence ellipsoids. Our test scenario 
 will be comprised of the following steps:
 
 \begin{itemize}
-  \item 500 3D feature points are created within camera's observable space.
-  \item By utilizing the pinhole model, 
-    all 3D feature points are projected onto the camera whose initial pose $p_0$ is known.
-  \item Projected feature points are stored in the form of 
-    $(u_{1:500}^{0}, v_{1:500}^{0},z_{1:500}^{0})$ sensor measurements as you would usually get it from 
+  \item 500 3D point features $\mathbf{X}^{(1:500,\mathcal{C})}$ are created within camera's observable space.
+  \item By utilizing the pinhole model (see notation \ref{eq:simplyfied_proj_func}), 
+    all 3D point features are projected 
+    onto the camera frame whose initial pose $\mathbf{x}_0^{\mathcal{C}}$ is known. 
+    The instrinsic matrix $\mathbf{K}$ is taken similar to TUM RGB-D FR1  
+    dataset (see table \ref{tb:tum_calib_param}).
+  \item Projected image features are stored in the form of 
+    $(u^{(1:500)}_{k=0}, v^{(1:500)}_{k=0},z^{(1:500)}_{k=0})$ sensor measurements as you would usually get it from 
       a regular RGB-D camera. 
-    \item The camera is transformed (translated and rotated) with a known distance 
-      and rotation $\mathbf{x}_{0,1} = [0.6, 0.6, 0.05, -0.183, -0.183, 0, 0.966]$ 
-      to its next pose $p_1$. 
-    \item The same 3D feature points are projected with respect to the new pose $p_1$ 
-      and stored as $(u_{1:500}^{1}, v_{1:500}^{1},z_{1:500}^{1})$.
-    \item In order to introduce uncertainty into the system, the gaussian 
+    \item The camera is transformed (rotated and translated) with a known transformation information 
+      $\mathbf{T}_{0,1} = \mathbf{x}_{0,1} = [0.6, 0.6, 0.05, -0.183, -0.183, 0, 0.966]$ 
+      to its next pose $\mathbf{x}_1^{\mathcal{C}}$ 
+      (see notations \ref{eq:translation_cam} and \ref{eq:rotation_cam}).
+    \item The same 3D point features are projected with respect to the new pose 
+      $\mathbf{x}_1^{\mathcal{C}}$ 
+      and stored as $(u^{(1:500)}_{k=1}, v^{(1:500)}_{k=1},z^{(1:500)}_{k=1})$.
+    \item In order to introduce uncertainty into the system, the Gaussian 
       noises are added on both sensor measurements independently
-      $(\hat{u}_{i}=u_{i}+\phi_u, 
-      \hat{v}_{i}=u_{i}+\phi_v,
-    \hat{z}_{i}=z_i+\phi_z)$ where $\phi\sim\mathcal{N}(\mu,\sigma)$:
+      $(\hat{u}^{(i)}=u^{(i)}+\phi_u, 
+        \hat{v}^{(i)}=u^{(i)}+\phi_v,
+      \hat{z}^{(i)}=z^{(i)}+\phi_z)$ where $\phi\sim\mathcal{N}(\mu,\sigma)$:
       \begin{itemize}
           \item The pixel noises are
             assigned to $(\mu_u=0,\sigma_u=8)$ and $(\mu_v=0,\sigma_v=8)$. 
-          \item Whereas, 
-            mean of depth noise is $\mu_z=0$ and standard deviation is chosen 
+          \item Whereas, the 
+            mean of the depth noise is $\mu_z=0$ and standard deviation is chosen 
+            as $\sigma_z^{(i)} (z,\theta)$ 
             with respect to feature points' distance to the camera.
-            $\sigma_z^{(i)} (z,\theta)$. 
             The lateral noise and the surface angle $\theta$ is assumed to be 0.
-            The depth's noise model is discussed in \ref{sb_sc_depth_uncertainty}.
+            This depth's noise model is discussed in \ref{sb_sc_depth_uncertainty}.
         \end{itemize}
     \item For every measurements, convariance matrices 
-      $(\mathbf{Q}_{xyz}^{0,1:500}, \mathbf{Q}_{xyz}^{1,1:500})$ are formed with 
+      $(\mathbf{Q}_{\mathbf{xyz},0}^{(1:500)}, \mathbf{Q}_{\mathbf{xyz},1}^{(1:500)})$ are formed with 
       the same standard deviations of the added noises, where  
-      $\mathbf{Q_{xyz}}^{(i)} = \mathbf{J_{bp}}(\mathbf{u})^T
+    $\mathbf{Q}_{\mathbf{xyz},0}^{(i)} = \mathbf{J_{bp}}(\mathbf{u}^{(i,k)})^T
   \begin{bmatrix} 
     \sigma_u^2(=8^2) & 0 & 0 \\ 
     0 & \sigma_v^2(=8^2) & 0 \\
     0 & 0 & (\sigma_z^{(i)}(z, \theta))^2
-  \end{bmatrix} \mathbf{J_{bp}}(\mathbf{u})$.
+  \end{bmatrix} \mathbf{J_{bp}}(\mathbf{u}^{(i,k)})$.
 
-    \item Perfectly matched noisy 3D feature point pairs along with their covariances 
-      are given to the optimizer that is discussed in \ref{sc_rel_pose_est_w_uncertainty} 
-      to estimate $\mathbf{x^*}_{0,1}$ and $\mathbf{Q}_{\mathbf{t,q}}^{0,1}$.
+    \item Perfectly matched noisy 3D point features along with their covariance matrices 
+      are given to the optimizer 
+      to estimate $\mathbf{T^*}_{0,1}=\mathbf{x^*}_{0,1}$ camera's transformation 
+      and calculate $\mathbf{Q}_{\mathbf{tq},0,1}$ covariance matrix of its estimation 
+      as discussed in \ref{sc_rel_pose_est_w_uncertainty}.
     \item This whole process is repeated 1000 times.
 \end{itemize}
 
-In the following simulation figures, we implement discussed scenario into 
-a 3D space. In this environment, we have  
-noisy 3D feature points, confidence ellipsoids whose center is around the 
-noisy feature points and real position of the 3D feature points that are somewhere 
+In the following simulation figures, we show 
+above scenario in a 3D visual environment. 
+In this environment, we have  
+noisy 3D point features, confidence ellipsoids whose center is around the 
+noisy point features and the real position of the points that are somewhere 
 inside the ellipsoids.
+It is worth noting that the volume of the confindence ellipsoids are 
+determined by the conic ray model and are scaled with $3\sigma$.
 
 % Distribution of Point Clouds in 3D at p0
 \begin{figure}[H]
   \centering
   \includegraphics[width=\linewidth,natwidth=640,natheight=640]
-  {fig/eva_graphs/sim_at_p0.pdf}
-  \caption{asda}
+  {fig/eva_graphs/sim_at_p0_edit.pdf}
+  \caption[Simulation Environment At The Initial Pose]
+  {Simulation Environment At The Initial $\mathbf{x}_0^{\mathcal{C}}$ Pose}
 	\label{fig:sim_at_p0}
 \end{figure}
 
-The figure \ref{fig:sim_at_p0} depicts the environment at its initial pose $p_0$. 
-Note that we only draw small subset of 3D feature points and scaled the 
-confidence ellipses by 10 to gain visibility. Notice how 
-size and orientation of the confidence ellipsoids are situated according to 
+The figure \ref{fig:sim_at_p0} depicts the environment at its initial pose 
+$\mathbf{x}_0^{\mathcal{C}}$.
+For the sake of visibility, we only draw a small subset of 3D feature points and scaled the 
+confidence ellipses by 10. Notice how 
+volume and orientation of the confidence ellipsoids are situated according to 
 the conic ray model.
-
 
 % Distribution of Point Clouds in 3D at p1
 \begin{figure}[H]
   \centering
   \includegraphics[width=\linewidth,natwidth=640,natheight=640]
-  {fig/eva_graphs/sim_at_p1.pdf}
-  \caption{asda}
+  {fig/eva_graphs/sim_at_p1_edit.pdf}
+  \caption[Simulation Environment At The Next Pose]
+  {Simulation Environment At The Next $\mathbf{x}_1^{\mathcal{C}}$ Pose}
 	\label{fig:sim_at_p1}
 \end{figure}
 
-Then, we move and rotate the camera to its next pose $p_1$ in the figure 
-\ref{fig:sim_at_p1}. Notice how confidence ellipsoids are changed with 
+Then, we rotate and translate the camera to its next pose 
+$\mathbf{x}_0^{\mathcal{C}}$ as shown in figure 
+\ref{fig:sim_at_p1}. Notice how confidence ellipsoids are situated with 
 the new camera pose accordingly.
 
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=\linewidth,natwidth=640,natheight=640]
-  {fig/eva_graphs/sim_at_p0p1.pdf}
-  \caption{asda}
+  {fig/eva_graphs/sim_at_p0p1_edit.pdf}
+  \caption[Simulation Environment At Both Poses]
+  {Simulation Environment At Both 
+  $\mathbf{x}_0^{\mathcal{C}}$ and $\mathbf{x}_1^{\mathcal{C}}$ Poses}
 	\label{fig:sim_at_p0p1}
 \end{figure}
 
 Finally, the figure \ref{fig:sim_at_p0p1} shows how confidence ellipsoids 
 from both views intersect each other and include the real feature points within 
 the intersected space.
+Now that we now have everything we need, we can estimate camera transformation 
+and its covariance and compare with their original values.
 
 % 4
 \subsection{RPE and The Estimated Covariances}
 
-With the simulated data, we estimate relative poses $\mathbf{x^*}_{1:1000}$
-and its convariances $\mathbf{x^*}_{1:1000}$. Then, we calculate RPE with 
-$\Delta=1$ so that we validate whether the error lies within the 3 sigma bounds
-for each parameters of the state vector. 3 sigma bounds corresponds to a rule of 
-thumb that expresses 99.7\% probability as near certainty.
-
+With the simulated data, we run the experiment 1000 times and added random noise on point features. Then, we estimate relative poses $\mathbf{x^*}_{0,1}^{(1:1000)}$ and its covariances $\mathbf{Q}_{\mathbf{tq},0,1}^{(1:1000)}$.  In the end, we calculate RPE with $\Delta=1$ so that we validate whether the RPE lies within the $3\sigma$ bounds for each parameter of the state vector. In this case, $3\sigma$ bounds correspond to a rule of thumb evaluation metric that checks whether the RPE are bounded with 99.7\% probability.
 
 % Translation RPE with 3 sigma 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.8\linewidth,natwidth=640,natheight=640]
   {fig/eva_graphs/synt_trans_rpe_3sigma.pdf}
-  \caption{asda}
+  \caption{Translational RPE in Simulation Environment}
   \label{fig:synt_trans_rpe_3sigma}
 \end{figure}
 
-As seen in figure \ref{fig:synt_trans_rpe_3sigma}, parameters of the translation 
-are bounded with 3 sigma with maximum 2 or 3 predictions which is statistically 
+As seen in figure \ref{fig:synt_trans_rpe_3sigma}, the translational RPE 
+are bounded with except 2 predictions which is statistically 
 acceptable. 
 
 % Rotation RPE with 3 sigma 
@@ -2937,78 +2884,33 @@ acceptable.
   \centering
   \includegraphics[width=0.8\linewidth,natwidth=640,natheight=640]
   {fig/eva_graphs/synt_rot_rpe_3sigma.pdf}
-  \caption{asda}
-	\label{fig:2d_local_coords_in_world_coords}
+  \caption{Rotational RPE in Simulation Environment}
+	\label{fig:synt_rot_rpe_3sigma}
 \end{figure}
 
-The same behavior is observed for the rotation as well. This indicates that 
-the propagated covariances of the estimated poses based on the 
-proposed model produce statistically meaningful uncertainty with simulated data 
-if $3\sigma$ bounds are considered. However, $3\sigma$ bounds evaluations itself 
-is not enough to prove estimator's credibility. Thus, further evaluations are 
-done with NEES.
+The same behavior is observed for the rotation as seen in figure \ref{fig:synt_rot_rpe_3sigma}. It indicates that the propagated covariances of the estimated poses based on the proposed model produce statistically acceptable covariances with simulated data if $3\sigma$ bounds are considered.  What we also noticed that the majority of the RPE are beyond the $1\sigma$ bounds, which is not acceptable since $1\sigma$ corresponds to 68\% probability.  In other words, we expected that 68\% of the RPE must be bounded with $1\sigma$, which does not hold in our case. This is because we introduce a non-linearity with the projection function. That means the noise is not Gaussian anymore when we propagate point feature covariances $\mathbf{Q}_{\mathbf{xyz},0,1}$ from its disparity space $\mathbf{Q}_{\mathbf{uvd},0,1}$ with the non-linear error propagation which is the approximated with the first-order Taylor expansion $\mathbf{J_{bp}}$ (see notation \ref{eq:cov_xyz_prop}).  However, $\sigma$ bounds evaluations itself is not enough to prove estimator's credibility. Thus, further evaluations are done with NEES.
 
 % 3
 \subsection{Evaluation of Estimated Covariances}
 
-Even though $3\sigma$ bounds confirm that our algorithm provides consistent 
-pose estimation given RPE is bounded, we need to check whether the 
-covariance of the estimated pose are being too optimistic or not.
-Hence, we run our simulation as described at the beginning of this section. 
-We get ANEES; i.e, 15.64 for translation and 15.72 for rotation. 
-We also illustrate the results in figure \ref{fig:test_hist_nees_1}.
+Even though $\sigma$ bounds confirm that our algorithm provides consistent pose estimation given RPE is bounded with $3\sigma$, we need to check whether the covariance of the estimated pose is being too optimistic or not since it fails at $1\sigma$.  Hence, we run our simulation as described at the beginning of this section again.  Then, we calculate ANEES; i.e., 15.64 for translation and 15.72 for rotation.  Also, the results are illustrated in figure \ref{fig:test_hist_nees_1}.
 
 
-\begin{figure}[H]
-\begin{tabular}{ccc}
-\centering
-\subcaptionbox{NEES}{\includegraphics[width = 0.55\linewidth]{fig/eva_graphs/synt_nees.pdf}} &
-\subcaptionbox{Histogram of NEES}{\includegraphics[width = 0.40\linewidth]{fig/eva_graphs/synt_hist_nees.pdf}}
-\end{tabular}
-\caption{Remove Y axes title and Y axes thick from graphs!!!}
-\end{figure}\label{fig:test_hist_nees_1}
+\begin{figure}[H] \begin{tabular}{ccc} \centering \subcaptionbox{NEES}{\includegraphics[width = 0.55\linewidth]{fig/eva_graphs/synt_nees.pdf}} & \subcaptionbox{Histogram of NEES}{\includegraphics[width = 0.40\linewidth]{fig/eva_graphs/synt_hist_nees.pdf}} \end{tabular} \caption{NEES For Simulated Data Without $\phi$ Scaling Factor} \label{fig:test_hist_nees_1} \end{figure}
 
-%Translation Average NEES: 15.64
-%Rotation Average NEES: 15.72
 
-These results show that the estimator is not consistent. This is because 
-the projection operation introduces non-linearity to the system and 
-we only approximate covariance of 3D feature points with first-order 
-taylor expansion. This linearization process does not work well with 
-large noises. In this case, [\cite{Shalom2001}, pp.395-397] 
-suggests couple of heuristic methods to make the estimator consistent.
-Among them, we apply multiplication of estimated covariance $\mathbf{Q_{t,q}}^{(k,k+1)}$
-by scaling factor $\phi$ after optimiziton.
+These results show that the estimator is not consistent according to the ANEES analysis. This is because the projection operation introduces non-linearity to the system as mentioned before.  This linearization process does not work well with large noises, i.e., the pixel noise: $\sigma_u=8, \sigma_v=8$, and the depth noise: $\sigma_z$ especially for the features that get larger with the range.  Moreover, we run multiples test scenarios where the pixel uncertainty was kept small such as $0<\sigma_u<2$ and $0<\sigma_v<2$, and the features are located under $z<1m$ range. In this case, we approximation works and the ANEES decreases below $3$ for both translation and rotation, which is the acceptance threshold for a consistent estimator.  In this perspective, [\cite{Shalom2001}, pp.395-397] suggest a couple of heuristic methods to make the estimator consistent.  Among them, we apply multiplication of estimated covariance $\mathbf{Q}_{\mathbf{tq}, k,k+1}$ by scaling factor $\phi$ after optimization.
 
-\begin{figure}[H]
-\begin{tabular}{ccc}
-\centering
-\subcaptionbox{NEES}{\includegraphics[width = 0.55\linewidth]{fig/eva_graphs/synt_nees_2.pdf}} &
-\subcaptionbox{Histogram of NEES}{\includegraphics[width = 0.40\linewidth]{fig/eva_graphs/synt_hist_nees_2.pdf}}
-\end{tabular}
-\caption{Remove Y axes title and Y axes thick from graphs!!!}
-\end{figure}\label{fig:test_hist_nees_2}
+\begin{figure}[H] \begin{tabular}{ccc} \centering \subcaptionbox{NEES}{\includegraphics[width = 0.55\linewidth]{fig/eva_graphs/synt_nees_2.pdf}} & \subcaptionbox{Histogram of NEES}{\includegraphics[width = 0.40\linewidth]{fig/eva_graphs/synt_hist_nees_2.pdf}} \end{tabular} \caption{NEES For Simulated Data With $\phi=4^2$ Scaling Factor} \label{fig:test_hist_nees_2} \end{figure}
 
-We find out that ANEES for translation and rotation becomes 2.7 and 2.69, 
-respectively when taking $\phi=4^2$ and the results are shown in figure 
-\ref{fig:test_hist_nees_2}. These values can be accepted as we consider 
-the estimator to be consistent for this setup.
+For our initial test setup which extensively described in section \ref{sc_sim_env}, we find out that ANEES for translation and rotation becomes 2.7 and 2.69, respectively when taking $\phi=4^2$ and the results are shown in figure \ref{fig:test_hist_nees_2}.  Therefore, the scaling factor can be accepted as we consider the estimator to be consistent with this setup.  The reason we take this setup along with all empiric parameters in the simulation is that we want to create an environment that covers the possible worst case scenarios in the real-world dataset.  We will explain why we specifically set $\sigma_u=8$ and $\sigma_v=8$ after analyzing the effect of pseudo inliers in the following section \ref{sc_pseudo_inliers}. 
 
-%Translation Average NEES: 2.70
-%Rotation Average NEES: 2.69
 
 \section{TUM RGB-D Dataset}
 
-TUM dataset \cite{Sturm2012a} provides an extensive bechmark capability for 
-RGB-D based Visual SLAM or VO systems. It consists of datasets that are 
-collected in two different indoor environment; i.e, fr1 refers to 
-datasets collected in an office $(6\times 6 m^2)$ and fr2 is colleced in an open spaced 
-garage $(10\times 12m^2)$. In our experiments, we choose a subset of datasets that are mainly 
-suitable for VO and has sufficient texture on the images. 
-The selected datasets are given in table \ref{tb:tum_dataset}.
-In addition, calibration parameters of RGB and depth images are validated 
-by the time-synchronized ground truth measurements recorded by a motion capture system.
+TUM dataset by \cite{Sturm2012a} provides an extensive benchmark capability for RGB-D based Visual SLAM or VO systems. It consists of datasets that are collected in two different indoor environments; i.e., fr1 refers to datasets collected in an office $(6\times 6 m^2)$ and fr2 is collected in an open spaced garage $(10\times 12m^2)$. In our experiments, we choose a subset of datasets that are mainly suitable for VO and has sufficient texture on the images.  The selected datasets are given in table \ref{tb:tum_dataset}.  Besides, calibration parameters of RGB and depth images are validated by the time-synchronized ground truth measurements recorded by a motion capture system.
 
+\begin{table}
 \begin{center}
   \begin{tabular}{lccc}
     \hline
@@ -3023,71 +2925,31 @@ by the time-synchronized ground truth measurements recorded by a motion capture 
     fr1 desk2 & 25 & 0.43 & 29.31\\
     fr2 desk  & 99 & 0.19 & 6.34\\
     \hline
-    \end{tabular}
-  \end{center}\label{tb:tum_dataset}
+  \end{tabular}
+\end{center}
+  \caption{List of Chosen TUM RGB-D Datasets}
+  \label{tb:tum_dataset}
+\end{table}
 
-  In the following sections, we will use these datasets to validate 
-  our relative pose estimation and its covariance 
-  with regards to accuracy and consistency.
+Before we use these datasets to validate 
+our relative pose estimation and its covariance, 
+we are going to investigate the effect of pseudo inliers that 
+exist in our feature matches even after applying RANSAC. 
 
 \subsection{Discovering the Effect of Pseudo Inliers on Pixel Uncertainty}\label{sc_pseudo_inliers}
 
-As discussed earlier in section \ref{sb_sc_pixel_uncertainty}, pixel 
-uncertainty caused by quantization operation is treated as half pixel. 
-Nevertheless, this error is itself not sufficient when choosing 
-standard deviation of pixel noise for covariance of 3D features 
-to be propagated through the \ref{} equation. Remember that 
-we still had outliers in feature matching even after applying RANSAC, 
-which we call them as pseudo inliers. We proposed to treat them as 
-inliers, but they will increase the pixel uncertainty. We also assume that 
-RANSAC will bound these pseudo inliers. Thus, we are interested in 
-determining the boundaries which we will set them as pixel uncertainties 
-We determine them using TUM RGB-D and the ground truth measurements.
+As discussed earlier in section \ref{sb_sc_pixel_uncertainty}, the pixel uncertainty caused by quantization operation is treated as a half pixel.  Nevertheless, this error is itself not sufficient when choosing a standard deviation of pixel noise for feature covariances to be propagated through the equation \ref{eq:cov_xyz_prop}. Remember that we still had outliers in feature matching even after applying RANSAC, which we call them as pseudo inliers. We proposed to treat them as inliers in the condition that they will increase the pixel uncertainty.  Moreover, we expected that RANSAC would bound these pseudo inliers, which can utilize them as pixel noise. Thus, we are interested in determining the boundaries of the pseudo inliers.  Since we have TUM RGB-D dataset and the ground truth measurements, we can calculate the pixel error of the pseudo inliers by aligning feature matches with transformation information from ground truth.
 
-% Time-based error histogram with 20 frame discrete window
-% - Show that pixel errors are gaussian and stds are different along the path
 
-\begin{figure}[H]
-  \makebox[\textwidth][c]{\includegraphics[width=1.4\linewidth,natwidth=640,natheight=640]
-  {fig/eva_graphs/tum_fr1_xyz_tbased_hist_uv_err.pdf}}
-  \caption{explain the window}
-\end{figure}\label{fig:time_based_hist_pix_err}
+\begin{figure}[H] \makebox[\textwidth][c]{\includegraphics[width=1.4\linewidth,natwidth=640,natheight=640] {fig/eva_graphs/tum_fr1_xyz_tbased_hist_uv_err.pdf}} \caption[Time-based Histogram of Pixel Errors]{ This illustration shows how the pixel error distances are distibuted along the trajectory. Note that we grouped the errors every 20 frames.} \label{fig:time_based_hist_pix_err} \end{figure}
 
-Let's remind ourselves with the procedures of the pipeline.
-To find the pixel error caused by pseudo inliers, we run our VO pipeline 
-up until the optimization part estimating the pose. 
-To do so, we first extracted features, then matched them and finally filtered outliers with RANSAC. 
-At this point, we have feature matches that includes pseudo inliers. 
-Now, instead of estimating the relative pose,
-we can identify boundaries of the pseudo inliers caused by RANSAC 
-by using ground truth data. With using translation and rotation information 
-from ground truth, we project features matches one on another. 
-Then, for some matches, we expect to get pixel errors to be greater than 1 as 
-they are the pseudo inliers.
-This test case is applied on every consecutive frame of the whole trajectory.
-Next, we illustrate the results in a time-based scheme to observe 
-how the pixel error changes throughout the trajectory. The illustration 
-gathered by 'fr1 xyz' dataset is given in figure \ref{fig:time_based_hist_pix_err}.
-As observed, pixels error mainly caused by pseudo inliers are distibuted as 
-gaussian and its standard deviation changes over the trajectory. To 
-see how it changes we draw the time-based standard deviation of the pixel errors 
-in figure \ref{fig:time_based_std_pix_err}.
+To be more specific, let's remind ourselves with the CoVO pipeline.  To find the pixel error caused by pseudo inliers, we run our CoVO algorithm up until the optimization part at which we estimate the $\mathbf{x^*}_{k,k+1}(=\mathbf{T^*}_{k,k+1})$ transformation information.  At this point, we already have feature matches that include pseudo inliers.  Now, instead of estimating the transformation with the LM algorithm, we can rotate and translate $\mathbf{u}^{(1:m,k)}$ features from $k^{th}$ frame towards $k+1^{th}$ frame and save them as $\mathbf{\hat{u}}^{(1:m,k+1)}$.  In an ideal case, we expect transformed $\mathbf{\hat{u}}^{(1:m,k+1)}$ features and measured $\mathbf{u}^{(1:m,k+1)}$ features to be aligned closely such that the error distances between them are maximum a half pixel.  Regardless, the error distance for some matches will be greater than a half pixel due to the pseudo inliers as we are operating on a real-world dataset.  As a result, we can use this test case to identify the pixel error distance caused by the pseudo inliers.  We can now apply to every consecutive frame of the whole trajectory.  Thus, we illustrate the results in a time-based scheme to observe how the pixel error changes throughout the trajectory. The illustration gathered by 'fr1 xyz' dataset is given in figure \ref{fig:time_based_hist_pix_err}.  As seen, the pixel distance error is distributed as Gaussian and its standard deviation changes over the trajectory.  To see how the standard deviation changes clearly, we draw the time-based standard deviation of the pixel errors in figure \ref{fig:time_based_std_pix_err}.
 
-TODO: THERE IS SOMETHING WRONG WITH THE NUMBERING OF FIGS.
-% Time-based std with 5 frame sliding window with fr1_xyz
 
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\linewidth,natwidth=640,natheight=640]
-  {fig/eva_graphs/tum_fr1_xyz_tbased_uv_err_std.pdf}
-  \caption{asda}
-\end{figure}\label{fig:time_based_std_pix_err}
+\begin{figure}[H] \centering \includegraphics[width=0.8\linewidth,natwidth=640,natheight=640] {fig/eva_graphs/tum_fr1_xyz_tbased_uv_err_std.pdf} \caption[The Standard Deviations of Pixel Errors] {As seen in the previous figure, the pixel errors were distributed Gaussian but varying with time. Thus, this figure is drawn to see how the standard deviation of these distibutions changes throughout the trajectory more clearly }\label{fig:time_based_std_pix_err} \end{figure}
 
-The goal is to run this test over many datasets so that we can find the largest 
-standard deviation. The result of these test are represented with 
-the boxplots in figure \ref{fig:boxplot_time_based_std_all_datasets}.
+Because we want to cover as many corner cases as possible, we run the test over many datasets so that we can find the largest standard deviation. To see all datasets' results, we take the time-based standard deviation results which we use to draw figure \ref{fig:time_based_std_pix_err} and illustrate with a boxplot.  All the standard deviations of the pixel error from six different datasets are given in in figure \ref{fig:boxplot_time_based_std_all_datasets}.
 
-% Boxplot of Time-based std with 5 frame sliding window for all datasets
 
 \begin{figure}[H]
 \begin{tabular}{ccc}
@@ -3099,89 +2961,30 @@ the boxplots in figure \ref{fig:boxplot_time_based_std_all_datasets}.
 \subcaptionbox{fr1 desk}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/boxplot_tbased_uv_err_std_fr1_desk.pdf}} &
 \subcaptionbox{fr1 desk2}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/boxplot_tbased_uv_err_std_fr1_desk2.pdf}}
 \end{tabular}
-\caption{Remove Y axes title and Y axes thick from graphs!!!}
-\end{figure}\label{fig:boxplot_time_based_std_all_datasets}
+\caption[Boxplots of The Standard Deviations of Pixel Errors]
+{Boxplots of The Standard Deviations of Pixel Errors in Different Datasets}
+\label{fig:boxplot_time_based_std_all_datasets}
+\end{figure}
 
-To cover the worst case scenario, 
-we take these values as largest value of standard deviations of the pixel noise 
-when forming covariance matrix $\mathbf{Q_{uvz}}^{(i,k)}$.
+To cover the worst case scenario, we take pixel uncertainty as $\sigma_u=8$ and $\sigma_v=8$ from fr1 rpy and fr1 desk2 datasets since the largest error occurs in these two datasets.  Finally, we form a covariance matrix $\mathbf{Q_{uvz}}^{(i,k)}$ of a point feature based on the experimental analysis that we conducted in this section.
 
-% 2
-
-%\subsection{Estimation of Relative Pose and its Covariance}
-%
-%% 2.1
-%% - Decide which one to use for scaling: RANSAC Threshold or max std?
-%% -> DONE! Decided on max std besides the outliers due to wrong ground truth!
-%% - Show estimated covariances that is scaled with RANSAC Threshold or Max std?
-%
-%% Translation RPE frame-to-frame with 3 sigma with fr1_xyz
-%\begin{figure}[H]
-%  \centering
-%  \includegraphics[width=\linewidth,natwidth=640,natheight=640]
-%  {fig/eva_graphs/tum_fr1_xyz_trans_rpe_3sigma.pdf}
-%  \caption{asda}
-%	\label{fig:2d_local_coords_in_world_coords}
-%\end{figure}
-%
-%
-%% Rotation RPE frame-to-frame with 3 sigma with fr1_xyz
-%\begin{figure}[H]
-%  \centering
-%  \includegraphics[width=\linewidth,natwidth=640,natheight=640]
-%  {fig/eva_graphs/tum_fr1_xyz_rot_rpe_3sigma.pdf}
-%  \caption{asda}
-%	\label{fig:2d_local_coords_in_world_coords}
-%\end{figure}
-%
-
-% 1
 \subsection{Evaluation of Estimated Covariance}\label{sc_cov_eval}
 
-Similar to simulation data, we calculate NEES for covariance of the estimated 
-poses after running the VO algorithm 6 different datasets in TUM. 
+Similar to simulation data, we calculate NEES for the covariance of the estimated 
+poses after running the CoVO algorithm with 6 different datasets. 
 Note that we set standard deviation of pixel uncertainty according to 
-the largest value $\sigma_u=7$ and $\sigma_v=8$ 
-determined in the experimental analysis done in previous section.
-After each optimization, we scale resulting covariance $\mathbf{Q_{t,q}}^{(k,k+1)}$
-with the $\phi=4^2$ to compensate the errors due to the linearization.
+the largest value $\sigma_u=8$ and $\sigma_v=8$ which was 
+determined in the previous section.
+Also, we scale resulting covariance $\mathbf{Q}_{\mathbf{tq},k,k+1}$
+with the $\phi=4^2$ to compensate the errors caused by the linearization 
+after each optimization for consecutive frames.
 Under these parameterizations, we run the algorithm and calculate 
 histogram of NEES and ANEES for the selected datasets. 
 The resulting histograms are illustrated in \ref{fig:hist_nees_all_datasets} and 
 their ANEES are given in table \ref{tb:anees_all_datasets}.
 
 
-%% NEES and ANEES with fr1_xyz
-%\begin{figure}[H]
-%  \centering
-%  \includegraphics[width=\linewidth,natwidth=640,natheight=640]
-%  {fig/eva_graphs/tum_fr1_xyz_nees.pdf}
-%  \caption{asda}
-%	\label{fig:2d_local_coords_in_world_coords}
-%\end{figure}
-
-% Without average by 3 (degree of freedom)
-%fr1 xyz
-%Translation Average NEES: 24.102167961194326
-%Rotation Average NEES: 52.094722966630314
-%fr1 360 
-%Translation Average NEES: 23.056611560549662
-%Rotation Average NEES: 75.33737874564399
-%fr1 rpy 
-%Translation Average NEES: 21.70951280913415
-%Rotation Average NEES: 64.33137984284465
-%fr1 desk
-%Translation Average NEES: 60.40113749011506
-%Rotation Average NEES: 105.36408125491856
-%fr1 desk2
-%Translation Average NEES: 56.536957402794926
-%Rotation Average NEES: 110.9844039603292
-%fr1 room 
-%Translation Average NEES: 19.81107198582873
-%Rotation Average NEES: 55.49945876186048
-
 % Histogram of NEES with all datasets!
-% BUG: Caption does not located under figures!
 \begin{figure}[H]
 \begin{tabular}{ccc}
 \centering
@@ -3192,17 +2995,26 @@ their ANEES are given in table \ref{tb:anees_all_datasets}.
 \subcaptionbox{fr1 desk}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/tum_fr1_desk_hist_nees.pdf}} &
 \subcaptionbox{fr1 desk2}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/tum_fr1_desk2_hist_nees.pdf}}
 \end{tabular}
-\caption{4 x 4}
-\end{figure}\label{fig:hist_nees_all_datasets}
+\caption{Histogram of NEES in Different Datasets}
+\label{fig:hist_nees_all_datasets}
+\end{figure}
 
 We observe that covariance of the translation estimations are conversative, 
 which is acceptable in VO systems. However, covariance of the rotation estimation 
 result in being overconfident for 3 datasets; i.e., 'fr1 360', 'fr1 desk' and 'fr1 room'.
 Thus, we can say the estimator is \textit{inconsistent} for the rotation, 
 as opposed to the translation providing consistent covariance estimations.
+In literature, the accuracy and consistency of the estimation in VO algorithm 
+are compared with the translation since it already includes the effect of 
+the rotation (see notation \ref{eq:translation_cam}). 
+At the moment, the exact reason why covariances of rotation part are estimated 
+poorly is unknown to me. Thus, it could be a future work where I need to 
+analyze the quaternion algebra and manifold operation in Ceres-Solver more 
+deeply.
 
+\begin{table}
 \begin{center}
-  \begin{tabular}{l|cc|cc}
+  \begin{tabular}[H]{l|cc|cc}
     \hline
   & Translation ANEES & Status & Rotation ANEES & Status \\
   \hline
@@ -3219,8 +3031,9 @@ as opposed to the translation providing consistent covariance estimations.
   fr1 room  & 0.96 & conservative & 2.65 & conservative \\
   \hline
   \end{tabular}
-\end{center}\label{tb:anees_all_datasets}
-
+  \caption{ANEES in Different Datasets}\label{tb:anees_all_datasets}
+\end{center}
+\end{table}
 
 % 5
 \section{Comparison to FOVIS}
@@ -3229,24 +3042,23 @@ as opposed to the translation providing consistent covariance estimations.
 As for the accuracy of the estimated poses, we compare the proposed algorithm 
 with FOVIS, which is a defacto VO application since it produces very accurate 
 pose estimation with fast computations.
-To provide an illustration as to building trajectory from relative pose estimations, 
+To provide an illustration of the trajectory built from relative pose estimations, 
 we draw estimations results of 'fr2 desk' which is suitable to present drift effects 
-and it is given in \ref{fig:comp_fr2_desk} along with the boxplot representation
+and it is given in figure \ref{fig:comp_fr2_desk} along with the boxplot representation
 of RPEs. 
 
 % Traj XYZ with fr2_desk Boxplot with fr2_desk
 \begin{figure}[H]
 \begin{tabular}{ccc}
 \centering
-\subcaptionbox{asd}{\includegraphics[width = 0.5\linewidth]{fig/eva_graphs/fovis_comp_3d_tum_fr2_desk.pdf}} &
-\subcaptionbox{asd}{\includegraphics[width = 0.45\linewidth]{fig/eva_graphs/fovis_comp_boxplot_tum_fr2_desk.pdf}}
+\subcaptionbox{The 3D Trajectories}{\includegraphics[width = 0.5\linewidth]{fig/eva_graphs/fovis_comp_3d_tum_fr2_desk.pdf}} &
+\subcaptionbox{Boxplots of RPE}{\includegraphics[width = 0.45\linewidth]{fig/eva_graphs/fovis_comp_boxplot_tum_fr2_desk.pdf}}
 \end{tabular}
-\caption{Remove Y axes title and Y axes thick from graphs!!!}
-\end{figure}\label{fig:comp_fr2_desk}
+\caption{FOVIS versus CoVO in The TUM FR2 Desk Dataset}
+\label{fig:comp_fr2_desk}
+\end{figure}
 
-We run both algorithm for the 7 datasets and the resulting RMSEs of RPEs 
-are given in table \ref{tb:comp_all_dataset}. Note that we take $\Delta=30$ 
-frames while calculating RPEs.
+We run both algorithms for the seven datasets and the resulting RMSEs of RPEs are given in table \ref{tb:comp_all_dataset}. Note that we take $\Delta=30$ frames while calculating RPEs. Additionally, we also provide the boxplot representation of RPE for more explicit comparison in figure \ref{fig:comp_all_dataset}.
 
 \begin{figure}[H]
 \begin{tabular}{ccc}
@@ -3258,10 +3070,13 @@ frames while calculating RPEs.
 \subcaptionbox{fr1 desk}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/fovis_comp_boxplot_tum_fr1_desk.pdf}} &
 \subcaptionbox{fr1 desk2}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/fovis_comp_boxplot_tum_fr1_desk2.pdf}}
 \end{tabular}
-\caption{4 x 4}
+\caption{FOVIS versus CoVO With RPE Boxplots}
+\label{fig:comp_all_dataset}
 \end{figure}
 
+We can say that FOVIS is more accurate than CoVO in the context of relative pose estimations for several reasons we can name.  FOVIS utilizes the keyframe scheme and different outlier rejection algorithm than RANSAC. Also, it provides a better initial guess to its optimizer after several refinement processes throughout the pipeline. Most importantly, it minimizes the 3D-to-2D correspondences which are less prone to settle for undesired local minimums in the LM algorithm.
 
+\begin{table}
 \begin{center}
   \begin{tabular}{lcc}
     \hline
@@ -3282,18 +3097,13 @@ frames while calculating RPEs.
     \hline
     fr2 desk2 & 0.0156  & 0.0428 \\
     \hline
-  \end{tabular}\label{tb:comp_all_dataset}
+  \end{tabular}
+  \caption{FOVIS versus CoVO With RMSE RPE}
+\label{tb:comp_all_dataset}
 \end{center}
+\end{table}
 
-We can say that FOVIS is more accurate than the proposed algorithm and 
-name number of reasons. FOVIS utilizes the keyframe scheme and different 
-outlier rejection algorithm than RANSAC and 
-provides a better initial guess to its optimizer after several refinement processes 
-throughout the pipeline.
-
-
-
-
+This chapter has dealt with the evaluation of the proposed CoVO algorithm regarding accuracy and consistency. Initially, we began by describing the two main error metrics: RPE for accuracy comparisons and NEES for covariance estimator's consistency.  Then, we provided a detailed step by step instruction upon which the simulation environment was built. With the use of simulated data, we identified how large noise in feature and depth measurement contributed to covariance estimator's inconsistency. Besides this important validation, we discovered the effect of the pseudo inliers that still exist after an outlier rejection process. We proposed that the pixel error distance caused by pseudo inliers can be used as the pixel uncertainty of image features. This approach is necessary to estimate metric pose covariances, which is the primary task of this thesis.  In the final section of the chapter, we compare the proposed CoVO algorithm with FOVIS in terms of accuracy.
 
 \chapter{Conclusion} \label{cp_conc}
 
@@ -3301,7 +3111,7 @@ throughout the pipeline.
 
 This thesis was undertaken to design
 an error-aware RGB-D Visual Odometry system and evaluate its credibility. 
-This achieved by identifying the errors occuring in both sensor 
+It is achieved by identifying the errors occuring in both sensor 
 and algorithm level and integrating them into the optimization 
 problem.
 
@@ -4360,7 +4170,7 @@ where $\mathbf{Q}$ is the covariance matrix that corresponds to uncertainty.
 \section{Calibration Parameters of TUM RGB-D}
 
 \begin{center}
-  \begin{tabular}{|c|c|c|c|}
+  \begin{tabular}{|c|c|c|c|}\label{tb:tum_calib_param}
     Dataset & Parameter Name & Value & Explanation\\
     RGB TUM FR1 & $f_x$ & 517.3 & focal length along x direction\\
     & $f_y$ & 516.5 & focal length along y direction\\
