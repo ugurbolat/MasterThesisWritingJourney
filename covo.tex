@@ -3108,82 +3108,91 @@ This chapter has dealt with the evaluation of the proposed CoVO algorithm regard
 \chapter{Conclusion} \label{cp_conc}
 
 % what&how I did in 2-3 sent
-
-This thesis was undertaken to design
-an error-aware RGB-D Visual Odometry system and evaluate its credibility. 
-It is achieved by identifying the errors occuring in both sensor 
-and algorithm level and integrating them into the optimization 
-problem.
+This thesis was undertaken to design an error-aware RGB-D Visual Odometry
+system and evaluate its credibility.  It is achieved by identifying the errors
+occurring in both sensor and algorithm level and integrating them into the
+optimization problem.
 
 % outline thesis
-After an introduction chapter, the first step was to lay out 
-the foundational elements of Visual Odometry.
+The first step was to introduce the VO problem in the context of sensor fusion
+in Chapter 1. We argued that researchers mainly targeted to improve the
+accuracy of the pose estimations when developing VO systems.  On the other
+hand, providing uncertainty information about their estimations is disregarded.
+Knowing that the safety critical sensor applications require the covariance for
+measurements, we stated the motivation; that is, we build such a VO system that
+outputs a metric covariance for its pose estimation dynamically. 
+
+After the introduction chapter, the foundational elements of a projective
+camera was laid out. 
 % camera model
-Then, the geometrical models of a RGB-D camera sensor was given 
-in order to be acquainted with the working principles of such sensors 
-in Chapter 2. 
-The pinhole and triangulation models 
-served as essential tools when modeling error characteristics of the sensors.
+In this respect, the geometrical models of an RGB-D camera sensor were given to
+be acquainted with the working principles of such sensors.  The pinhole and
+triangulation models served us as essential tools when modeling error
+characteristics of the sensors.
 % typical vo pipeline
-In Chapter 3, the typical pipeline of a feature based VO 
-was studied. The pipeline comprised of 4 fundamental processes; that is, 
-extracting features, matching features, rejecting outliers and 
-pose estimation. To model uncertainy of the complete system, 
-not only the systematic errors of the sensors, but also 
-the errors introduced by the image processing processes are 
+In Chapter 3, the standard pipeline of a feature based VO was studied. The
+pipeline comprised of 4 fundamental processes; i.e., extracting features,
+matching features, rejecting outliers and pose estimation. To model the
+uncertainty of the complete system, not only the systematic errors of the
+sensors but also the errors introduced by the image processing processes are
 needed to be investigated.
 
 % modeling uncertainties of RGB-D
-After stating the motivation behind the thesis in Chapter 4, two main source of errors 
-are discussed in Chapter 5; i.e., feature related errors caused by outliers and 
-depth related errors caused by the IR sensor.  
-All of these errors were combined in the conic ray model to 
-represent the uncertainty of 3D feature points with covariances.
+In Chapter 5, two primary sources of errors are discussed such as
+feature-related errors caused by outliers and depth-related errors caused by
+the IR sensor.  All of these errors were combined in the conic ray model to
+represent the uncertainty of 3D point features with covariances.
 % optimization 
-Afterwards, how these uncertainties were incorporated 
-into the optimization process and 
-the covariance of the estimated pose was propagated through 
-feature uncertainty were described in detail.
+Afterward, how these uncertainties were incorporated into the optimization
+process and the covariance of the estimated pose was propagated through feature
+uncertainty were described in detail. With the use of the error modeling, we
+provided the implementation details of the proposed algorithm which we called
+CoVO.
 
 % evaluation 
-Chapter 6 started with presenting the simulation environment whose purpose 
-is to validate the corectness of the algorithm.
-% sim 
-Experiments in simulation showed that linearization
-of projection function led to inconsistency for the covariance 
-of the estimated poses in the case of large noise. 
-This issue was compensated with a heuristic method that 
-scales resulting covariance accordingly.
+Next, Chapter 6 dealt with testing the CoVO algorithm in both the simulation
+environment and real-world datasets. 
+%whose purpose is to validate the correctness of the algorithm.  sim 
+The experiments in simulation showed that linearization of projection function
+led to inconsistency for the covariance of the estimated poses in the case of
+large noise.  This issue was compensated with a heuristic method that scales
+the resulting covariance accordingly.
+
 % tum dataset
-Next, TUM RGB-D dataset was used 
-not only for testing 
-consistency of the estimations with the real-world data, 
-but also for identifying the effect of pseudo inliers 
-on pixel uncertainty. 
+Later, TUM RGB-D datasets were used not only for testing the consistency of the
+estimations with the real-world data, but also for identifying the effect of
+pseudo inliers on pixel uncertainty. 
 % fovis comp
-At the end of the chapther, 
-accuracy of the proposed algorithm was compared with FOVIS.
+At the end of the chapter, the accuracy of the proposed algorithm was compared
+with FOVIS.
 
 % limitations
-Finally, several limitations to this work need to be acknowledged. 
-The simulation environment was built under the assumption that the 
-pixel and depth uncertainties are gaussian and there are no outliers in 
-feature matches. The fact that RANSAC is non-deterministic 
-causes to remain outliers that are greater than RANSAC's acceptance 
-threshold. Once remaining outliers are treated as pseudo inliers, 
-pixel uncertainty grows, which then brings out issues in the linearizations.
-It is also obvious that setting the pixel uncertainty 
-by the largest standard deviation value
-after running exhaustive tests 
-to determine how pseudo inliers' error are distributed throughout all trajectories 
-will not cover every corner cases. Thus, this problem requires more 
-sophisticated approaches if more adaptive covariance estimation is desired.
-Additionally, in contrast to our simulation environment, 
-the analysis being done for estimator's consistency with NEES 
-is usually performed in Monte Carlo simulation to introduce greater uncertainty 
-to the system.
+Finally, several limitations to this work need to be acknowledged.  First of
+all, the simulation environment was built under the assumption that the pixel
+and depth uncertainties are Gaussian and there are no outliers in feature
+matches. The fact that RANSAC is non-deterministic results in remaining
+outliers that are greater than RANSAC's acceptance threshold. We suggested that
+the remaining outliers treated as pseudo inliers.  However, once the pixel
+uncertainty caused by pseudo inliers grows, it then brings out the issues with
+the linearizations.  Secondly, we claimed that the effect of pseudo inliers on
+the pixel uncertainty would be bounded by the standard deviation values which
+one could identify by running exhaustive tests on many real-world datasets.
+This claim held as we observed that the pixel error were ranged between 6-8 pixels
+over seven different datasets. In the end, our solution was to take the largest
+errors to cover the worst case scenario.  As a result, it leads to us obtaining less 
+adaptive covariance estimations. 
 
-TODO: open questions and future work
+In further research, more sophisticated approaches are required, considering
+heavy parameterization being done for the proposed algorithm such as the covariance
+scaling factor due to linearization and the chosen standard deviation of the
+pixel errors caused by pseudo inliers. For example, a more self-tuning approach
+where the parameters of the error model are also estimated based on the
+resulting estimated poses could provide more dynamic uncertainty information.
+Ultimately, the goal for a robust sensor fusion system is to cover
+corners cases with minimum parameterization.  Thus, we need models that are
+constantly predicting the probability that their predicted states are
+successful.
+
 
 \chapter{Bibliography} \label{cp_bib}
 
