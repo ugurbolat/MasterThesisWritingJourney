@@ -3,13 +3,13 @@ Thesis Feebacks from Sven
 # General
 * [ ] Include reference to the equation and algorithms as much as possible.
 * [ ] Find formal synonyms for in doing so, for doing so, etc.
-* [ ] State your motivation clearly why you did what you did.
-* [ ] Link chapter&section with couple of sentences.
+* [x] State your motivation clearly why you did what you did.
+* [x] Link chapter&section with couple of sentences.
 + [x] Reference style - Biblatex
-* [ ] Improve notation for transformation and pose.
+* [x] Improve notation for transformation and pose.
   * It is too much effort change all notation according to Robotic Vision and 
     Control book so just make it more consistent over all thesis.
-* [ ] Brackets for equation references
+* [x] Brackets for equation references
 - [x] VO problem -> Point set registration problem: CANCELLED.
   * In point set registration problem, feature matches might be unknown.
       Regardless of it, the main goal is to align point sets. In VO, we are not
@@ -17,19 +17,20 @@ Thesis Feebacks from Sven
   * So, I will keep it as it is.
 
 # C1 - Intro
-* [ ] After first paragraph, describe sensor fusion and other sensors to get
+* [x] After first paragraph, describe sensor fusion and other sensors to get
     ego-motion. Discuss the advantages of using VO and RGB-D.
-* [ ] Integrate the content with motivation.
+* [x] Integrate the content with motivation.
 
 # C2 - Cam 
-* [ ] Fix transformation notation.
+* [x] Fix transformation notation.
 + [x] Triangulation Model section - fix first sentences about losing angle.
 
 # C3 - VO
-* [ ] Remove the ORB part
+* [x] Move the ORB part to appendices
+* [x] Explain why you choose ORB and refer to appendices
 
 # C4 - Motiv
-* [ ] Move motivation part to the intro
+* [x] Move motivation part to the intro
 
 # C5 - Error-aware VO
 + [x] Give an intro paragraph about what is error-aware vo means
@@ -43,11 +44,11 @@ Thesis Feebacks from Sven
 * [x] Improve your arguments
 
 # C7 - Conc
-* [ ] Editting
-* [ ] Future work and open questions
+* [x] Editting
+* [x] Future work and open questions
 
 # C8 - App
 * [ ] Editting
-* [ ] Remove Newton's method in the appendices. Leave LM related part briefly.
+* [x] Remove Newton's method in the appendices. Leave LM related part briefly.
 
 
