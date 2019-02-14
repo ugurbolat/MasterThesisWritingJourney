@@ -1,8 +1,8 @@
 Thesis Feebacks from Sven
 
 # General
-* [ ] Include reference to the equation and algorithms as much as possible.
-* [ ] Find formal synonyms for in doing so, for doing so, etc.
+* [x] Include reference to the equation and algorithms as much as possible.
+* [x] Find formal synonyms for in doing so, for doing so, etc.
 * [x] State your motivation clearly why you did what you did.
 * [x] Link chapter&section with couple of sentences.
 + [x] Reference style - Biblatex
@@ -48,7 +48,21 @@ Thesis Feebacks from Sven
 * [x] Future work and open questions
 
 # C8 - App
-* [ ] Editting
+* [x] Editting
 * [x] Remove Newton's method in the appendices. Leave LM related part briefly.
+* [x] Prettify the parameters tables
 
+# Format Checklist 
+
+* [x] Grammar
+* [ ] Clarity of your arguments
+* [ ] TOC
+* [ ] LOF - Left Margin Issue
+* [x] LOA
+* [ ] Acknowledgement
+* [ ] Declaration 
+* [ ] Figures and Tables
+* [ ] Bibliography
+* [x] Fix transposes: \top
+* [x] Change J' to J_tq
 

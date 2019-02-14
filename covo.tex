@@ -31,8 +31,8 @@
 \usepackage[noend]{algpseudocode}
 \usepackage{array}
 \usepackage{mathtools}
-\usepackage{tocloft}
-
+\usepackage[titletoc]{appendix}
+\usepackage{multirow}
 
 % ***************************NEW COMMANDS***************************
 % for numbering per section
@@ -89,11 +89,12 @@
 	\let\bibopenparen=\bibopenbracket%
 	\let\bibcloseparen=\bibclosebracket}
 
-% config for appendix spacing in toc
-\setlength{\cftchapnumwidth}{2em}
-\cftsetindents{section}{2em}{2.4em}
-\cftsetindents{subsection}{4.4em}{3.2em}
-
+%% config for appendix spacing in toc
+%\setlength{\cftchapnumwidth}{2em}
+%\cftsetindents{section}{2em}{2.4em}
+%\cftsetindents{subsection}{4.4em}{3.2em}
+%\DeclareTOCStyleEntry[indent=0pt]{tocline}{figure}
+%\DeclareTOCStyleEntry[indent=0pt]{tocline}{table}
 
 % ***************************ACRONYM AND SYMBOL DEFINITIONS*******************
 
@@ -112,20 +113,27 @@
 \newacronym{brief}{BRIEF}{Binary Robust Independent Elementary Features}
 \newacronym{orb}{ORB}{Oriented FAST and Rotated BRIEF}
 \newacronym{ransac}{RANSAC}{Random Sample Consensus}
-
+\newacronym{sfm}{SFM}{Structure from Motion}
+\newacronym{icp}{ICP}{Iterative Closest Point}
+\newacronym{dvo}{DVO}{Dense Visual Odometry}
+\newacronym{covo}{CoVO}{Covariance-enabled Visual Odometry}
+\newacronym{rmse}{RMSE}{Root Mean Squared Error}
+\newacronym{rpe}{RPE}{Relative Pose Error}
+\newacronym{nees}{NEES}{Normalized Estimation Error Squared}
+\newacronym{anees}{ANEES}{Average Normalized Estimation Error Squared}
 
 % Symbols
 \newglossaryentry{world_coord}{
   name = \ensuremath{\mathcal{W}},
-  description = index for world coordinate system
+  description = index for the world coordinate system
 }
 \newglossaryentry{cam_coord}{
   name = \ensuremath{\mathcal{C}},
-  description = index for camera coordinate system
+  description = index for the camera coordinate system
 }
 \newglossaryentry{disparity_space}{
   name = \ensuremath{\mathcal{D}},
-  description = index for disparity image space
+  description = index for the disparity image space
 }
 \newglossaryentry{state_vector}{
   name = \ensuremath{\mathbf{x}},
@@ -137,11 +145,11 @@
 }
 \newglossaryentry{cam_position}{
   name = \ensuremath{\mathbf{p}},
-  description = position vector
+  description = position vector in $\R^3$
 }
 \newglossaryentry{cam_orientation}{
   name = \ensuremath{\mathbf{q}},
-  description = quaternion vector 
+  description = quaternion vector in $SO(3)$
 }
 %\newglossaryentry{transformation}{
 %  name = \ensuremath{\mathbf{T}_{k,k+1}},
@@ -149,7 +157,7 @@
 %}
 \newglossaryentry{translation}{
   name = \ensuremath{\mathbf{t}},
-  description = translation vector
+  description = translation vector in $\R^3$
 }
 %\newglossaryentry{rotation}{
 %  name = \ensuremath{\mathbf{q}_{k,k+1}},
@@ -157,11 +165,11 @@
 %}
 \newglossaryentry{2d_feature_pix_coord}{
   name = \ensuremath{\mathbf{u}},
-  description = 2D image feature's pixel coordinates 
+  description = pixels coordinates of 2D image feature
 }
 \newglossaryentry{3d_point_cam_coords}{
   name = {\ensuremath{\mathbf{X}}} ,
-  description = 3D point features's position
+  description = position of 3D point feature 
 }
 %\newglossaryentry{3d_point_world_coords}{
 %  name = $\mathbf{X^{\mathcal{W}}}^{(i)}$ ,
@@ -178,8 +186,8 @@
 %}
 \newglossaryentry{transformation_ab}{
   name = $\mathbf{T}_{A,B}$,
-  description = homogeneous transformation representing frame $A$ with respect to 
-  frame $B$
+  description = homogeneous transformation representing frame $A$ with respect 
+  to frame $B$ in $SE(3)$
 }
 \newglossaryentry{projection}{
   name = {\ensuremath{\mathbf{P}}} ,
@@ -188,6 +196,10 @@
 \newglossaryentry{projection_func}{
   name = {\ensuremath{\mathbf{F_{p}}}} ,
   description = projection function
+}
+\newglossaryentry{back_proj}{
+	name = {\ensuremath{\mathbf{F_{bp}}}} ,
+	description = back-projection function
 }
 \newglossaryentry{distortion_func}{
   name = {\ensuremath{\mathbf{F_{d}}}} ,
@@ -205,6 +217,74 @@
   name = {\ensuremath{\mathbf{H}}} ,
   description = homography matrix
 }
+\newglossaryentry{residuals_forward}{
+	name = {\ensuremath{\mathbf{r_f}}} ,
+	description = residuals function of forward-transformation
+}
+\newglossaryentry{residuals_backward}{
+	name = {\ensuremath{\mathbf{r_b}}} ,
+	description = residuals function of backward-transformation
+}
+\newglossaryentry{cov_uvz}{
+	name = {\ensuremath{\mathbf{Q_{uvz}}}} ,
+	description = 3D point feature covariance in $\mathcal{D}$
+}
+\newglossaryentry{cov_xyz}{
+	name = {\ensuremath{\mathbf{Q_{xyz}}}} ,
+	description = 3D point feature covariance in $\mathcal{C}$
+}
+\newglossaryentry{cov_tq}{
+	name = {\ensuremath{\mathbf{Q_{tq}}}} ,
+	description = 3D pose covariance in $\mathcal{C}$
+}
+\newglossaryentry{pixel_uncertainty}{
+name = {\ensuremath{\sigma_u, \sigma_v}} ,
+description = pixels noise variance
+}
+\newglossaryentry{depth_axial_uncertainty}{
+	name = {\ensuremath{\sigma_Z}} ,
+	description = axial depth noise variance
+}
+\newglossaryentry{lateral_axial_uncertainty}{
+	name = {\ensuremath{\sigma_L}} ,
+	description = lateral depth noise variance
+}
+\newglossaryentry{back_proj_jacob}{
+	name = {\ensuremath{\mathbf{J_{bp}}}} ,
+	description = Jacobian matrix of back-projection function
+}
+\newglossaryentry{back_trans_jacob}{
+	name = {\ensuremath{\mathbf{J_{b}}}} ,
+	description = Jacobian matrix of back-transformation function
+}
+\newglossaryentry{for_trans_jacob}{
+	name = {\ensuremath{\mathbf{J_{f}}}} ,
+	description = Jacobian matrix of forward-transformation function
+}
+\newglossaryentry{residuals_jacob}{
+	name = {\ensuremath{\mathbf{J_{tq}}}} ,
+	description = Jacobian matrix of residuals function of both 
+	backward-transformation and forward-transformation
+}
+\newglossaryentry{residuals_scaled_info_jacob}{
+	name = {\ensuremath{\mathbf{J_{tqs}}}} ,
+	description = Jacobian matrix of residuals function of both 
+	backward-transformation and forward-transformation scaled by information 
+	matrix
+}
+\newglossaryentry{residuals_scaled_manifold_jacob}{
+	name = {\ensuremath{\mathbf{J_{tqm}}}} ,
+	description = Jacobian matrix of residuals function of both 
+	backward-transformation and forward-transformation scaled by manifold
+}
+\newglossaryentry{residuals_scaled_info_manifold_jacob}{
+	name = {\ensuremath{\mathbf{J_{tqsm}}}} ,
+	description = Jacobian matrix of residuals function of both 
+	backward-transformation and forward-transformation scaled by both 
+	information matrix and manifold
+}
+
+
 \renewcommand{\contentsname}{Table of Contents}
 
 % ***************************DOC***************************
@@ -257,7 +337,7 @@ well-designed robots whose task is to solve a defined problem without moving
 from its assembled position.  They can operate safely as the uncertainty of
 operational components, and its controlled environment are modeled with
 substantial accuracy and precision.  However, once we build robots that move
-around and interact with the real world, number of unforeseen events increase
+around and interact with the real world, the number of unforeseen events increase
 drastically. In such scenarios, robustness is crucial.  The way we increase
 robustness is to have intelligent agents and accurate uncertainty models of
 their sensors and estimations. That being said, this work focuses on the latter
@@ -267,13 +347,13 @@ of Visual Odometry.
 So far, researchers and engineers have developed many RGB-D camera based VO
 applications.  In filter-based or graph-based SLAM applications, they are
 usually combined with other dead-reckoning and landmark measurements because of
-the drift occurring in relative pose estimations over time.  To do so, one
+the drift occurring in relative pose estimations over time. In this respect, one
 should have a reliable uncertainty model of the sensors being measured so that
-uncertainty of pose estimation can be estimated in the form of a covariance
+the uncertainty of pose estimations can be estimated in the form of a covariance
 matrix.  To my knowledge, there is no open source VO software that provides
 such covariance matrices for its pose estimations. Thus, the covariance matrix
-from VO is taken as an identity matrix. This does not offer any meaningful
-information as to whether the estimation should have specific importance
+for VO is taken as an identity matrix. Nevertheless, this does not offer any metric 
+uncertainty information as to whether the estimation should have specific importance
 comparing to other sensor measurements during filtering or optimization
 process.  On the other hand, researchers model the uncertainty of RGB-D cameras
 such as Kinect, but they applied their models on applications that are outside
@@ -319,17 +399,17 @@ The essence of a mobile robot is autonomy.
 A fully autonomous robot first \textit{senses} its environment, then 
 \textit{interprets} the collected data and finally \textit{acts} based on the insights 
 that it gathered over time.
-If we look at nature, throughout the evolution, 
+If we look at nature, throughout evolution, 
 certain animals gained certain abilities regarding 
 spatial awareness in all sorts of ways. For instance, 
-homing pigeons navigate by magnetic field, bats use sound to map their 
-surroundings or bees smell with their special chemoreception to find their way 
+homing pigeons navigate by a magnetic field. Bats use sound to map their 
+surroundings. Bees smell with their special chemoreception to find their way 
 back home. 
 Even though each sense helps us with particular importance,
 we humans are good at navigating ourselves by relying on our vision. 
-As the incredible capability of human vision and perception 
+While the incredible capability of human vision and perception 
 mostly stay a mystery, 
-robotics researchers has naturally been drawn to studying 
+robotics researchers have naturally been drawn to studying 
 the computer vision field for navigation purposes.
 
 
@@ -339,12 +419,12 @@ robot must be known accurately. We define this physical state by its
 \textit{pose}, meaning its position and orientation. The current pose of the
 robot can be measured by two ways; i.e., \textit{dead-reckoning} that measures
 \textit{relative} motion and \textit{landmarks} that measures \textit{absolute}
-position which are known a priori.  Without priori-known landmark measurements,
+position which is known a priori.  Without priori-known landmark measurements,
 dead-reckoning systems are destined to drift from its real position. Thus, the
 robot must build a map of its environment along with the previously seen
 landmarks. Then, it will have a chance to recover from drifts by recognizing
-the same landmarks in the same area in different time. In fact, this problem in
-robotics is named as \acrfull{slam}.  SLAM problem has almost 30 years history
+the same landmarks in the same area at different time. In fact, this problem in
+robotics is named as \acrfull{slam}. SLAM problem has almost 30 years history
 \parencite{Moravec1980} and vision systems always had great importance. Even 
 though
 some researchers \parencite{Frese2010} consider SLAM to be solved, there are 
@@ -355,42 +435,41 @@ open research questions regarding robustness, accuracy and real-time operation.
 To solve SLAM problems, robots are equipped with various kind of sensors 
 such as 
 dead-reckoning sensors; e.g., IMU, wheel odometry and visual odometry. 
-Each sensor comes with certain benefits and drawbacks. For example, 
-wheel odometry offers a simple solution but 
-it is hard to model non-deterministic slipperry motions. 
-On the other hand, vision odometry is more agile and accurate compared to 
+Each sensor comes with its own benefits and limitations. For example, 
+wheel odometry offers a cheap and simple solution, but 
+it is hard to model non-deterministic slippery motions. 
+On the other hand, visual odometry (VO) is more agile and accurate compared to 
 wheel odometry. However, 
 for the VO system to work
-accurately, the environment should be adequately illuminated, static and
-texture-rich.  However, in the real world, we deal with shadowed, dynamic and
-texture-poor environments. Eventually, drifts will occur in VO. 
+accurately with the current algorithms, the environment should be adequately 
+illuminated, static and
+texture-rich.  However, we deal with shadowed, dynamic and
+texture-poor environments in the real world. Eventually, drifts will occur in 
+VO. 
 Hence, the good
 design of a mobile robot should combine many sensors.
-In fact, combining variety of sensors 
+In fact, combining a variety of sensors 
 along with their known biases and calibration parameters is called 
 \textit{sensor fusion}.
 
-%\subsubsection{Motivation} \label{cp_motivation}
-%Visual Odometry outputs relative ego-motion information similar to IMU and 
-%wheel odometry. Apart from absolute sensor measurments like known a priori set of landmarks
-%or GPS, all of three low-level sensors are heavily used in 
-%localization applications as relative sensors. 
 Nowadays, sensor fusion applications for SLAM and 3D reconstruction are designed 
 accordingly to compensate each other's biases in order to obtain the best 
 possible result. In the case of an accurate and robust sensor fusion framework, 
-one selects sufficient amount absolute and relative positioning sensors. 
+one selects a sufficient amount absolute and relative positioning sensors. 
 The main goal is to fuse both relative and absolute sensor types 
 along with their noise characteristics in a way that the error is minimized. 
 Hence, it is critical to model each sensor's uncertainties. 
-IMU and wheel odometry sensors' uncertainty are modeled by their vendors 
+IMU and wheel odometry sensors' uncertainty is modeled by their vendors 
 based on the working principles and worst-case scenario tests beforehand.
 Whereas, widely used open source VO tools do not provide any uncertainty information 
 about their pose estimations. Even though there are several VO papers 
 \parencite{Endres2014}, \parencite{Konolige08}, \parencite{Di2016a}, 
 \parencite{Belter2018a}
-that deals with uncertainty of RGB-D sensors, they only intend to 
-improve accuracy of the pose estimation, but not to provide any uncertainty 
-information about their estimation. Therefore, my ultimate motivation, in this thesis, is to build 
+that deals with the uncertainty of RGB-D sensors, they only intend to 
+improve the accuracy of the pose estimation, but not to provide any 
+uncertainty 
+information about their estimation. Therefore, the ultimate motivation, in 
+this thesis, is to build 
 a feature-based RGB-D Visual Odometry system that outputs pose estimations 
 along with their metric uncertainties.
 As a result, the VO system can be treated as a stand-alone 
@@ -410,8 +489,6 @@ with both simulated data and TUM RGB-D dataset in Chapter 5. Finally, the
 conclusion gives a summary and critique of the findings.
 
 
-%\newpage
-
 % ***************************CP2-VO***************************
 
 
@@ -420,94 +497,105 @@ conclusion gives a summary and critique of the findings.
 % RGB-D Camera in VO?
 The camera offers rich data by mapping 3D
 space onto a 2D plane and the output data are quantized pixels according to the
-intensity of the illumination.  This type of data makes camera sensor a
-multi-purpose device and one can build various kinds of computer vision
+intensity of the illumination.  This type of data makes a camera a
+multi-purpose device so one can build various kinds of computer vision
 applications.  Considering the potential, computer vision researchers proposed
-VO methods that are tailored to the different type of environments.  When
+VO methods that are tailored to different type of environments.  When
 designing a VO pipeline, one should select a suitable algorithm and camera type
 based on the operating environment.
 
 % Why used? Advantages?
 As to camera types, RGB-D cameras based on structured light (e.g., PrimeSense
-Carmine, Microsoft Kinect, and Asus Xtion) that are categorized as active
+Carmine, Microsoft Kinect (see Figure \ref{fig:kinect_pic}), and Asus Xtion) 
+that are categorized as active
 stereo cameras are especially intriguing.  These cameras gave rise to many 3D
 vision applications including VO. Even though it has certain limitations; i.e.,
-the depth accuracy being grown with distance to the object, it offers a cheap 3D data, especially for
+the depth accuracy being grown with distance to the object, it offers cheap 3D 
+data, especially for
 indoor applications. 
 
 
 In this chapter, we will discuss two geometrical model and calibration methods
-for RGB-D camera.  In principle, a camera maps from a 3D world scene to a 2D
+for an RGB-D camera.  In principle, a camera maps from a 3D world scene to a 2D
 image plane. We call this process \textit{projection} operation. Since the VO
-systems process camera image sequences, one has to model this projection
+systems process projected image sequences, one has to model this projection
 operation accurately. One of the basic camera modeling technique is the
-\textit{Pinhole Model} where the projection of the 3D points are mapped on a 2D
+\textit{pinhole model} where the projection of the 3D points is mapped on a 2D
 image plane.  
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.65\linewidth,natwidth=640,natheight=640]
 	{fig/ref_imgs/kinect_pic.png}
-  \caption[Microsoft Kinect V1]{Microsoft Kinect V1 is a RGB-D camera that has 
+  \caption[Microsoft Kinect V1]{Microsoft Kinect V1 is an RGB-D camera that 
+  has 
   640 $\times$ 480 pixels spatial resolution, 0.8-4.0 $m$ depth range, 2-40 
-  $mm$ depth resolution and 30 fps \parencite{Smisek2011}.}
+  $mm$ depth resolution, and 30 fps \parencite{Smisek2011}.}
 	\label{fig:kinect_pic}
 \end{figure}
 
 While mapping a point from 3D space to 2D space, we lose the 
-depth information.  Although there are ways to recover relative depth scale by 
+depth information.  Although there are ways to recover the relative depth 
+scale by 
 taking images from different poses with a monocular camera, they can't provide 
 metric depth.  In this thesis, we are interested in cameras that offer metric 
-depth using stereo cameras, more specifically active stereo camera. One can 
-model these active stereo cameras with \textit{Triangulation Model}. That 
+depth using stereo camera principle, more specifically active stereo camera. 
+Thus, one 
+can 
+model these active stereo cameras with the \textit{triangulation model}. That 
 being said, these two models cannot be used without having the camera to be 
-\textit{calibrated} since many anomalies occur in manufacturing.
+\textit{calibrated} since many anomalies occur in manufacturing. In this 
+chapter, we will discuss the geometric models of an RGB-D camera and how 
+to calibrate it.
 
 
 \section{The Pinhole Model} \label{sc_pinhole}
 
 The light rays are captured through the camera's lens onto an electronic plate 
-(called \textit{image plane} in computer vision) that convert light intensity 
+(called \textit{image plane} in computer vision) that converts light intensity 
 to electrical signals.  The pinhole model is, on the other hand, an 
-approximation which simplifies this operation.  In this model, the camera 
-centre sits behind the image plane.  The Z-axis, so-called \textit{principal 
+approximation to this operation.  In this model, the camera 
+center sits behind the image plane.  The z-axis, so-called \textit{principal 
 axis}, of this coordinate system points out through the origin of the image 
-plane, and the point where pierce through image plane is called the 
-\textit{principal point} $\mathbf{p}$.  We can also see how other two axes; 
-i.e., X and Y, are located in figure \ref{fig:pinhole} and this is known as 
-the \textit{camera coordinate system}.
+plane. Also, the point where pierce through image plane is called the 
+\textit{principal point} $\mathbf{p}$. In Figure \ref{fig:pinhole}, we can see 
+how other two axes; 
+i.e., X and Y, are located and the depicted coordinate system is known as 
+the \textit{camera coordinate system}. Note that the formulation of the 
+pinhole model was mostly taken from \parencite{RichardHartley2003}.
 
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
   {fig/drawings/pinhole_3d2d.pdf}
-  \caption[The Pinhole Model]{In the Pinhole Model, $C$ is the camera centre 
+  \caption[The Pinhole Model]{In the pinhole model, $C$ is the camera center 
   and $\mathbf{p}$ is the principle point. A 3D point 
   $\mathbf{X^{\mathcal{C}}}$ in the 
   camera coordinate system is projected as a 2D point $\mathbf{u}$ onto the 
-  image plane. Note that the camere coordinate system is drawn according to 
+  image plane. Note that the camera coordinate system is drawn according to 
   right-hand rule. The illustration is redrawn from 
   \parencite{RichardHartley2003} 
   accordingly.}
 	\label{fig:pinhole}
 \end{figure}
 
-Thanks to geometrical propotion property, we can project the 3D point 
+Thanks to geometrical proportion property, we can project the 3D point 
 $\mathbf{X^{\mathcal{C}}}=(X^{\mathcal{C}}, Y^{\mathcal{C}}, 
-Z^{\mathcal{C}})^T$ in the 
+Z^{\mathcal{C}})^\top$ in the 
 camera 
 coordinate system 
 to 
 the 2D 
 point $\mathbf{u} = (f_xX^{\mathcal{C}}/Z^{\mathcal{C}}, 
-f_yY^{\mathcal{C}}/Z^{\mathcal{C}})^T$ on the 
+f_yY^{\mathcal{C}}/Z^{\mathcal{C}})^\top$ on the 
 image 
 plane, where 
-$f_x$ and $f_y$ are the \textit{focal lengths} between the camera centre and 
-the pricipal point with respect to horizontal and vertical axis of the camera 
+$f_x$ and $f_y$ are the \textit{focal lengths} between the camera center and 
+the principal point with respect to horizontal and vertical axis of the camera 
 coordinate system respectively.  After projection, we obtain a 2D point  
-as \textit{pixel coordinates} $\mathbf{u}=(u,v)^T$ on the image plane.  To 
+as \textit{pixel coordinates} $\mathbf{u}=(u,v)^\top$ on the image 
+plane.  To 
 be more specific, we can write the projection operation as a linear mapping 
 function in the following way if we utilize the homogeneous coordinates:
 
@@ -547,7 +635,7 @@ function in the following way if we utilize the homogeneous coordinates:
 This equation applies for the case when 3D points are projected onto a plane 
 where the principal point is the origin.  However, the common convention in 
 practice is to have the origin at the corner \parencite{RichardHartley2003}, 
-instead of the centre.
+instead of the center (see Figure \ref{fig:pinhole_offset}).
 
 \begin{figure}[H]
 	\centering
@@ -555,7 +643,8 @@ instead of the centre.
   {fig/drawings/pinhole_cam_offset.pdf}
 	\caption[Principle Point Offset]{We take OpenCV's pixel coordinate 
 	convention where the origin is located at the upper left corner. In order 
-	to shift the origin from camera centre to the corner, $c_x, c_y$ principle 
+	to shift the origin from the camera center to the corner, $c_x, c_y$ 
+	principle 
 	point offsets are added.}
 	\label{fig:pinhole_offset}
 \end{figure}
@@ -598,14 +687,14 @@ Thus, we get offsets, which can further be added as:
 where $c_x$ and $c_y$ are coordinates of the principal point \textbf{p}.
 In addition to principal offsets, an inaccurately synchronized pixel-sampling 
 process can result in \textit{skewed pixels}. This camera imperfection leads 
-to non-square pixels as seen in figure \ref{fig:skewed}.
+to non-square pixels as seen in Figure \ref{fig:skewed}.
 
 \begin{figure}[H]
 	\centering
   \includegraphics[width=0.4\linewidth,natwidth=640,natheight=640]
   {fig/drawings/pinhole_skew.pdf}
   \caption[Skewed Pixels]{Skewed pixels occur in earlier versions of CCD 
-  cameras because the camera's detector array is not orthogonal to the 
+  cameras because the camera's detector array was not orthogonal to the 
   principle axis. This design issue is mostly fixed in modern camera and thus 
   it is usually neglected by taking $\eta_x=1$, $\eta_y=1$ and $s=0$.}
 	\label{fig:skewed}
@@ -671,21 +760,22 @@ form:
 	\centering
   \includegraphics[width=\linewidth,natwidth=640,natheight=640]
   {fig/drawings/pinhole_world_to_cam.pdf}
-  \caption[Extrinsic Matrix]{The Z-axis of the camera coordinate system aligns 
-  with the principal axis that is \textit{local} to camera frame. In fact, we 
+  \caption[Extrinsic Matrix]{The z-axis of the camera coordinate system aligns 
+  with the principal axis that is \textit{local} to the camera frame. In fact, 
+  we 
   have measured 3D points that we know their position in the \textit{world 
-  coordinate system} which is also refer to the \textit{global frame}, as 
-  opposed to the camera coordinate system referring to
+  coordinate system} which is also referred to the \textit{global frame}, as 
+  opposed to the camera coordinate system referring to the 
 \textit{local frame}.}
   \label{fig:cam_model_rot_trans}
 \end{figure}
 
-Remember that we measure 3D points in the real-world with respect to the 
-camera centre.  Thus, these two coordinates systems, i.e., the camera and 
+Remember that we measure 3D points in the real world with respect to the 
+camera center.  Thus, these two coordinates systems, i.e., the camera and 
 world coordinate system, can be transformed one another by a rotation and a 
-translation as it is depicted in figure \ref{fig:cam_model_rot_trans} and we 
+translation as it is depicted in Figure \ref{fig:cam_model_rot_trans} and we 
 are interested in converting from the world coordinate system to the camera 
-coordinate system in the context of projection operation.  To do so, we 
+coordinate system in the context of projection operation.  In this regard, we 
 perform series of rotations around each axis of the Cartesian coordinate 
 system in $\R^3$ Euclidean space by using \textit{rotation matrices} where 
 $R_x, R_y, R_z \in SO(3)$ is the rotation group:
@@ -717,7 +807,8 @@ $R_x, R_y, R_z \in SO(3)$ is the rotation group:
   \end{bmatrix}\label{eq:rot_matrx_z}
 \end{equation} 
 
-Let's concatenate all three rotations about axes z, y, x respectively (also 
+Now, let's concatenate all three rotations about axes z, y, x respectively 
+(also 
 called \textit{yaw, pitch, yaw}) by the matrix multiplication:
 
 \begin{equation}
@@ -753,9 +844,10 @@ one:
   \end{bmatrix}\label{eq:transformation_matrix}
 \end{equation} 
 
-The ${\mathbf{T_{RGB}}}_{\mathcal{W}, \mathcal{C}} \in \R^{4x3}$ matrix in 
-fact represents a 
-\textit{transformation} from 3D position in the world coordinate system to the 
+where ${\mathbf{T_{RGB}}}_{\mathcal{W}, \mathcal{C}} \in \R^{4x3}$ matrix 
+in $SE(3)$ represents a 
+\textit{transformation} of a 3D position from the world coordinate system to 
+the 
 camera coordinate system, which we call \textit{extrinsic camera parameters}.  
 Finally, we combine intrinsic $\mathbf{K_{RGB}}$ and extrinsic 
 ${\mathbf{T_{RGB}}}_{\mathcal{W}, \mathcal{C}}$ matrices in the following form:
@@ -800,7 +892,8 @@ camera coordinate systems and then maps them onto the image plane.
 One last issue with regards to imperfect pixels is the \textit{radial 
 distortion}.  The distortion effect has non-linear characteristics. Thus, we 
 introduce polynomial function whose coefficients $\kappa = (k_1, k_2, p_1, 
-p_2, k_3)^T$ can be fitted by optimization. The polynomial function is given 
+p_2, k_3)^\top$ can be fitted by optimization. The polynomial function is 
+given 
 as follows:
 
 \begin{equation}
@@ -831,15 +924,6 @@ projection function:
     1
   \end{pmatrix}
     =
-%      \mathbf{K_{RGB}}
-%      \mathbf{F_{d}}\begin{pmatrix}
-%      \begin{pmatrix}
-%        X^{\mathcal{C}}/Z^{\mathcal{C}}\\
-%        Y^{\mathcal{C}}/Z^{\mathcal{C}}\\
-%        1
-%      \end{pmatrix}
-%    \end{pmatrix} 
-%    =
     \mathbf{K_{RGB}}
     \mathbf{F_{d}}\begin{pmatrix}
        {\mathbf{T_{RGB}}}_{\mathcal{W}, \mathcal{C}}
@@ -861,7 +945,8 @@ Let's combine projection and distortion function into one:
 
 To build any reliable computer vision application with digital cameras, it is 
 essential to find the parameters of the projection matrix and the radial 
-distortion.  The next section describes one of many numerical methods for 
+distortion.  Section \ref{sb_sc_rgb_calibration} describes one of many 
+numerical methods for 
 estimating them in literature.
 
 \section{The Triangulation Model} \label{sc_depth_model}
@@ -875,7 +960,9 @@ Whereas, for an active stereo camera, one typically has one light projector
 and one camera sensor. For example, in Kinect, an Infrared (IR) laser projects 
 structured IR speckle light pattern on an object, and then the deformed light 
 due to 3D geometry of the object is captured with a monochrome IR camera from 
-a different position.
+a different position. Note that the formulation of the triangulation model is 
+mostly constructed by using papers; i.e., \parencite{Park2012a} and 
+\parencite{Khoshelham2012a}.
 
 \begin{figure}[H]
 	\centering
@@ -891,7 +978,7 @@ a different position.
 Since we use Kinect V1 to retrieve depth information for our experiments, we will 
 be modeling active stereo vision principle even though the basic principle 
 behind them is the same mathematical model, which is the \textit{triangulation 
-model}. As shown in figure \ref{fig:triangulation_model}, this model is a 
+model}. As shown in Figure \ref{fig:triangulation_model}, this model is a 
 geometrical model that takes advantages of similarity triangles to calculate 
 the depth.
 
@@ -899,20 +986,22 @@ the depth.
 	\centering
   \includegraphics[width=0.65\linewidth,natwidth=640,natheight=640]
   {fig/drawings/triangulation.pdf}
-  \caption[The Depth Measurement Model]{The Depth Measurement Model}
+  \caption[The Depth Measurement Model]{The Depth Measurement Model. The 
+  illustration is redrawn from \parencite{Khoshelham2012a}.}
 	\label{fig:triangulation_model}
 \end{figure}
 
 In this setup, we again utilize the camera coordinate system similar to RGB 
 camera and IR camera with $f$ focal length is placed by facing perpendicular 
-to the (principle axis) Z-axis at the origin. Then, IR laser projector is also 
-placed along the X-axis parallel to the IR camera with \textit{baseline} 
+to the (principal axis) z-axis at the origin. Then, IR laser projector is also 
+placed along the x-axis parallel to the IR camera with \textit{baseline} 
 $b$ distance.  
-Additionally, we measure $d$ as a \textit{disparity} data and the maximum 
+Additionally, we measure $d$ as \textit{disparity} data and the maximum 
 range that can be measured refers to $Z_r$. Ultimately, we are interested in 
-finding $Z^{\mathcal{C}}$ distance if depth information of point 
-$\mathbf{X}^{(\mathcal{C}, i)}$ is 
-desired. For doing so, we build two useful relationships using similarity of 
+finding $Z^{\mathcal{C}}$ distance if depth information of a point 
+$\mathbf{X}^{\mathcal{C}}$ is 
+desired. In this respect, we build two useful relationships using similarity 
+of 
 triangles:
 
 
@@ -933,8 +1022,8 @@ following formula:
 Another critical point to note is that Kinect or other depth cameras might not 
 provide the depth metric information directly in practice. For instance, 
 Kinect provides us disparity image data that correspond to inverse depth 
-quantized with 11 bits and the relationship between disparity data and real 
-depth is non-linear as shown in figure \ref{fig:depth_disparity_relation}.
+quantized with 11 bits. The relationship between disparity data and real 
+depth is non-linear as shown in Figure \ref{fig:depth_disparity_relation}.
 
 \begin{figure}[H]
 	\centering
@@ -983,36 +1072,45 @@ projection operation for the IR camera.
 \end{equation} 
 
 
-Keep in mind that we first need to calibrate the IR camera's intrinsic and 
-extrinsic paratemeters to find related depth related parameters, i.e., 
+Keep in mind that we also need to calibrate the IR camera's intrinsic and 
+extrinsic parameters to find related depth related parameters, i.e., 
 $f,b,Z_r,m, n$. In the following section, we will discuss how calibration 
-processes are performed for RGB-D camera to measure quality data.
+processes are performed for an RGB-D camera to measure quality data.
 
 \section{RGB-D Camera Calibration} \label{sb_sc_rgb_calibration}
 
 The calibration process is a crucial part of any computer vision applications, 
-and there are many sophisticated techniques to achieve accurately.  However, 
+and there are many sophisticated techniques to achieve accurate results.  
+However, 
 it is important to note that full derivations of the calibration formulation 
-are not provided in this thesis, but only the important points are given.  
+are not provided in this thesis. Instead, only the important points are 
+given.  
 Therefore, I refer readers to \parencite{Zhang2000a}, \parencite{Smisek2011}, 
-\parencite{Karan2015} and \parencite{Herrera2016a} for the details of a RGB-D 
+\parencite{Karan2015} and \parencite{Herrera2016a} for the details of an RGB-D 
 camera 
-calibration.  Since we are about to perform 3 calibration operation: RGB 
-camera, IR camera, and depth measurement, we assume that both RGB and IR 
+calibration.  Since we are about to perform 3 calibration operations: RGB 
+camera, IR camera, and depth measurement, we assume that both the RGB and IR 
 camera's image planes are aligned for simplicity (in practice, one must 
-  perform transformation $\mathbf{T}_{RGB,IR}$ between RGB 
-and IR camera if a feature from RGB camera used in IR camera) and they have 
-1:1 pixel correspondences. Under these assumptions, let's start with RGB and 
+  perform transformation $\mathbf{T}_{RGB,IR}$ between an RGB 
+and IR camera if a feature from the RGB camera used in the IR camera) and they 
+have 
+1:1 pixel correspondences. Under these assumptions, let's start with the RGB 
+and 
 IR camera.
 
 \subsubsection{RGB and IR Camera Calibration}
 
-We calibrate RGB and IR camera since they both project 3D space to 2D space, 
+We calibrate the RGB and IR camera since they both project 3D space to 2D 
+space, 
 but only measuring the different light spectrum. Thus, the calibration process 
-for the RGB camera that we will discuss applies for the IR Camera as well.  To 
+for the RGB camera which we will discuss in this section applies for the IR 
+camera as well.  To 
 begin with, the simplest case which can help us to understand the calibration 
-process is that we assume that we know the exact position of 3D points in 
-world coordinate system and exact position of 2D points on the image plane.  
+process is that we assume that we know the exact position of 3D points 
+$\mathbf{X}^{(\mathcal{W}, 1:m)}$ in 
+world coordinate system and exact position of 2D points $\mathbf{u}^{(1:m)}$ 
+on 
+the image plane.  
 One can build a constraint between them by exploiting the projection function:
 
 \begin{equation}
@@ -1058,45 +1156,54 @@ retrieve individual pixel coordinates:
 \end{equation} 
 
 
-Since $\mathbf{u}$ and $\mathbf{X^{\mathcal{W}}}$ are known, we can find 
+Since $\mathbf{u}^{(1:m)}$ and $\mathbf{X}^{(\mathcal{W}, 1:m)}$ are known, we 
+can 
+find 
 elements of the 
-$\mathbf{p} = (p_{00}, p_{01}, \dots, p_{23})^T$ matrix by solving 
-$\mathbf{Ap=0}$ liner system of equations from \eqref{eq:u_i} and 
+$\mathbf{p} = (p_{00}, p_{01}, \dots, p_{23})^\top$ matrix by solving 
+$\mathbf{Ap=0}$ linear system of equations from \eqref{eq:u_i} and 
 \eqref{eq:v_i}.  
-For \textit{minimal solution} of this linear system of equations, we need at 
-least $n \geq 6$ measurement points to solve the problem as the 
-$\mathbf{P_{RGB}}$ matrix has 12 unknowns (11 if scale is ignored).  Note that 
-this accounts for having noise-free measurement which does not hold in 
+For a \textit{minimal solution} of this linear system of equations, we need at 
+least $n \geq 6$ measurement points to solve the problem because the 
+$\mathbf{P_{RGB}}$ matrix has 12 unknowns (11 if the scale is ignored).  Note 
+that 
+this accounts for having noise-free measurements which does not hold in 
 reality. Then, the problem becomes \textit{over-determined}.
 
 \begin{figure}[H]
 %\begin{tabular}{cc}
 \centering
 \subcaptionbox{RGB Images}{\includegraphics[width = 0.8\linewidth]{fig/ref_imgs/checkerboard_rgb.png}} \\
-\subcaptionbox{IR Images}{\includegraphics[width = 0.8\linewidth]{fig/ref_imgs/checkerboard_ir.png}}
+\subcaptionbox{IR Images}{\includegraphics[width = 
+0.8\linewidth]{fig/ref_imgs/checkerboard_ir.png}}
 %\end{tabular}
 \caption[Checkboard Calibration for RGB and IR Camera]{When calibrating RGB 
 and IR camera with a checkerboard, one should produce many measurement points 
 by placing checker board at different orientation and different tilted 
 posture \parencite{Karan2015}.}
-\end{figure}\label{fig:}
+\label{fig:checkerboard_rgb_ir}
+\end{figure}
 
 
-In noisy measurement case, the problem is usually solved with \textit{singular 
+In the noisy measurement case, the problem is usually solved with 
+\textit{singular 
 value decomposition (SVD)} with $n > 6$ measurement points.  This method is 
-called the \textit{Direct Linear Transformation (DLT)}.  Disadvantage of the 
+called the \textit{Direct Linear Transformation (DLT)}. A disadvantage of the 
 DLT methods, it is still sensitive errors since it only considers algebraic 
 errors (that are the residuals of $\mathbf{Ap}$).  Another drawback of DLT is 
 that it cannot compensate non-linearities of projection function due to the 
 radial distortions.  Thus, instead of DLT, the non-linear least squares 
-optimization is usually performed for the better accuracy:
+optimization is usually performed for better accuracy:
 
-In practice, the checkerboard is used to get many good measurement points as 
-we can easily extract edge features from the image as 2D points.  Plus, we 
-also know the corresponding 3D positions in the world coordinate system.
+In practice, the checkerboard (see Figure \ref{fig:checkerboard_rgb_ir}) 
+is 
+used to get many good measurement points as 
+we can easily extract edge features from the image as 2D points.  In addition, 
+we know the corresponding 3D positions in the world coordinate system.
 Also, we have prior knowledge about some of the parameters of intrinsic 
-matrix, e.g., pixels are squared, skew factor is trivial, optical center near 
-the center of the image. All of these can increase our chance for successful 
+matrix, e.g., pixels are squared, the skew factor is trivial, optical center 
+near 
+the center of the image. All of these can increase our chance for a successful 
 convergence when optimizing:
 
 \begin{equation}\label{eq:proj_lsq}
@@ -1115,20 +1222,21 @@ convergence when optimizing:
 
 where $\mathbf{F_{dp}}$ is the projection function along with distortion (see 
 notation \eqref{eq:simplyfied_dist_proj_func}), $\mathbf{u}^{(i)}$ is the 
-measured pixel coordinates of a feature on image plane and 
+measured pixel coordinates of a feature on the image plane and 
 $\mathbf{X}^{(\mathcal{W},i)}$ is the 3D coordinates of a feature in world 
 coordinate 
 system to identify the following parameters:
 
 \begin{itemize}
-  \item $\mathbf{K_{RGB}}$ is the intrinsic matrix for RGB camera, 
-  \item $\kappa_{RGB}$ is the distortion coefficients for RGB camera, 
+  \item $\mathbf{K_{RGB}}$ is the intrinsic matrix for the RGB camera, 
+  \item $\kappa_{RGB}$ is the distortion coefficients for the RGB camera, 
   \item ${\mathbf{T_{RGB}}}_{\mathcal{W}, \mathcal{C}}$ is the corresponding 
   transformation from the world coordinate system to the camera coordinate 
-  system for RGB camera.
+  system for the RGB camera.
 \end{itemize}
 
-As mentioned earlier, we can apply the same optimization process for IR camera 
+As mentioned earlier, we can apply the same optimization process for the IR 
+camera 
 to find $\mathbf{K_{IR}}$ intrinsic matrix, $\kappa_{IR}$ 
 distortion coefficients and ${\mathbf{T_{IR}}}_{\mathcal{W}, 
 	\mathcal{C}}$ corresponding transformation for the IR camera.
@@ -1136,18 +1244,18 @@ distortion coefficients and ${\mathbf{T_{IR}}}_{\mathcal{W},
 
 \subsubsection{Depth Measurement Calibration}
 
-As we discussed in the previous section, disparity data for every pixel on IR 
+As we discussed in the previous section, disparity data for every pixel on the 
+IR 
 image corresponds to the metric depth information.  We can only build the 
 relationship between pixel coordinates of the IR image and disparity value 
-when the IR camera is calibrated and its $\mathbf{u_{IR}}$ pixel measurements 
-are corrected accordingly.
+when the IR camera is calibrated.
 
 \begin{figure}[H]
 	\centering
   \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
   {fig/ref_imgs/checkerboard_depth.png}
   \caption[Checkboard Calibration for Depth]{When calibrating the depth 
-  parameters, checkerboard should be placed at the different distances to the 
+  parameters, checkerboard should be placed at different distances to the 
   camera so that we get enough measurement points, especially for fitting 
   $m,n$ parameters \parencite{Karan2015}.}
   \label{fig:checkerboard_depth}
@@ -1161,7 +1269,8 @@ used:
 \end{equation}
 
 where $M$ is a function that return the disparity value at pixel coordinates 
-$\mathbf{u_{IR}}^{(i)}=[u_{IR}^{(i)},u_{IR}^{(i)}]^T$ of calibrated IR image.  
+$\mathbf{u_{IR}}^{(i)}=(u_{IR}^{(i)},u_{IR}^{(i)})^\top$ of calibrated IR 
+image.  
 Then, our one last step will be to convert disparity measurement to depth for 
 every feature on the checkerboard and minimize the error between measured 
 depth 
@@ -1175,17 +1284,18 @@ $Z^{\mathcal{C}}$:
   \sum_{i=1:n} || Z^{(\mathcal{C}, i)} - F_d(d'^{(i)})  ||^2
 \end{equation}
 
-The calibration processes for cameras are a well-studied problem in computer 
+The calibration processes for cameras are a well-studied problem in the 
+computer 
 vision literature.  Fortunately, there are many open software libraries, such 
 as OpenCV, that offers such implementations.
 
-In summary, this chapter gave both a theoritical and pratical background 
-for a RGB-D camera. The first and most important topic was the pinhole 
+In summary, this chapter gave both a theoretical and practical background 
+for an RGB-D camera. The first and most important topic was the pinhole 
 camera model that simplifies the working principles of a projective camera. 
 As discussed, we lose depth information during projection operation. Hence, 
 we studied the triangulation method that retrieves the metric depth 
 with the Structured-Light IR speckles. Lastly, the calibration techniques of 
-a RGB-D camera were given. In the following chapter, we will dive more 
+an RGB-D camera were given. In the following chapter, we will dive more 
 into the algorithmic part of VO.
 
 \chapter{Fundamentals of Visual Odometry} \label{cp_vo}
@@ -1194,25 +1304,27 @@ into the algorithmic part of VO.
 
 % What is VO?
 As being part of dead-reckoning systems, VO provides the \textit{ego-motion}
-estimation of a robot by exploiting only one or multiple cameras. The working
-principle of VO relies on the idea that if we had two subsequent images
-captured by the camera in 3D space would tell us about a change in the camera's
+estimation of an agent by exploiting only one or multiple cameras. The working
+principle of VO relies on the following idea: if we had two subsequent images
+captured by the camera in a 3D space, it would tell us about a change in the 
+camera's
 pose from one image to another as changing patterns of objects' shapes or
 pixels' intensity occurs during motion.  This change in the pose refers as
-\textit{relative pose} which we want to know in VO problem.
+\textit{relative pose} which we want to know ultimately.
 
 % First ego motion estimation with cam
 % - Moravec1980 - Obstacle Avoidance and Navigatio n in the Real World by a Seeing Robot Rover
 % - Matthies1987a - Error Modeling in Stereo Navigation
 % - Olson2003 - Rover navigation using stereo ego-motion
-First research in estimating camera ego-motion was done in a Ph.D. Thesis 
+First research in estimating camera ego-motion was done in a Ph.D. thesis 
 \parencite{Moravec1980} in the 1980s. He used a sliding camera as a stereo 
 fashion 
-that captures images when the robot stopped after moving for some small 
+that captures images when the robot stops after moving for some small 
 distance. Another early study, from  
 \parencite{Matthies1987a}, 
 formulated the ego-motion estimation for stereo vision. The interest in VO 
-peaked after NASA's Mars expeditions with a rover in 2003. Researchers and 
+peaked after NASA's Mars expeditions with a rover in 2003. Therefore, 
+researchers and 
 engineers in NASA JPL further improved the robustness of their mobile robots 
 with the VO system \parencite{Olson2003}.
 % First VO Paper
@@ -1220,9 +1332,12 @@ with the VO system \parencite{Olson2003}.
 
 In computer vision, Structure from Motion (SFM), that tackles 3D 
 reconstruction of an environment with moving camera, is a well-studied topic. 
-For SFM, it is critical to estimate camera pose accurately to build the 3D 
-environment. VO can be thought of subset problem of SFM. The reason VO parted 
-from SFM is that VO systems started to empower other applications such SLAM 
+For SFM, it is critical to estimate camera pose accurately if one wants to 
+build the 3D 
+environment. On the other hand, VO can be thought of a subset problem of SFM. 
+The reason VO 
+parted 
+from SFM is that VO systems started to empower other applications such as SLAM 
 and are required to operate in real-time, all of which introduces a great 
 challenge.
 
@@ -1236,28 +1351,35 @@ challenge.
 For the first time, Visual Odometry term was introduced in 
 \parencite{Nister2004}. 
 It estimates the transformation matrix by solving the P3P problem between 
-consecutive frames. Nister also demonstrated a VO pipeline that became a 
+consecutive frames. \cite{Nister2004} also demonstrated a VO pipeline that 
+became a 
 defacto system configuration even for today's VO applications. With the help 
-of early robotics applications in NASA and computer vision community, the VO 
+of early robotics applications in NASA and the computer vision community, the 
+VO 
 became a quite popular field. That being said, two of the most influential 
 papers were \parencite{Fraundorfer2012} and \parencite{Scaramuzza2011}. By 
 publishing 
-these tutorials, the authors gave researchers and engineers a design recipe 
+these tutorials, the authors gave researchers and engineers a 
+design recipe 
 for building the VO system for different kind of environment settings since 
-there is no such a system that works under any conditions. One can also find a 
+there is no such a system that works under any conditions. Additionally, one 
+can find a 
 survey of VO types, approaches and challenges in \parencite{Aqel2016}.
 
 Over the years, research on VO is progressively increased and various types of 
 VO systems are proposed. Therefore, VO systems can be categorized based on 
 different phenomena such as camera sensor types and solver algorithms choice. 
-One can utilize monocular or stereo cameras to capture images. The stereo 
+As for the camera choice, One can utilize monocular or stereo cameras to 
+capture images. The stereo 
 cameras are further grouped into two categories; i.e., active and passive 
 cameras. For the active camera, besides color or monochrome camera, there is 
-another camera such IR camera that measures the depth information combination 
+another camera such IR camera that helps to measure the depth information 
+combination 
 with IR laser projector. For the passive camera, the depth is calculated from 
-two color or a monochrome camera. In the case of solver algorithms, one can 
-group VO into two categories; i.e., feature-based and appearance-based.
+two color or a monochrome camera. 
 
+As for the solver algorithms, one can 
+group VO into two categories; i.e., feature-based and appearance-based.
 The feature-based VO algorithms are interested in extracting distinct and 
 repeatable feature points from images and finding correspondences in extracted 
 features either between consecutive frames or keyframes. The challenging part 
@@ -1283,10 +1405,12 @@ Whereas, FOVIS is more accurate and faster than LIBVISO2 according to
 %% - Angladon2017 - An evaluation of real-time RGB-D visual odometry algorithms on mobile devices
 % - Fang2015a - Experimental evaluation of RGB-D visual odometry methods
 FOVIS uses only FAST corner detectors to extract features. For matching 
-features, FOVIS take advantage of keyframes instead of consecutive images to 
-reduce the drift. Instead of using RANSAC for outlier rejection, it constructs 
+features, it takes advantage of keyframes instead of consecutive images to 
+reduce the drift effect. Instead of using RANSAC for outlier rejection, it 
+constructs 
 a graph of consistent feature matches and updates the features that obey the 
-idea that the Euclidean distance between two features at one time should match 
+following idea: the Euclidean distance between two features at one time should 
+match 
 their distance at another time. Finally, several refinement processes are 
 applied during motion estimation to improve accuracy.
 % RGBD VO Implementations
@@ -1308,7 +1432,8 @@ feature-based methods.
 % - Besl1992 - First ICP Paper - A method for registration of 3-D shapes
 % - Rusinkiewicz2001 - ICP - Efficient Variants of the ICP Algorithm
 Then, another type of appearance-based approach, so-called Dense Visual 
-Odometry (DVO) \parencite{Kerl2013a}, was emerged by minimizing the 
+Odometry (DVO) \parencite{Kerl2013a}, was emerged. Fundamentally, it minimizes 
+the 
 photometrical 
 error based on the pixel intensity between consecutive frames. Although the 
 original techniques developed with appearance-based approaches produces less 
@@ -1320,7 +1445,7 @@ and it can outperform feature-based VO in some cases.
 
 In this chapter, we will focus on the standardized feature-based VO pipeline, 
 which will serve us as a foundational basis so that we comprehend the 
-algorithmic errors. Hence, We structured this chapter according to four main 
+algorithmic errors. Hence, we structured this chapter according to four main 
 components of the pipeline: (1) feature extraction, (2) feature matching, (3) 
 outlier rejection and (4) pose estimation. 
 
@@ -1332,27 +1457,30 @@ that describe the image. In this way, we compress the necessary information
 from images so that we can deal with computationally expensive image 
 processing tasks. Points of interest $\mathbf{u}^{(i)}$, which also can be 
 called as 
-\textit{keypoints}, \textit{features} or \textit{landmarks} interchangeably, 
-are particularly valuable because their location in the image can be measured 
-accurately. This is useful for localization-related tasks such as VO. 
+\textit{key points}, \textit{features} or \textit{landmarks} interchangeably, 
+are particularly valuable because their location can be measured 
+accurately on an image. This is useful for localization-related tasks such as 
+VO. 
 
 In feature-based VO, the critical task is to find good features.  What defines 
 good features from others is that they are distinct, repeatable, 
-computationally cheap and invariant to geometrical changes.  One has many 
+computationally cheap and invariant to geometrical changes. In this regard, 
+one has many 
 options to produce such image, but two common methods in VO systems are blobs 
-and corners.  Blobs are image patterns that contain distinct image response 
-comparing to their neighborhood pixels. Blobs take advantage of pixel 
+and corners. Blobs are image patterns that contain distinct image response 
+comparing to their neighborhood pixels. they take advantage of pixel 
 intensity or color to decide whether it has a distinct response or not.  In 
 the VO literature, SIFT \parencite{Lowe2004} and SURF \parencite{Bay2008} are 
 popular 
 choices for detecting blob features.  In contrast, corners are the meeting 
-points where two or many edges intersect.  Corners take advantage of the 
+points where two or many edges intersect.  they exploit the 
 geometrical structure of an image.  FAST \parencite{Rosten2006} and Harris 
 \parencite{Harris1988} are widely used for detecting corners.
 
-Fundamentally, a two-step process is needed to extract good features.  First, 
+Fundamentally, a two-step process is needed to extract good features.  In the 
+first step, 
 you take a response function called \textit{image filter}, shift this filter 
-through the image and save the one that has greater response than your 
+through the image and save the one that has a greater response than your 
 previously defined threshold.  This might be a Gaussian filter for blobs or a 
 corner detector filter for corners. In the second step, you perform non-maxima 
 suppression on the resulting image features to find local minima of the 
@@ -1370,30 +1498,30 @@ urban areas where many lines exist?  However, the rule of thumb is that blobs
 are distinct but slow to compute and corners are fast to compute but less 
 distinct according to \parencite{Fraundorfer2012}. 
 
-%\subsection{Feature Descriptor} \label{sb_sc_feature_descriptor}
-
 After extracting features, one needs to encode the detected image features 
-into a format that we can perform comparisons operations among them. 
-This is done by taking the neighboring pixels around the image features and 
+into a format that we can perform comparison operations among them. 
+This encoding is done by taking the neighboring pixels around the image 
+features and 
 convert into a more compact form. For example, SIFT (1) creates a patch around 
 an 
 image feature, (2) divides this patch into 
 smaller grids, (3) calculate the gradient of each grid and (4) saves them as a 
 histogram.  This procedure makes feature descriptor robust against scale or 
-rotation changes. Then, one can use these descriptors for various comparison 
+rotation changes. Then, one can use these descriptors for comparison 
 operations such as matching or tracking in VO. 
 
 In this thesis, we utilize ORB (Oriented FAST and Rotated BRIEF). ORB offers 
-both the feature extraction and the description capability. The feature 
+both the feature extraction and description capability. The feature 
 extraction is done by FAST corners. Then, the extracted FAST corners are 
 ranked with Harris based on their image derivatives so that one can select 
 top N corners with greater distinction. After extracting features, the 
 feature descriptors are formed with BRIEF to encode necessary pixel 
 information around the extracted feature. To feature descriptors, BRIEF takes 
 a patch $\mathbf{S}$ around the extracted features and performs binary 
-comparison operations between randomly selected pixels in $\mathbf{S}$. 
+comparisons between randomly selected pixels in $\mathbf{S}$. 
 However, BRIEF is not robust against rotations so ORB rotates BRIEF 
-descriptors with the corners' angle. In short, although the overall accuracy 
+descriptors with the calculated corners' angle. In short, although the overall 
+accuracy 
 of SIFT is better than ORB, we choose ORB because it is faster and more than 
 SIFT. For more details on how to extract ORB features, I refer readers to 
 appendices \ref{sb_sc_orb}.
@@ -1401,7 +1529,7 @@ appendices \ref{sb_sc_orb}.
 
 \section{Feature Matching} \label{sc_feature_matching}
 
-Normally, a camera can procedure a video stream consisting of 
+Typically, a camera can procedure a video stream consisting of 
 usually ranging from 30 to 60 frames per second. 
 Now that we know how to extract a feature and form a descriptor, 
 we can start building a relationship across frames with feature descriptors to 
@@ -1450,8 +1578,8 @@ $\mathbf{D}^{(k+1,1:m)}$ descriptors in $k+1^{th}$ image by calculating
 \end{equation}
 
 where $\oplus$ corresponds to an 'exclusive or' logic operation. Then, if the 
-distance is greater than the specified threshold, we call it as a match. 
-Additionally, we perform cross-check validation by ensuring that matches 
+distance is greater than the specified threshold, we call it a match. 
+Additionally, we perform a cross-check validation by ensuring that matches 
 with value $(i,j)$ such that $i^{th}$ descriptor in image $k$ has $j^{th}$ 
 descriptor in image $k+1$ as the best match and vice-versa.
 Note that we still keep the Hamming distance information with their 
@@ -1466,179 +1594,26 @@ detect wrong ones as the optimization algorithm that estimates the camera
 motion is sensitive to even a small number of wrong matches. In technical 
 terms, we call these wrong matches \textit{outliers} (or \textit{false 
 positives}). Hence, we need an algorithm to reject those outliers from 
-\textit{inliers}.  The most common way is to use RANSAC 
-\parencite{Fischler1981b}, 
-which is an abbreviation to Random Sample Consensus. RANSAC is an iterative 
+\textit{inliers} (or \textit{true positives}). 
+
+The most common way is to utilize 
+RANSAC 
+\parencite{Fischler1981b} algorithm, 
+which is an abbreviation to Random Sample Consensus. In short, RANSAC is an 
+iterative 
 algorithm which fits the desired model with the presence of outliers by 
 selecting a subset of dataset randomly and improving parameters of model each 
 iteration. Note that RANSAC works well if at least half of the dataset 
-contains inliers.
+contains inliers. Since outliers plays a big part of modeling a metric 
+uncertainty of features accurately, I refer readers to appendices 
+\ref{sb_sc_ransac_app} 
+where we discuss details of the RANSAC algorithm. 
 
-\begin{figure}[H]
-	\centering
-	\includegraphics[width=0.8\linewidth,natwidth=640,natheight=640]
-	{fig/drawings/ransac.pdf}
-	\caption[Outlier Rejection with RANSAC]
-	{RANSAC identifies the outliers by fitting the parameters of the 
-	homography iteratively.  For simplicity, the figure depicts the outlier 
-	rejection scenario with a simple line fitting example instead of 
-	homography. As seen in the figure, after the number of iteration $N=14$, 
-	RANSAC is able to fit line by excluding the outliers in the optimization 
-	process. Note that we can still have outliers within the RANSAC inlier 
-	threshold which is the area shaded with light blue color.} 
-	\label{fig:outlier_matches}
-\end{figure}
-
-In section \ref{sc_pinhole}, we discussed how to model rotation and 
-translation motion along with the intrinsic matrix. Parameters that we aim to 
-identify are elements of projection matrix in notation 
-\eqref{eq:proj_func_w_square_pix_skew}.  Similarly, the model being fitted in 
-RANSAC case is elements of a \textit{homography matrix}, which transforms a 2D 
-image point to another 2D image point.  Remember that we have feature matches 
-from image pairs. One of the pair is the transformed version of the other 
-pair.  We can model this relationship in the following way:
-
-\begin{equation}\label{eq:homography_full}
-  k
-  \begin{bmatrix}
-    \hat{u}^{(i)} \\ \hat{v}^{(i)} \\1
-  \end{bmatrix}
-  =
-  \mathbf{H}
-  \begin{bmatrix}
-    u^{(i)} \\ v^{(i)} \\1
-  \end{bmatrix}
-  =
-  \begin{bmatrix}
-    h_{00} & h_{01} & h_{02} \\
-    h_{10} & h_{11} & h_{12} \\
-    h_{20} & h_{21} & h_{22}
-    \end{bmatrix}
-  \begin{bmatrix}
-    u^{(i)} \\ v^{(i)} \\1
-    \end{bmatrix}
-  \end{equation}
-
-The goal is to fit parameters of $\mathbf{H}$ with the selected subset of the 
-matching under the condition where majority of selected point matchings are 
-inliers. In this way, we can easily detect outliers by testing whether they 
-fit to model parameters or not. To make notation \eqref{eq:homography_full} 
-more 
-obvious, we form linear system of equations:
-
-\begin{equation}
-\underbrace{
-\begin{bmatrix}
-  u^{(i)} & v^{(i)} & 1 & 0 & 0 & 0 & -\hat{u}^{(i)}u^{(i)} & -\hat{u}^{(i)}v^{(i)} -\hat{u}^{(i)}\\
-  0 & 0 & 0 & u^{(i)} & v^{(i)} & 1 & -\hat{v}^{(i)}u^{(i)} & -\hat{v}^{(i)}v^{(i)} -\hat{v}^{(i)}
-\end{bmatrix}}_{\mathbf{A}}
-\underbrace{
-\begin{bmatrix}
-    h_{00} \\ h_{01} \\ h_{02} \\ h_{10} \\ h_{11} \\ h_{12} \\ h_{20} \\ h_{21} \\ h_{22}
-\end{bmatrix}}_{\mathbf{h}}
-= 
-\begin{bmatrix}
-  0\\0
-\end{bmatrix}
-\end{equation}
-
-The first step of RANSAC is to select a subset that contains a minimum number 
-of matching points to determine the parameters of the model. In homography 
-$\mathbf{H}$ case, we need at least 4 point pairs 
-$(\mathbf{u}=(u^{(i)},v^{(i)}),\mathbf{\hat{u}}=(\hat{u}^{(i)},\hat{v}^{(i)}))$
- to solve this linear system of equation. However, due to the noise, we 
-require more than 4 point pairs, but this makes the problem over-determined. 
-Therefore, we might find an approximated solution by solving the least squares 
-problem: In doing so, we minimize so-called \textit{algebraic distance error}:
-
-\begin{equation}
-\argmin_h || \mathbf{Ah-0}||^2.
-\end{equation}
-
-In the second step, after estimating $\mathbf{h}$ parameters, we test every 
-matchings that are outside the subset which randomly selected at the first 
-step whether they fit to the model with the certain $\mathbf{d}$ threshold we 
-define:
-
-\begin{equation}
-  ||\mathbf{\hat{u}} - \mathbf{H}\mathbf{u}||^2 > d
-\end{equation}
-
-In the third step, we include the points that passed our test procedure in the 
-second step into our subset. In the fourth step, we have another test in which 
-we check whether the number of matching points in our subset is large enough 
-to prove that we include the majority of the inliers. If not, we go back to 
-the first step and repeat the whole process until we fulfill the fourth step. 
-The following listing summarizes the algorithm:
-
-\begin{algorithm}[H]
-  \caption{Rejecting outlier matches with RANSAC}
-	\label{algo:ransac}
-  \textbf{Input} \\
-    \hspace*{\algorithmicindent}S: the smallest number of points\\
-    \hspace*{\algorithmicindent}N: the number of iteration\\
-    \hspace*{\algorithmicindent}d: the threshold used to identify a point which fits the model\\
-    \hspace*{\algorithmicindent}T: the number of nearby points to notify that there is a good fit\\
-  \textbf{Output} \\
-    \hspace*{\algorithmicindent}C: the (consensus) set of inliers \\
-  \begin{algorithmic}[1]
-
-    \Procedure{RANSAC}{S,N,d,T}\\
-      \While{iterations $<$ N}
-      \State select random sample subset of S points
-      \State estimate parameters to fit homography with S
-      \ForEach {points outside S}
-        \State calculate error between estimated point and measured point
-        \If {error $<$ d}
-          \State add point into S
-        \EndIf
-        \If {S $>$ T}
-          \State return C $=$ S
-        \EndIf
-      \EndFor
-      \EndWhile
-    \EndProcedure
-  \end{algorithmic}
-\end{algorithm}
-
-As it is seen in list \ref{algo:ransac}, there are four empiric parameters 
-that we 
-need to define; S,N,d and T. In order to make the algorithm as efficient as 
-possible, these parameters must be chosen carefully. As we discussed, S is the 
-subset of matchings that we randomly select, and initial value should be at 
-least 4 so that we can solve the least squares problem. 
-
-For N, it is insufficient to iterate through every matching points. Thus, we 
-at least select N number of matching points with respect to following 
-condition:
-
-\begin{equation}
-  \text{N} = log(1-p)/log(1-(1-\epsilon)^s)
-\end{equation}
-
-where $p=0.99$ is the probability of covering all inliers, $s$ is the minimum 
-number of iteration that likelihood of choosing a subset with only outliers 
-and $\epsilon$ is the probability that the match is an outlier.
-
-For d, it is chosen empirically if the distribution of outliers is unknown. If 
-it is known, i.e., Gaussian with mean $\mu$ and $\sigma$, the threshold should 
-be $d=5.99\sigma^2$ so that there is a 95\% probability that the point is an 
-inlier.
-
-For T, we might have a case where we reach the expected ratio of inliers; thus 
-we don't have to iterate through N number of times. That means we can 
-terminate it earlier if the following condition is satisfied:
-
-\begin{equation}
-  \text{T} = (1-\epsilon)n
-\end{equation}
-
-where $n$ is the total number of matching points.
 
 It is crucial to note that we may still have outliers after RANSAC.  However, 
 our motion estimation will be greatly improved since the majority of the 
 outliers are removed.  Finally, we will discuss how we can utilize the 
-carefully selected features and its matches to estimate the camera motion.
+carefully selected features and its matches to estimate the camera motion. 
 
 
 \section{Pose Estimation} \label{sc_pose_estimation}
@@ -1649,42 +1624,46 @@ information. The transformation corresponds to relative camera motion between
 two images that are recorded in different poses (see 
 figure-\ref{fig:transformation_ij}). Let's assume; we have consecutive camera 
 poses $\mathbf{x}_{k}^{\mathcal{C}} = [\mathbf{p}_k^{\mathcal{C}}, 
-\mathbf{q}_k^{\mathcal{C}}]^T$ and 
+\mathbf{q}_k^{\mathcal{C}}]^\top$ and 
 $\mathbf{x}_{k+1}^{\mathcal{C}} = 
-[\mathbf{p}_{k+1}^{\mathcal{C}}, \mathbf{q}_{k+1}^{\mathcal{C}}]^T$ where 
+[\mathbf{p}_{k+1}^{\mathcal{C}}, \mathbf{q}_{k+1}^{\mathcal{C}}]^\top$ in 
+$SE(3)$ 
+where 
 $\mathbf{p}^{\mathcal{C}} = [p_x^{\mathcal{C}}, 
-p_y^{\mathcal{C}}, p_z^{\mathcal{C}}]^T$ 
-is the position of the camera in $\R^3$ with respect to the camera coordinate 
-system  and 
+p_y^{\mathcal{C}}, p_z^{\mathcal{C}}]^\top$ 
+is the position of the camera in $\R^3$ and 
 $\mathbf{q}^{\mathcal{C}} = [q_w^{\mathcal{C}}, q_x^{\mathcal{C}}, 
 q_y^{\mathcal{C}}, 
-q_z^{\mathcal{C}}]^T$ is the orientation of the camera in quaternion form in 
-$SO(3)$ with respect to the camera coordinate system.  
-Notice that, in camera model chapter \ref{cp_cam_models}, we use rotation 
+q_z^{\mathcal{C}}]^\top$ is the orientation of the camera in quaternion 
+form in 
+$SO(3)$. Both the position and orientation is measured with respect to the 
+camera coordinate system as well.  
+Notice that, in camera model Chapter \ref{cp_cam_models}, we use rotation 
 matrix to represent orientations, which made it convenient to combine 
 intrinsic matrix and extrinsic matrix into a single projection matrix (see 
-notation \eqref{eq:simplyfied_proj_func}) so that we optimize for parameters 
-of 
-the single matrix. On the other hand, when estimating relative motion, we use 
-quaternions to represent orientations, which is less intuitive way but has 
-certain advantage over rotation matrix such as requiring less storage.  As a 
-result, we can represent the transformation $\mathbf{x}_{k,k+1}^{\mathcal{C}} 
+notation \eqref{eq:simplyfied_proj_func}). On the other hand, when estimating 
+relative motion, we use 
+quaternions to represent orientations, which is less intuitive but has 
+certain advantages over rotation matrix such as requiring less storage.  
+
+In addition, we can represent the transformation 
+$\mathbf{x}_{k,k+1}^{\mathcal{C}} 
 = 
 \mathbf{T}_{k,k+1}^{\mathcal{C}}= 
-[\mathbf{t}_{k,k+1}^{\mathcal{C}},\mathbf{q}_{k,k+1}^{\mathcal{C}}]^T$ between 
+[\mathbf{t}_{k,k+1}^{\mathcal{C}},\mathbf{q}_{k,k+1}^{\mathcal{C}}]^\top$ 
+between 
 two camera poses 
 $(\mathbf{x}_k^{\mathcal{C}},\mathbf{x}_{k+1}^{\mathcal{C}})$ with the 
-rotation $\mathbf{q}_{k,k+1}^{\mathcal{C}}$ in 
-$SO(3)$  and the translation $\mathbf{t}_{k,k+1}^{\mathcal{C}}$ in $\R^3$. 
+translation $\mathbf{t}_{k,k+1}^{\mathcal{C}}$ in $\R^3$ and  
+rotation $\mathbf{q}_{k,k+1}^{\mathcal{C}}$ in $SO(3)$. 
 That being said, 
 one can formulate the transformation $\mathbf{T}_{k,k+1}^{\mathcal{C}}$ 
 between two camera 
 pose if the initial pose $\mathbf{x}_{0}^{\mathcal{C}}$ is known. 
 For our convenience, we will drop $\mathcal{C}$ superscript by assuming that 
 all transformations are executed in the camera coordinate system. 
-Then, let's 
-first find the 
-camera position:
+Let's first find the next camera position considering the position at $k^{th}$ 
+is known:
 
 \begin{equation}\label{eq:translation_cam}
   \mathbf{p}_{k+1} = 
@@ -1694,7 +1673,8 @@ camera position:
 
 where $\mathbf{q}_{k,k+1} \otimes \mathbf{p}_k \otimes \mathbf{q}_{k,k+1}^*$ 
 is the \textit{hamilton product} that rotates the camera position at the 
-$k^{th}$ pose and $\mathbf{t}_{k,k+1}$ is the simple vector addition that 
+$k^{th}$ pose initially and $\mathbf{t}_{k,k+1}$ is the simple vector addition 
+that 
 translates the camera position. Next, the camera orientation can be found as 
 follows:
 
@@ -1704,7 +1684,8 @@ follows:
 \end{equation}
 
 where $\mathbf{q}_{k,k+1} \otimes \mathbf{q}_{k}$ is the product of two 
-quaternions that the former is the rotation and that the latter is the 
+quaternions that the former is the rotation of the camera movement and that 
+the latter is the 
 orientation of the camera at the $k^{th}$ pose.
 
 \begin{figure}[H]
@@ -1713,7 +1694,8 @@ orientation of the camera at the $k^{th}$ pose.
   {fig/drawings/rel_pose.pdf}
   \caption[Trajectory From Relative Pose]
   {VO estimates the ego-motion of the camera by relative poses estimated from  
-  image pairs. Thus, it assumes that the initial pose $p_0$ of the camera is 
+  image pairs. Thus, it assumes that the initial pose $\mathbf{x}_0$ of the 
+  camera is 
   known. Transformation $T_{0,1}$ from one image to another corresponds to the 
   camera movement from one position to another. As long as VO is able to 
   detect a sufficient number of features, it keeps estimating relative 
@@ -1746,9 +1728,10 @@ used to calculate $n^{th}$ camera pose that is relative to the initial pose:
 
 To find transformation, we take advantage of image features as they can inform 
 us how the camera moves if we detect them across multiple frames.  All the 
-aforementioned step such as feature extraction and feature matchings are 
-performed so that we can compute relative motion.  Similar to projection 
-matrix \eqref{eq:proj_lsq} in camera calibration, we utilize the least squares 
+aforementioned steps such as feature extraction and feature matchings are 
+performed for the purpose of computing relative motion. Similar to the 
+projection 
+matrix in camera calibration, we utilize the least squares 
 method for estimating an approximated transformation information due to the 
 noise. 
 
@@ -1762,11 +1745,13 @@ information for features. Note that there are methods that retrieve relative
 scale information using only 2D image features and its epipolar constraints 
 with monocular cameras, but we are interested in having metric depth 
 information rather than relative scale in this thesis. Therefore, we have two 
-common choices regarding camera types: Stereo Camera or RGB-D Camera. In our 
-experiments, we experimented on RGB-D Camera to retrieve the depth information.
+common choices regarding camera types: stereo cameras or RGB-D cameras. In our 
+experiments, we experimented on an RGB-D camera to retrieve the depth 
+information.
 
 At this point, one generally has two ways to compute relative camera poses.  
-and the reason we have different kinds of way to compute transformation arises 
+The reason we have different two different methods to compute transformation 
+arises 
 from the cost function we define for the least squares problem. In the end, 
 all we wish to find a good model for our optimization problem so that we 
 settle on the best possible local minimum.  The design choice for cost 
@@ -1782,23 +1767,22 @@ problem:
 
 
 The 2D term refers to 2D image features. Whereas, the 3D term refers to 3D 
-point features that composed of back-projection of 2D features and depth 
-information.  Note that this thesis does not engage with 2D-to-2D 
+point features.  Note that this thesis does not engage with 2D-to-2D 
 correspondences method since it is used in monocular camera; thus it will not 
-be discussed here. On the other hand, we will discuss and compare 3D-to-2D 
-correspondences and 3D-to-3D correspondences.  Although 3D-to-2D 
-correspondences outperform 3D-to-3D correspondences in VO, we show the 
+be discussed here. Although 3D-to-2D 
+correspondences outperform 3D-to-3D correspondences in VO, we show that the 
 accuracy of 3D-to-3D correspondences can be significantly improved if the 
 uncertainty of the 3D point features is modeled properly and used in the 
 optimization process.  On the plus side, this technique allows us to propagate 
-the uncertainty of the 3D feature points to get the uncertainty of estimated 
-pose.  With being said, let's explain both methods.
+the uncertainty of the 3D feature points to get the uncertainty of the 
+estimated 
+pose. Now, let's explain both methods.
 
 
 \subsubsection{3D-to-2D Correspondences}\label{sb_sc_3d_to_2d}
 
 Remember that, after feature matching step for the consecutive image frames, 
-we have only2D-to-2D correspondences information and the transformation which 
+we have only 2D-to-2D correspondences information and the transformation which 
 we wish to compute is in $\R^3$. Therefore, we require transformation 
 involving in 3D point features. That being said, we can estimate 
 transformation 3D-to-2D Correspondences in four steps:
@@ -1806,7 +1790,7 @@ transformation 3D-to-2D Correspondences in four steps:
 \begin{enumerate}
   \item Back-project 2D image features from $k+1^{th}$ frame to form 3D point features,
   \item Back-transform 3D point features from $k+1^{th}$ frame towards $k^{th}$ frame 
-    with transformation matrix,
+    with the transformation matrix,
   \item Reproject the back-transformed 3D point features onto the $k^{th}$ image plane, 
   \item Minimize 2D Euclidean distance error between reprojected and measured 2D image features.
 \end{enumerate}
@@ -1823,7 +1807,8 @@ transformation 3D-to-2D Correspondences in four steps:
   feature as $\mathbf{\hat{u}}^{(k,i)}$ on image plane at $k^{th}$ frame. 
   Afterward, one will get Euclidean error distance $d_k \in \R^2$ between the 
   reprojected pixel and the measured pixel. This behavior applies for 
-  reprojecting image from $k^{th}$ to $k+1^{th}$ frame to calculate $d_{k+1}$. 
+  reprojection of image features from $k^{th}$ to $k+1^{th}$ frame to 
+  calculate $d_{k+1}$. 
   For the sake of efficiency, most VO algorithms assume that measurement 
   errors occur in only one image pair and only uses $d_k$ to minimize the 
   error, but not both $d_k+d_{k+1}$. Note that 
@@ -1840,14 +1825,15 @@ the projections of this exact feature point as a 2D image feature,
 $\mathbf{u}^{(k,i)}$ and $\mathbf{u}^{(k+1,i)}$ on subsequent 
 camera poses $k^{th}$ and $k+1^{th}$ respectively. What we also know is that 
 we can back-project measured 2D image features as 3D point features using 
-projection matrix (see notation \eqref{eq:simplyfied_proj_func_1}) and depth 
+the projection matrix (see notation \eqref{eq:simplyfied_proj_func_1}) and 
+depth 
 information. Let's write again projection function that converts 3D point 
 features to 2D image features: $\mathbf{u}^{(k,i)} = 
 \mathbf{K}\mathbf{X}^{(k,i)}$ and $\mathbf{u}^{(k+1,i)} = 
 \mathbf{K}\mathbf{X}^{(k+1,i)}$.
 One can also back-project 2D image features to 3D point features: 
-$\mathbf{X}^{(k,i)} = \mathbf{K}^T\mathbf{u}^{(k,i)}$ and 
-$\mathbf{X}^{(k+1,i)} = \mathbf{K}^T\mathbf{u}^{(k+1,i)}$. 
+$\mathbf{X}^{(k,i)} = \mathbf{K}^\top \mathbf{u}^{(k,i)}$ and 
+$\mathbf{X}^{(k+1,i)} = \mathbf{K}^\top \mathbf{u}^{(k+1,i)}$. 
 After back-projecting 2D image features to 3D point features, 
 we get two 
 $(\mathbf{X}^{(k,i)},\mathbf{X}^{(k+1,i)})$ measurements with respect to the 
@@ -1859,7 +1845,7 @@ Now, we can formulate the
 previously discussed four steps of 3D-to-2D correspondences as follows:
 
 \begin{enumerate}
-  \item $\mathbf{X}^{(k+1,i)} = \mathbf{K}^T\mathbf{u}^{(k+1,i)}$
+  \item $\mathbf{X}^{(k+1,i)} = \mathbf{K}^\top \mathbf{u}^{(k+1,i)}$
   \item $\mathbf{\hat{X}}^{(k,i)} = f(\mathbf{t}_{k,k+1}, \mathbf{q}_{k,k+1}, 
   \mathbf{X}^{(k+1,i)}) = 
     \mathbf{q}_{k,k+1} \otimes \mathbf{X}^{(k+1,i)} \otimes 
@@ -1884,7 +1870,7 @@ we form the problem as an optimization problem in the following form:
 \subsubsection{3D-to-3D Correspondences}\label{sb_sc_3d_to_3d}
 
 Another way of modeling the cost function is to utilize only 3D point features 
-correspondences, and one can estimate transformation with 3D-to-3D 
+correspondences. One can estimate transformation with 3D-to-3D 
 correspondences in three steps:
 
 \begin{enumerate}
@@ -1903,15 +1889,15 @@ correspondences in three steps:
 	\caption[3D-to-3D Correspondences]
 	{3D-to-3D correspondences method calculates the Euclidean error distance 
 	in 
-	3D space. For example, all image features 
-	$\mathbf{u}^{(k,i)},\mathbf{u}^{(k+1,i)}$ from both frames are 
+	3D space. For example, all image features are 
 	back-projected to get 3D point features 
 	$\mathbf{X}^{(k,i)},\mathbf{X}^{(k+1,i)}$. Then, $\mathbf{X}^{(k+1,i)}$ is 
 	rotated and translated with the transformation information 
 	$\mathbf{T}_{k,k+1}$ to align the same 3D point feature 
-	$\mathbf{\hat{X}}^{(k,i)}$ with respect to $k^{th}$ camera's centre.In 
+	$\mathbf{\hat{X}}^{(k,i)}$ with respect to $k^{th}$ camera's center. In 
 	this 
-	way, one can calculate the Euclidean distance error $d_k \in \R^3$.Reverse 
+	way, one can calculate the Euclidean distance error $d_k \in \R^3$. 
+	The reverse 
 	behavior applies on moving features from $k^{th}$ to $k+1^{th}$ frame to 
 	calculate $d_{k+1}$ as well.}
 	\label{fig:min_euclidean_error}
@@ -1927,8 +1913,8 @@ Therefore, we need to back-project both image features. With that in mind, we
 can formulate the three steps of 3D-to-3D correspondences as follows:
 
 \begin{enumerate}
-  \item $\mathbf{X}^{(k+1,i)} = \mathbf{K}^T\mathbf{u}^{(k+1,i)}$ and 
-    $\mathbf{X}^{(k,i)} = \mathbf{K}^T\mathbf{u}^{(k,i)}$ 
+  \item $\mathbf{X}^{(k+1,i)} = \mathbf{K}^\top \mathbf{u}^{(k+1,i)}$ and 
+    $\mathbf{X}^{(k,i)} = \mathbf{K}^\top \mathbf{u}^{(k,i)}$ 
   \item $\mathbf{\hat{X}}^{(k,i)} = f(\mathbf{t}_{k,k+1}, \mathbf{q}_{k,k+1}, 
   \mathbf{X}^{(k+1,i)}) = 
     \mathbf{q}_{k,k+1} \otimes \mathbf{X}^{(k+1,i)} \otimes 
@@ -1955,7 +1941,7 @@ optimization problem.
 
 To sum up, this chapter described the necessary computer vision
 algorithms behind VO. As explained, VO requires a processing pipeline 
-where series of mathematical operations are applied in order to get 
+where a series of mathematical operations are applied in order to get 
 the relative pose estimations. In this regard, we explained important 
 components of VO such as feature extraction, feature matching, outlier rejection 
 and pose estimation. The important point is to remember that 
@@ -1973,7 +1959,7 @@ if the operating environment lacks a sufficient number of feature points.
 An \textit{error-aware} Visual Odometry estimates an ego-motion of a camera
 along with the uncertainty of its estimations.  Remember that the primary goal
 of a sensor fusion application is to combine multiple sensors to get a better
-estimation of its pose.  In this case, we need metric uncertainty
+estimation of its pose.  In this case, we need a metric uncertainty
 representation for each sensor.  That is why we require a covariance matrix for
 every pose estimation from all sensors so that we can compensate sensors'
 biases dynamically throughout the trajectory.  Ideally, a good error-aware VO
@@ -2055,7 +2041,7 @@ uncertainty models, but they assume half pixel Gaussian noise for all features.
 Naturally, this increases their localization accuracy. However, it still
 unclear how one can propagate covariance of the detected features to the
 covariance of the estimated pose in the presence of outliers of matched
-features.  The only exception that attempts to model the pixel uncertainty of
+features.  The exception that attempts to model the pixel uncertainty of
 features is \parencite{Belter2018a}.  They implemented a so-called reserve-SLAM
 simulation tool to identify the pixel noise caused by feature descriptor.  They
 too did not propagate feature covariance to get pose covariance.  They only
@@ -2081,7 +2067,7 @@ algorithm based on an RGB-D camera.  It utilizes 3D-to-3D correspondences
 method along with the uncertainty of 3D point features to estimate relative
 camera poses. Most importantly, it exploits the metric covariance of 3D point
 features to propagate the pose covariance.  An overview of the CoVO pipeline is
-illustrated in figure \ref{fig:covo_pipeline}.
+illustrated in Figure \ref{fig:covo_pipeline}.
 
 \begin{figure}[H] \centering
 \includegraphics[width=0.9\linewidth,natwidth=640,natheight=640]
@@ -2102,7 +2088,7 @@ this section, we will explain the essential steps that we take to build CoVO:
 
 
 \begin{enumerate} 
-  \item \textbf{Extracting Feature:} We choose ORB due its efficiency and
+  \item \textbf{Extracting Feature:} We choose ORB due to its efficiency and
     repeatability. Before extracting ORB features, we convert RGB images to
     grayscale. Then, we detect corners with FAST-9 that takes a patch of
     circular radius as 9 pixels around the corner. Next, the detected corners
@@ -2113,11 +2099,13 @@ this section, we will explain the essential steps that we take to build CoVO:
     \parencite{Rublee2011a}.  
   \item \textbf{Matching Features:} After extracting ORB features from
     consecutive images, we matched them with Brute-Force algorithm that uses
-    Hamming window for the comparison. Before calling two features as a match,
+    a Hamming window for the comparison. Before calling two features as a 
+    match,
     the cross-check is performed to make sure both features are identified as a
     match in their own comparison set.  In the end, a filtering operation is
-    applied on the matches by removing worst 10\% matches based on the distance
-    calculated by Hamming window.
+    applied on the matches by removing the worst 10\% matches based on the 
+    distance
+    calculated by the Hamming window.
   \item \textbf{Rejecting Outliers:} With the remaining matches, we apply
     RANSAC to reject outliers. Note that we choose RANSAC threshold to be 10
     pixels. Also, remember that we will have pseudo inliers even after applying
@@ -2128,7 +2116,7 @@ this section, we will explain the essential steps that we take to build CoVO:
     combine inlier 2D features with their corresponding depth information. It
     is critical to note that Kinect has invalid depth measurement which is
     measured as 0 disparity level for certain regions of the object surface.
-    Thus, we remove 2D features having invalid depth value from match set.
+    Thus, we remove 2D features having invalid depth value from the match set.
     Plus, we remove 2D features that have a depth value greater than $5m$ since
     it is Kinect's accurate depth distance range. 
   \item \textbf{Preparing Covariance Matrix of 3D Feature Points:} For every
@@ -2140,7 +2128,8 @@ this section, we will explain the essential steps that we take to build CoVO:
     estimating pose covariance.  
   \item \textbf{Minimizing 3D-to-3D Correspondences With Weights:} To able to
     take advantages of feature covariances of both consecutive images, we
-    expand the residuals by defining both back- and forward transformation
+    expand the residuals by defining both back-transformation and 
+    forward-transformation
     function (see notation \eqref{eq:residuals_w_back_and_forward}).  It 
     improves
     the optimization process because we take measurement error in both images.
@@ -2154,7 +2143,8 @@ this section, we will explain the essential steps that we take to build CoVO:
     completing least squares optimization process, we calculate the covariance
     $\mathbf{Q_{tq}}$ of the estimated relative camera pose by propagating it
     from the feature covariances $\mathbf{Q_{xyz}}$ with the Jacobian of
-    residuals function $\mathbf{J'}(\mathbf{x^*})$ at the optimal solution (see
+    residuals function $\mathbf{J_{tqm}}(\mathbf{x^*})$ at the optimal 
+    solution (see
     notation \eqref{eq:cov_tq_prop}).  Due to the non-linearity of the 
     projection
     function, an approximated version of the error propagation law produces
@@ -2164,8 +2154,8 @@ this section, we will explain the essential steps that we take to build CoVO:
     \ref{sc_cov_eval}.  
 \end{enumerate}
 
-Note that all of the parameters mentioned above of CoVO are given as a list in
-appendices \ref{sc_covo_tuning_param}.  In the end, building such a VO system
+Note that all of the parameters mentioned above of CoVO are given in Table 
+\ref{tb:covo_param}.  In the end, building such a VO system
 require many tuning parameters and many VO algorithms do not emphasize the
 effect of this phenomena.  The fact that we aim to develop an error-aware VO
 that produces metric pose covariances means that each parameter must be
@@ -2179,7 +2169,8 @@ The main reason why conventional VO applications do not provide any uncertainty
 information (namely covariance matrix) for its pose estimation is that it is
 hard to model error characteristics of the whole VO pipeline.  This is because
 we perform many preprocessing, each of which eventually introduces different
-types of error. What we aim is to define potential error source of the VO and
+types of error. What we aim is to define the potential error source of the VO 
+and
 to model them. Thus, we will investigate the noise characteristic of sensors in
 RGB-D camera in this section. In particular, we examine Kinect, having three
 sensors: RGB camera, IR camera, and IR laser projector.  In our experiments and
@@ -2207,14 +2198,15 @@ interest point location uncertainty and outliers in feature matching.
 
 
 To understand these two types of errors, we need to remind ourselves how we
-detect and describe features section \ref{sc_feature_extraction} in the first
-place.  In ORB, FAST corner filter is performed by selecting pixel coordinates
+detect and describe features in the first
+place (see Section \ref{sc_feature_extraction}).  In ORB, FAST corner filter 
+is performed by selecting pixel coordinates
 of an interest point and comparing it with its surrounding pixels. In an ideal
 scenario where we match features in consecutive image perfectly, we would
 assume that the error will be a half pixel due to the quantization process of
 the RGB camera.  The ideal scenario breaks once we have outliers. 
 In other words, if we had perfect matches, all the reprojected features would
-be situated closely to their matches and the error distance between matches
+be situated close to their matches and the error distance between matches
 would be a half pixel. However, we still have outliers even after applying
 RANSAC. Thus, the error distance for those outliers would be greater that one
 pixel.  In this thesis, we call those outliers that appear after RANSAC
@@ -2228,15 +2220,15 @@ we investigate the pixel error caused by pseudo inliers in section
 model is inspired from \parencite{Sola2007a} and we expand a confidence 
 ellipse 
 to a
-confidence ellipsoid by adding depth uncertainty since we use a RGB-D camera.}
+confidence ellipsoid by adding depth uncertainty since we use an RGB-D camera.}
 \label{fig:conic_ray_3d_error_model} \end{figure}
 
 Having all these in mind, let's model uncertainty related to features.  First
 of all, remember that 3D point features in the camera coordinate system are
 projected to 2D points on an image plane with the pinhole model from section
 \ref{sc_pinhole}.  When the aperture of a digital camera opens, it captures
-incoming light rays using its light detector sensor (typically CMOS image
-sensors) and turns them into electrical signals, which is an over-simplified
+incoming light rays using its light detector sensor and turns them into 
+electrical signals, which is an over-simplified
 definition of a camera. With the help of the pinhole model, one can build a
 model for light ray coming from a 3D point.  Because we have the errors as
 mentioned above, we can't measure the exact location of the 3D point feature.
@@ -2250,7 +2242,7 @@ multi-dimensional Gaussian distributions in 3D space:
 
 \begin{equation} \mathbf{g}_{xyz}(\mathbf{X}^{\mathcal{C}}) =
 \frac{1}{\sqrt{(2\pi)^3|\mathbf{Q_{xyz}}|}} \exp(-\frac{1}{2}
-(\mathbf{X}^{\mathcal{C}}-\mathbf{m_X}^{\mathcal{C}})^\intercal
+(\mathbf{X}^{\mathcal{C}}-\mathbf{m_X}^{\mathcal{C}})^\top
 \mathbf{Q_{xyz}}^{-1} (\mathbf{X}^{\mathcal{C}}-\mathbf{m_X}^{\mathcal{C}}))
 \end{equation} \label{eq:cov_ellipse}
 
@@ -2285,7 +2277,7 @@ with another multivariate Gaussian distribution formed by pixel uncertainties.
 
 \begin{equation} \mathbf{g}_{uvz}(\mathbf{X}^{\mathcal{D}}) =
 \frac{1}{\sqrt{(2\pi)^3|\mathbf{Q_{uvz}}|}} \exp(-\frac{1}{2}
-(\mathbf{X}^{\mathcal{D}}-\mathbf{m_u}^{\mathcal{D}})^\intercal
+(\mathbf{X}^{\mathcal{D}}-\mathbf{m_u}^{\mathcal{D}})^\top
 \mathbf{Q_{uvz}}^{-1} (\mathbf{X}^{\mathcal{D}}-\mathbf{m_u}^{\mathcal{D}}))
 \end{equation} \label{eq:cov_ellipse}
 
@@ -2309,7 +2301,7 @@ back-projection function:
 
 Then, we propagate the pixel covariances as follows:
 
-\begin{equation} \mathbf{Q_{xyz}} = \mathbf{J_{bp}}(\mathbf{u})^T
+\begin{equation} \mathbf{Q_{xyz}} = \mathbf{J_{bp}}(\mathbf{u})^\top
 \mathbf{Q_{uvz}} \mathbf{J_{bp}}(\mathbf{u}) \end{equation}
 
 
@@ -2320,7 +2312,7 @@ the next section.
 \subsection{Depth Related Uncertainty} \label{sb_sc_depth_uncertainty}
 
 Modeling noise in depth measurements is more complicated than an RGB camera.
-In section \ref{sc_depth_model}, remember that we explained how structured IR
+In Section \ref{sc_depth_model}, remember that we explained how structured IR
 light speckles are projected onto an object so that IR camera can capture its
 deformed patterns.  During this process, many things can go wrong. For example,
 (1) specific ambient background would make Kinect suffer from over-saturated
@@ -2328,7 +2320,7 @@ disparity image, (2) having multiple Kinect in the same environment can lead to
 interference issue, (3) multi-path propagation of the light might change the
 expected illumination, or (4) measuring in dynamic scene might result in
 improper IR light patterns. All of these non-deterministic events makes it
-harder to model the uncertainty. However, we assume that operating conditions
+harder to model uncertainty. However, we assume that operating conditions
 and environment are chosen carefully to avoid these events as much as possible.
 What we aim to model in this section is mostly systematic errors in Kinect. In
 this regard, we rely on the experiments conducted by \parencite{Nguyen2012a}. 
@@ -2349,10 +2341,10 @@ work.
 {fig/ref_imgs/kinect_noise_model.png} \caption[Kinect's Depth Noise
 Model]{According to \parencite{Nguyen2012a}, axial noise corresponds to noise 
 along
-the $z$ axis in the camera coordinate system. In other words, it is the depth
+the z-axis in the camera coordinate system. In other words, it is the depth
 uncertainty model we search for our conic ray model.  On the other hand,
 lateral noise corresponds to directions perpendicular to the $z$ axis. This
-noise creates an uncertainty in the pixel coordinates of the disparity image.
+noise creates uncertainty in the pixel coordinates of the disparity image.
 The figure is taken from \parencite{Nguyen2012a}.} 
 \label{fig:kinect_noise_model}
 \end{figure}
@@ -2361,18 +2353,19 @@ To detect the lateral and axial noise, they built an experimental setup with a
 Kinect that projects its IR speckle patterns onto a planar surface.  Then, they
 collected depth measurements at a different distance to the planar surface
 positioning at different angles.  For calculating the axial noise, they first
-removed the lateral noise cropping edges. Then, remaining depth region was
+removed the lateral noise cropping edges. Then, the remaining depth region was
 fitted to a plane that has the minimum error to the ground truth. Finally, they
-calculated distance difference between measured depth and ground truth.
+calculated the distance difference between measured depth and ground truth.
 Whereas, the lateral noise was simply calculated by taking pixel difference
 between fitted straight edge passing through the center of distribution and
 measured (zigzag-like shape) pixels. The illustration of this experiment is
-given in figure \ref{fig:kinect_noise_experiment}.
+given in Figure \ref{fig:kinect_noise_experiment}.
 
 \begin{figure}[H] \centering
 \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
 {fig/ref_imgs/kinect_noise_experiment.png} \caption[Kinect's Depth Noise
-Experiment]{In order to measure the depth noise, an object that has flat white
+Experiment]{In order to measure the depth noise, an object that has a flat 
+white
 surface was placed at different known distances to Kinect. During the
 experiments, they also discovered that depth noise changes when the angle of
 the object changes with respect to Kinect's focus point. Thus, they included
@@ -2405,7 +2398,7 @@ parameter to represent the behavior measurement error beyond 60 degrees:
 \theta \geq \ang{60} \end{equation} \label{eq:axial_noise_w_hyperbolic}
 
 For lateral noise, its noise was almost constant with respect to distance along
-the z-axis and had the similar hyperbolic effect after 60 degrees of angle.
+the z-axis and had a similar hyperbolic effect after 60 degrees of angle.
 Hence, they defined lateral noise with the following equations:
 
 \begin{equation} \sigma_L(\theta) = 0.8 + 0.035 \cdot \theta/(\pi/2-\theta)
@@ -2431,7 +2424,7 @@ coordinates with the pixel coordinates, namely \textit{registration}.
 Therefore, one can avoid this registration error by applying a smoothing filter
 on depth images.  According to their experiments, the lateral noise of the
 Kinect is around one pixel.  Thus, a 3x3 smoothing filter can be used on
-extracted features or edges in disparity image.
+extracted features or edges in the disparity image.
 
 In short, the probabilistic model, we built with the conic ray, and the
 confidence ellipsoids, based on normal distribution can now allow us to
@@ -2448,8 +2441,9 @@ a covariance matrix for the estimated relative pose.
 \section{Pose Estimation with Uncertainties} \label{sc_rel_pose_est_w_uncertainty}
 
 Before diving into the formulation, it is a good idea to refresh our knowledge
-about how we estimated relative pose of a camera using 3D-to-3D correspondences
-in section \ref{sb_sc_3d_to_3d}.  Remember that after pre-processing extracted
+about how we estimated the relative pose of a camera using 3D-to-3D 
+correspondences
+in Section \ref{sb_sc_3d_to_3d}.  Remember that after pre-processing extracted
 features, we would have $m$ number of measured feature matches in camera
 coordinate system with respect to $k^{th}$ and $k+1^{th}$ consecutive camera
 frames and we stored them as $(\mathbf{X}^{(k,1:m)},
@@ -2520,7 +2514,8 @@ distance. This is the method we utilize in our VO.} \label{fig:min_mahalanobis}
 \end{figure}
 
 With being said, we can now extend the residuals function of our optimization
-problem by adding forward-transform.  Let's define the auxilary function in the
+problem by adding forward-transform.  Let's define the auxiliary function in 
+the
 following form:
 
 \begin{equation} \mathbf{r_{f}}^{(i)}(\mathbf{x}_{k,k+1}) =
@@ -2549,7 +2544,7 @@ into the optimization process. This technique is taken from
 images}.
 Furthermore, we expand the technique, whose original version is to minimize the
 Euclidean error distance, to minimize \textit{Mahalanobis} error distance by
-including feature covariances (see figure \ref{fig:min_mahalanobis}).
+including feature covariances (see Figure \ref{fig:min_mahalanobis}).
 
 Let's reformulate the residuals functions in the form of a matrix to simplify
 the notation for the optimization problem.  Hence, a single back-transformation
@@ -2581,13 +2576,14 @@ problem for convenience:
 \begin{equation} \begin{aligned} \mathbf{x}^* = \argmin_{\mathbf{x}}
 F(\mathbf{x}) & = \argmin_{\mathbf{x}} \frac{1}{2}
 ||\mathbf{r}(\mathbf{x})||^2_{\mathbf{Q_{xyz}}} \\ & = \frac{1}{2}
-\mathbf{r}(\mathbf{x})^T \mathbf{Q_{xyz}}^{-1} \mathbf{r}(\mathbf{x}) \\ & =
-\frac{1}{2} \mathbf{r}(\mathbf{x})^T \mathbf{\Omega}_{\mathbf{xyz}}
+\mathbf{r}(\mathbf{x})^\top \mathbf{Q_{xyz}}^{-1} \mathbf{r}(\mathbf{x}) 
+\\ & =
+\frac{1}{2} \mathbf{r}(\mathbf{x})^\top \mathbf{\Omega}_{\mathbf{xyz}}
 \mathbf{r}(\mathbf{x}) \end{aligned}
 \end{equation}\label{eq:residuals_objective}
 
 where $\mathbf{\Omega_{xyz} = Q^{-1}_{xyz}}$ is the \textit{information
-matrix}, repsesent a relationship between covariance matrices and weighting
+matrix}, represent a relationship between covariance matrices and weighting
 process.  That is, the smaller covariance (smaller the uncertainty in other
 words) for features, the greater weight will have in the optimization.  In this
 respect, the LM will attempt to converge to an optimal solution in which the
@@ -2622,7 +2618,7 @@ we are now able to estimate a covariance matrix of the estimated pose since we
 use the conic ray to model feature uncertainties.  With the help of each pose
 covariance, we can represent the possible accumulated covariances along the
 trajectory with $3\sigma$ ellipsoids if the relative poses are concatenated as
-seen in figure \ref{fig:pose_uncertainty}. 
+seen in Figure \ref{fig:pose_uncertainty}. 
 
 The fact that we use a metric uncertainty model to represent 3D point features'
 noise enables us to estimate a metric pose uncertainty. This property will
@@ -2644,22 +2640,23 @@ relative pose estimations. In the absence of absolute sensors that measure the
 priori-known landmarks, the pose drift will grow forever.}
 \label{fig:pose_uncertainty} \end{figure}
 
-Calculating covarinace matrix for the estimated state vector parameters is
+Calculating a covariance matrix for the estimated state vector parameters is
 fairly straightforward if the optimization for the relative camera pose is
 performed as described in the previous section. We can simply utilize the
-\textit{error propagation law}, which I refer readers for to appendices
+\textit{error propagation law}, which I refer readers to appendices
 \ref{sc_error_prop_law} for further details of the theory.  In this case, we
 require the Jacobian matrix at the optimal solution and corresponding
 covariance  matrices for each point feature. Then, we can propagate them to get
 the covariance for the estimated parameters by applying the following equation:
 
 \begin{equation}\label{eq:cov_tq_prop} \mathbf{Q}_{\mathbf{tq}}^{k,k+1} =
-(\frac{1}{2})^2 \cdot \mathbf{J'}(\mathbf{x^*}_{k,k+1})^T
-\mathbf{Q}_{\mathbf{xyz}}^{k,k+1} \mathbf{J'}(\mathbf{x^*}_{k,k+1})
+(\frac{1}{2})^2 \cdot \mathbf{J_{tqm}}(\mathbf{x^*}_{k,k+1})^\top
+\mathbf{Q}_{\mathbf{xyz}}^{k,k+1} \mathbf{J_{tqm}}(\mathbf{x^*}_{k,k+1})
 \end{equation}
 
-where $\mathbf{J'}(\mathbf{x^*}_{k,k+1}) \in \R^{6mx6}$ is the Jacobian of
-extended residuals function with backward-, forward-transformation and manifold
+where $\mathbf{J_{tqm}}(\mathbf{x^*}_{k,k+1}) \in \R^{6mx6}$ is the Jacobian of
+extended residuals function with back-transformation, forward-transformation 
+and manifold
 in \eqref{eq:new_jacobian_chain_rule},
 
 \begin{equation} \begin{aligned} & \mathbf{Q}_{\mathbf{xyz}}^{k,k+1}  =
@@ -2673,13 +2670,15 @@ is the covariance matrix that comprised of all covarince matrices for all
 matched features from $k^{th}$ and $k+1^{th}$ consecutive frames,
 
 \begin{equation}\label{eq:cov_xyz_prop} \begin{aligned} &
-\mathbf{Q}_{\mathbf{xyz}}^{(k,i)} = \mathbf{J_{bp}}^T(\mathbf{u}^{(k,i)})
+\mathbf{Q}_{\mathbf{xyz}}^{(k,i)} = 
+\mathbf{J_{bp}}^\top(\mathbf{u}^{(k,i)})
 \begin{bmatrix} \sigma_u & 0 & 0 \\ 0 & \sigma_v & 0 \\ 0 & 0 &
 (\sigma_Z^{(i)}(Z, \theta))^2 \end{bmatrix} \mathbf{J_{bp}}(\mathbf{u}^{(k,i)})
 \in \R^{3x3} \end{aligned} \end{equation}
 
 is the covariance matrix for the $i^{th}$ matched feature from $k^{th}$ frame 
-where $\mathbf{J_{bp}}^T(\mathbf{u}^{(k,i)})$ is the Jacobian matrix of 
+where $\mathbf{J_{bp}}^\top(\mathbf{u}^{(k,i)})$ is the Jacobian matrix 
+of 
 back-project function (see notation \eqref{eq:jacob_back_proj}).
 
 \begin{equation} \begin{aligned} & \mathbf{Q}_{\mathbf{tq}}^{k,k+1}  =
@@ -2694,9 +2693,11 @@ pose of the camera.
 
 Notice $(\frac{1}{2})^2$ in front of \eqref{eq:cov_tq_prop}.  In the original
 error propagation law, this does not exist.  It comes from the fact that we use
-both the backward- and forward-transformation in residuals function.  To be
+both the back-transformation and forward-transformation in residuals 
+function.  To be
 more clear, remember that we represented a relative camera motion with both
-back and forward transformation to take errors on both $k^{th}$ and $k+1^{th}$
+back-transformation and forward-transformation to take errors on both $k^{th}$ 
+and $k+1^{th}$
 consecutive images into account. This resulted in having two residuals
 $\mathbf{r_b}^{(i)}$ and $\mathbf{r_f}^{(i)}$ for one feature match (see
 notation \eqref{eq:residuals_w_back_and_forward}).  Therefore, we divide by 2 
@@ -2707,7 +2708,8 @@ Finally, let's summarize this chapter. At first, we provided a literature
 background for an error-aware VO. Then, we argued that all the related work being
 done did not use feature uncertainty to produce metric pose covariance. With
 this motivation, we gave a recipe for building an error-aware VO which we call
-CoVO. Afterwards, we explained how we include feature and depth-related noise models
+CoVO. Afterward, we explained how we include feature and depth-related noise 
+models
 into the optimization process so that we propagate a covariance matrix for the
 estimated relative camera pose. 
 The main takeaway from this chapter is that in order to estimate 
@@ -2719,9 +2721,18 @@ proposed CoVO algorithm with simulated and real-world data in the next chapter.
 \chapter{Evaluation} \label{cp_evaluation}
 % ***************************CP5-EVALUATION***************************
 
-Computer vision applications such as VO require many approximations and linearization techniques to cope with its dynamic nature for the sake of efficiency.  In practice, many corner cases might occur, no matter how good such estimation algorithms are modeled. It is therefore critical to verify such systems, especially in the real-world environment.  Considering that the proposed error-aware VO algorithm outputs two information: relative pose estimation and its covariance estimation, this chapter will mainly build around two following questions that I am going ask:
+Computer vision applications such as VO require many approximations and 
+linearization techniques to cope with its dynamic nature for the sake of 
+efficiency.  In practice, many corner cases might occur, no matter how good 
+such estimation algorithms are modeled. It is therefore critical to verify 
+such systems, especially in the real-world environment.  Considering that the 
+proposed error-aware VO algorithm outputs two information: relative pose 
+estimation and its covariance estimation, this chapter will mainly build 
+around two following questions that I am going to ask:
 
-\begin{enumerate} \item What is the \textit{accuracy} of relative pose estimations?  \item How \textit{consistent} do the algorithm estimate covariance of its pose?  \end{enumerate}
+\begin{enumerate} \item What is the \textit{accuracy} of relative pose 
+estimations?  \item How \textit{consistently} do the algorithm estimate 
+covariance of its pose?  \end{enumerate}
 
 In order to tackle these questions, simulation environment will be used to validate the model at first. Then, TUM RGB-D datasets will be used to test the algorithm in real-world scenarios.
 
@@ -2732,7 +2743,14 @@ There are already well-established error evaluation methods in literature so I a
 
 \subsubsection{Relative Pose Error}
 
-For evaluating the accuracy of a VO algorithm, it is better to calculate the relative pose error rather than comparing with the absolute (whole) estimated trajectory. This is also referred to Relative Pose Error (RPE).  On the other hand, some VO estimate a relative pose with frame-to-frame and some VO with keyframes.  To able to compare all kinds of VO with each other, a fixed time interval $\Delta$ is chosen for measuring the local accuracy of the pose estimation.  In this way, we take small local drifts into account to compare both types of VO algorithms.  Let's define RPE at time instance $i$ as follows:
+For evaluating the accuracy of a VO algorithm, it is better to calculate the 
+relative pose error rather than comparing with the absolute (whole) estimated 
+trajectory. This is also referred to Relative Pose Error (RPE).  On the other 
+hand, some VOs estimate a relative pose with frame-to-frame and some with 
+keyframes.  To able to compare all kinds of VO with each other, a fixed time 
+interval $\Delta$ is chosen for measuring the local accuracy of the pose 
+estimation.  In this way, we take small local drifts into account to compare 
+both types of VO algorithms.  Let's define RPE at time instance $i$ as follows:
 
 \begin{equation}
   \mathbf{E}_i := 
@@ -2740,7 +2758,11 @@ For evaluating the accuracy of a VO algorithm, it is better to calculate the rel
   (\mathbf{x^*}_i^{-1}\mathbf{x^*}_{i+\Delta})
 \end{equation}
 
-One can take a mean of all $E_{1:n}$, but this hides the effect of outliers when $n$ is large.  Instead, we calculate Root Mean Error Squared (RMSE) which encodes the error with much more information since it takes mean deviation of the error into account.
+One can take a mean of all $E_{1:n}$, but this hides the effect of outliers 
+when $n$ is large.  Instead, \parencite{Sturm2012a} suggests to calculate Root 
+Mean Error 
+Squared (RMSE) which encodes the error with much more information since it 
+takes mean deviation of the error into account.
 In other words, RMSE will show how the mean deviation of the error.  To calculate RMSE, $m = n - \Delta$ number of RPE are required among $n$ pose sequences:
 
 \begin{equation}
@@ -2765,7 +2787,8 @@ the proposed algorithm other VO such as FOVIS. This case corresponds to a drift 
 The main focus of this thesis is to provide metric uncertainty of the relative pose estimations. We can estimate dynamic covariances thanks to propagation property of the feature covariances based on the conic ray error model. In this respect, it is critical to assess the consistency of estimated covariance values to use them safely in sensor fusion applications.  One of the good metrics to evaluate consistency is to calculate Normalized Estimation Error Squared (NEES). This method measures the credibility of the provided covariance, and it helps us to decide whether the predicted uncertainty values are optimistic or pessimistic.  One can calculate NEES if $\mathbf{x}_i$ real pose, $\hat{\mathbf{x}_i}$ predicted pose and $\Omega_i = \mathbf{Q}_i^{-1}$ information matrix are known at time instance $i$:
 
 \begin{equation}
-  \epsilon_i = (\mathbf{x}_i - \mathbf{x^*}_i)^T \mathbf{\Omega}_i (\mathbf{x}_i - \mathbf{x^*}_i) 
+  \epsilon_i = (\mathbf{x}_i - \mathbf{x^*}_i)^\top \mathbf{\Omega}_i 
+  (\mathbf{x}_i - \mathbf{x^*}_i) 
   = ||\mathbf{e}_i||^2_{\Omega_i}
 \end{equation}
 
@@ -2778,7 +2801,7 @@ For comparison reasons, we also take an average of NEES (ANEES) over whole traje
   \frac{1}{n} \sum_{i=1}^{n} ||\mathbf{e}_i||^2_{\Omega_i}
 \end{equation}
 
-If the system is linear, has degree of freedom $d=1$ and Gaussian noise, 
+If the system is linear, has a degree of freedom $d=1$ and Gaussian noise, 
 then the expected value 
 $\hat{\epsilon}$ is 1. 
 
@@ -2786,7 +2809,8 @@ However, in practice, this does not hold. Therefore, besides ANEES, another
 metric when deciding on whether the estimator is consistent or not is to look 
 at the distribution of NEES over trajectory.  It is expected that it is 
 distributed as a chi-square $\chi_d^2$ with $d$ degrees of freedom.  For an 
-estimator with 3 degrees of freedom, acceptance region is $\hat{\epsilon} \in 
+estimator with 3 degrees of freedom, the acceptance region is $\hat{\epsilon} 
+\in 
 [2.5,3.5]$ when significance level $\alpha$ of $\chi_d^2$ is chosen 2.5\% and 
 50 Monte Carlo runs according to \parencite[see][234--235]{Shalom2001}.  Thus, 
 when evaluating the consistency of the estimator in simulation, we aim to get 
@@ -2800,20 +2824,20 @@ conservative estimator rather than overconfident one.
 \section{Simulation Environment}\label{sc_sim_env}
 
 Before testing the proposed algorithm, we will validate the relative 
-pose estimation, and its covariance with the simulated data. Hence, 
+pose estimation and its covariance with the simulated data. Hence, 
 we create a 3D simulation environment that consists of a camera pose, 
 3D point features and their confidence ellipsoids. Our test scenario 
 will be comprised of the following steps:
 
 \begin{itemize}
   \item 500 3D point features $\mathbf{X}^{(\mathcal{C}, 1:500)}$ are created 
-  within camera's observable space.
+  within the camera's observable space.
   \item By utilizing the pinhole model (see notation 
   \eqref{eq:simplyfied_proj_func}), 
     all 3D point features are projected 
     onto the camera frame whose initial pose $\mathbf{x}_0^{\mathcal{C}}$ is known. 
-    The instrinsic matrix $\mathbf{K}$ is taken similar to TUM RGB-D FR1  
-    dataset (see table \ref{tb:tum_calib_param}).
+    The intrinsic matrix $\mathbf{K}$ is taken similar to TUM RGB-D FR1  
+    dataset (see Table \ref{tb:tum_calib_param}).
   \item Projected image features are stored in the form of 
     $(u^{(0, 1:500)}, v^{(0, 1:500)},z^{(0, 1:500)})$ sensor 
     measurements as you would usually get it from 
@@ -2834,7 +2858,8 @@ will be comprised of the following steps:
           \item The pixel noises are
             assigned to $(\mu_u=0,\sigma_u=8)$ and $(\mu_v=0,\sigma_v=8)$. 
           \item Whereas, the 
-            mean of the depth noise is $\mu_z=0$ and standard deviation is chosen 
+            mean of the depth noise is $\mu_z=0$ and the standard deviation is 
+            chosen 
             as $\sigma_Z^{(i)} (Z,\theta)$ 
             with respect to feature points' distance to the camera.
             The lateral noise and the surface angle $\theta$ is assumed to be 0.
@@ -2843,7 +2868,8 @@ will be comprised of the following steps:
     \item For every measurements, convariance matrices 
       $(\mathbf{Q}_{\mathbf{xyz},0}^{(1:500)}, \mathbf{Q}_{\mathbf{xyz},1}^{(1:500)})$ are formed with 
       the same standard deviations of the added noises, where  
-    $\mathbf{Q}_{\mathbf{xyz},0}^{(i)} = \mathbf{J_{bp}}(\mathbf{u}^{(k,i)})^T
+    $\mathbf{Q}_{\mathbf{xyz},0}^{(i)} = 
+    \mathbf{J_{bp}}(\mathbf{u}^{(k,i)})^\top
   \begin{bmatrix} 
     \sigma_u^2(=8^2) & 0 & 0 \\ 
     0 & \sigma_v^2(=8^2) & 0 \\
@@ -2859,12 +2885,12 @@ will be comprised of the following steps:
 \end{itemize}
 
 In the following simulation figures, we show 
-above scenario in a 3D visual environment. 
+the above scenario in a 3D visual environment. 
 In this environment, we have  
 noisy 3D point features, confidence ellipsoids whose center is around the 
 noisy point features and the real position of the points that are somewhere 
 inside the ellipsoids.
-It is worth noting that the volume of the confindence ellipsoids are 
+It is worth noting that the volume of the confidence ellipsoids are 
 determined by the conic ray model and are scaled with $3\sigma$.
 
 % Distribution of Point Clouds in 3D at p0
@@ -2877,10 +2903,10 @@ determined by the conic ray model and are scaled with $3\sigma$.
 	\label{fig:sim_at_p0}
 \end{figure}
 
-The figure \ref{fig:sim_at_p0} depicts the environment at its initial pose 
+Figure \ref{fig:sim_at_p0} depicts the environment at its initial pose 
 $\mathbf{x}_0^{\mathcal{C}}$.
 For the sake of visibility, we only draw a small subset of 3D feature points and scaled the 
-confidence ellipses by 10. Notice how 
+confidence ellipses by 10. Notice how the 
 volume and orientation of the confidence ellipsoids are situated according to 
 the conic ray model.
 
@@ -2895,7 +2921,7 @@ the conic ray model.
 \end{figure}
 
 Then, we rotate and translate the camera to its next pose 
-$\mathbf{x}_0^{\mathcal{C}}$ as shown in figure 
+$\mathbf{x}_0^{\mathcal{C}}$ as shown in Figure 
 \ref{fig:sim_at_p1}. Notice how confidence ellipsoids are situated with 
 the new camera pose accordingly.
 
@@ -2910,7 +2936,7 @@ the new camera pose accordingly.
 	\label{fig:sim_at_p0p1}
 \end{figure}
 
-Finally, the figure \ref{fig:sim_at_p0p1} shows how confidence ellipsoids 
+Finally, Figure \ref{fig:sim_at_p0p1} shows how confidence ellipsoids 
 from both views intersect each other and include the real feature points within 
 the intersected space.
 Now that we now have everything we need, we can estimate camera transformation 
@@ -2930,7 +2956,7 @@ With the simulated data, we run the experiment 1000 times and added random noise
   \label{fig:synt_trans_rpe_3sigma}
 \end{figure}
 
-As seen in figure \ref{fig:synt_trans_rpe_3sigma}, the translational RPE 
+As seen in Figure \ref{fig:synt_trans_rpe_3sigma}, the translational RPE 
 are bounded with except 2 predictions which is statistically 
 acceptable. 
 
@@ -2943,7 +2969,7 @@ acceptable.
 	\label{fig:synt_rot_rpe_3sigma}
 \end{figure}
 
-The same behavior is observed for the rotation as seen in figure 
+The same behavior is observed for the rotation as seen in Figure 
 \ref{fig:synt_rot_rpe_3sigma}. It indicates that the propagated covariances of 
 the estimated poses based on the proposed model produce statistically 
 acceptable covariances with simulated data if $3\sigma$ bounds are 
@@ -2963,7 +2989,13 @@ evaluations are done with NEES.
 % 3
 \subsection{Evaluation of Estimated Covariances}
 
-Even though $\sigma$ bounds confirm that our algorithm provides consistent pose estimation given RPE is bounded with $3\sigma$, we need to check whether the covariance of the estimated pose is being too optimistic or not since it fails at $1\sigma$.  Hence, we run our simulation as described at the beginning of this section again.  Then, we calculate ANEES; i.e., 15.64 for translation and 15.72 for rotation.  Also, the results are illustrated in figure \ref{fig:test_hist_nees_1}.
+Even though $\sigma$ bounds confirm that our algorithm provides consistent 
+pose estimation given RPE is bounded with $3\sigma$, we need to check whether 
+the covariance of the estimated pose is being too optimistic or not since it 
+fails at $1\sigma$.  Hence, we run our simulation as described at the 
+beginning of this section again.  Then, we calculate ANEES; i.e., 15.64 for 
+translation and 15.72 for rotation.  Also, the results are illustrated in 
+Figure \ref{fig:test_hist_nees_1}.
 
 
 \begin{figure}[H] \begin{tabular}{ccc} \centering \subcaptionbox{NEES}{\includegraphics[width = 0.55\linewidth]{fig/eva_graphs/synt_nees.pdf}} & \subcaptionbox{Histogram of NEES}{\includegraphics[width = 0.40\linewidth]{fig/eva_graphs/synt_hist_nees.pdf}} \end{tabular} \caption{NEES For Simulated Data Without $\phi$ Scaling Factor} \label{fig:test_hist_nees_1} \end{figure}
@@ -2986,7 +3018,16 @@ $\phi$ after optimization.
 
 \begin{figure}[H] \begin{tabular}{ccc} \centering \subcaptionbox{NEES}{\includegraphics[width = 0.55\linewidth]{fig/eva_graphs/synt_nees_2.pdf}} & \subcaptionbox{Histogram of NEES}{\includegraphics[width = 0.40\linewidth]{fig/eva_graphs/synt_hist_nees_2.pdf}} \end{tabular} \caption{NEES For Simulated Data With $\phi=4^2$ Scaling Factor} \label{fig:test_hist_nees_2} \end{figure}
 
-For our initial test setup which extensively described in section \ref{sc_sim_env}, we find out that ANEES for translation and rotation becomes 2.7 and 2.69, respectively when taking $\phi=4^2$ and the results are shown in figure \ref{fig:test_hist_nees_2}.  Therefore, the scaling factor can be accepted as we consider the estimator to be consistent with this setup.  The reason we take this setup along with all empiric parameters in the simulation is that we want to create an environment that covers the possible worst case scenarios in the real-world dataset.  We will explain why we specifically set $\sigma_u=8$ and $\sigma_v=8$ after analyzing the effect of pseudo inliers in the following section \ref{sc_pseudo_inliers}. 
+For our initial test setup which extensively described in Section 
+\ref{sc_sim_env}, we find out that ANEES for translation and rotation becomes 
+2.7 and 2.69, respectively when taking $\phi=4^2$ and the results are shown in 
+Figure \ref{fig:test_hist_nees_2}.  Therefore, the scaling factor can be 
+accepted as we consider the estimator to be consistent with this setup.  The 
+reason we take this setup along with all empiric parameters in the simulation 
+is that we want to create an environment that covers the possible worst case 
+scenarios in the real-world dataset.  We will explain why we specifically set 
+$\sigma_u=8$ and $\sigma_v=8$ after analyzing the effect of pseudo inliers in 
+the following Section \ref{sc_pseudo_inliers}. 
 
 
 \section{TUM RGB-D Dataset}
@@ -2997,7 +3038,7 @@ that are collected in two different indoor environments; i.e., fr1 refers to
 datasets collected in an office $(6\times 6 m^2)$ and fr2 is collected in an 
 open spaced garage $(10\times 12m^2)$. In our experiments, we choose a subset 
 of datasets that are mainly suitable for VO and has sufficient texture on the 
-images.  The selected datasets are given in table \ref{tb:tum_dataset}.  
+images.  The selected datasets are given in Table \ref{tb:tum_dataset}.  
 Besides, calibration parameters of RGB and depth images are validated by the 
 time-synchronized ground truth measurements recorded by a motion capture 
 system.
@@ -3030,7 +3071,7 @@ exist in our feature matches even after applying RANSAC.
 
 \subsection{Discovering the Effect of Pseudo Inliers on Pixel Uncertainty}\label{sc_pseudo_inliers}
 
-As discussed earlier in section \ref{sb_sc_pixel_uncertainty}, the pixel 
+As discussed earlier in Section \ref{sb_sc_pixel_uncertainty}, the pixel 
 uncertainty caused by quantization operation is treated as a half pixel.  
 Nevertheless, this error is itself not sufficient when choosing a standard 
 deviation of pixel noise for feature covariances to be propagated through the 
@@ -3064,17 +3105,28 @@ this test case to identify the pixel error distance caused by the pseudo
 inliers.  We can now apply to every consecutive frame of the whole 
 trajectory.  Thus, we illustrate the results in a time-based scheme to observe 
 how the pixel error changes throughout the trajectory. The illustration 
-gathered by 'fr1 xyz' dataset is given in figure 
+gathered by 'fr1 xyz' dataset is given in Figure 
 \ref{fig:time_based_hist_pix_err}.  As seen, the pixel distance error is 
 distributed as Gaussian and its standard deviation changes over the 
 trajectory.  To see how the standard deviation changes clearly, we draw the 
-time-based standard deviation of the pixel errors in figure 
+time-based standard deviation of the pixel errors in Figure 
 \ref{fig:time_based_std_pix_err}.
 
 
-\begin{figure}[H] \centering \includegraphics[width=0.8\linewidth,natwidth=640,natheight=640] {fig/eva_graphs/tum_fr1_xyz_tbased_uv_err_std.pdf} \caption[The Standard Deviations of Pixel Errors] {As seen in the previous figure, the pixel errors were distributed Gaussian but varying with time. Thus, this figure is drawn to see how the standard deviation of these distibutions changes throughout the trajectory more clearly }\label{fig:time_based_std_pix_err} \end{figure}
+\begin{figure}[H] \centering 
+\includegraphics[width=0.8\linewidth,natwidth=640,natheight=640] 
+{fig/eva_graphs/tum_fr1_xyz_tbased_uv_err_std.pdf} \caption[The Standard 
+Deviations of Pixel Errors] {As seen in the previous figure, the pixel errors 
+were distributed Gaussian but varying with time. Thus, this figure is drawn to 
+see how the standard deviation of these distributions changes throughout the 
+trajectory more clearly }\label{fig:time_based_std_pix_err} \end{figure}
 
-Because we want to cover as many corner cases as possible, we run the test over many datasets so that we can find the largest standard deviation. To see all datasets' results, we take the time-based standard deviation results which we use to draw figure \ref{fig:time_based_std_pix_err} and illustrate with a boxplot.  All the standard deviations of the pixel error from six different datasets are given in in figure \ref{fig:boxplot_time_based_std_all_datasets}.
+Because we want to cover as many corner cases as possible, we run the test 
+over many datasets so that we can find the largest standard deviation. To see 
+all datasets' results, we take the time-based standard deviation results which 
+we use to draw Figure \ref{fig:time_based_std_pix_err} and illustrate with a 
+boxplot.  All the standard deviations of the pixel error from six different 
+datasets are given in in Figure \ref{fig:boxplot_time_based_std_all_datasets}.
 
 
 \begin{figure}[H]
@@ -3106,12 +3158,12 @@ Note that we set standard deviation of pixel uncertainty according to
 the largest value $\sigma_u=8$ and $\sigma_v=8$ which was 
 determined in the previous section.
 Also, we scale resulting covariance $\mathbf{Q}_{\mathbf{tq}}^{k,k+1}$
-with the $\phi=4^2$ to compensate the errors caused by the linearization 
+with the $\phi=4^2$ to compensate for the errors caused by the linearization 
 after each optimization for consecutive frames.
 Under these parameterizations, we run the algorithm and calculate 
-histogram of NEES and ANEES for the selected datasets. 
+the histogram of NEES and ANEES for the selected datasets. 
 The resulting histograms are illustrated in \ref{fig:hist_nees_all_datasets} and 
-their ANEES are given in table \ref{tb:anees_all_datasets}.
+their ANEES are given in Table \ref{tb:anees_all_datasets}.
 
 
 % Histogram of NEES with all datasets!
@@ -3129,18 +3181,24 @@ their ANEES are given in table \ref{tb:anees_all_datasets}.
 \label{fig:hist_nees_all_datasets}
 \end{figure}
 
-We observe that covariance of the translation estimations are conversative, 
+We observe that covariances of the translation estimations are conservative, 
 which is acceptable in VO systems. However, covariance of the rotation estimation 
 result in being overconfident for 3 datasets; i.e., 'fr1 360', 'fr1 desk' and 'fr1 room'.
 Thus, we can say the estimator is \textit{inconsistent} for the rotation, 
-as opposed to the translation providing consistent covariance estimations.
-In literature, the accuracy and consistency of the estimation in VO algorithm 
+as opposed to the translation providing \textit{consistent} covariance 
+estimations.
+In literature, the accuracy and consistency of the estimation in the VO 
+algorithm 
 are compared with the translation since it already includes the effect of 
 the rotation (see notation \eqref{eq:translation_cam}). 
-At the moment, the exact reason why covariances of rotation part are estimated 
-poorly is unknown to me. Thus, it could be a future work where I need to 
+At the moment, the exact reason why the covariances of the rotation parts are 
+estimated 
+poorly is unknown to me. Therefore, the proposed CoVO algorithm needs an 
+improvement for estimating the covariance of the rotational part. This could 
+be a future work where I need to 
 analyze the quaternion algebra and manifold operation in Ceres-Solver more 
-deeply.
+deeply to find out why the covariances of the rotation part are estimated 
+inconsistent for certain datasets.
 
 \begin{table}
 \begin{center}
@@ -3174,7 +3232,8 @@ with FOVIS, which is a defacto VO application since it produces very accurate
 pose estimation with fast computations.
 To provide an illustration of the trajectory built from relative pose estimations, 
 we draw estimations results of 'fr2 desk' which is suitable to present drift effects 
-and it is given in figure \ref{fig:comp_fr2_desk} along with the boxplot representation
+and it is given in Figure \ref{fig:comp_fr2_desk} along with the boxplot 
+representation
 of RPEs. 
 
 % Traj XYZ with fr2_desk Boxplot with fr2_desk
@@ -3188,7 +3247,11 @@ of RPEs.
 \label{fig:comp_fr2_desk}
 \end{figure}
 
-We run both algorithms for the seven datasets and the resulting RMSEs of RPEs are given in table \ref{tb:comp_all_dataset}. Note that we take $\Delta=30$ frames while calculating RPEs. Additionally, we also provide the boxplot representation of RPE for more explicit comparison in figure \ref{fig:comp_all_dataset}.
+We run both algorithms for the seven datasets and the resulting RMSEs of RPEs 
+are given in Table \ref{tb:comp_all_dataset}. Note that we take $\Delta=30$ 
+frames while calculating RPEs. Additionally, we also provide the boxplot 
+representation of RPE for more explicit comparison in Figure 
+\ref{fig:comp_all_dataset}.
 
 \begin{figure}[H]
 \begin{tabular}{ccc}
@@ -3206,7 +3269,8 @@ We run both algorithms for the seven datasets and the resulting RMSEs of RPEs ar
 
 We can say that FOVIS is more accurate than CoVO in the context of relative pose estimations for several reasons we can name.  FOVIS utilizes the keyframe scheme and different outlier rejection algorithm than RANSAC. Also, it provides a better initial guess to its optimizer after several refinement processes throughout the pipeline. Most importantly, it minimizes the 3D-to-2D correspondences which are less prone to settle for undesired local minimums in the LM algorithm.
 
-\begin{table}
+\begin{table}[H]
+\caption{FOVIS versus CoVO With RMSE RPE}
 \begin{center}
   \begin{tabular}{lcc}
     \hline
@@ -3228,7 +3292,6 @@ We can say that FOVIS is more accurate than CoVO in the context of relative pose
     fr2 desk2 & 0.0156  & 0.0428 \\
     \hline
   \end{tabular}
-  \caption{FOVIS versus CoVO With RMSE RPE}
 \label{tb:comp_all_dataset}
 \end{center}
 \end{table}
@@ -3269,14 +3332,14 @@ camera was laid out.
 % camera model
 In this respect, the geometrical models of an RGB-D camera sensor were given to
 be acquainted with the working principles of such sensors.  The pinhole and
-triangulation models served us as essential tools when modeling error
+triangulation models served us as essential tools when modeling the error
 characteristics of the sensors.
 % typical vo pipeline
 In Chapter 3, the standard pipeline of a feature based VO was studied. The
 pipeline comprised of 4 fundamental processes; i.e., extracting features,
 matching features, rejecting outliers and pose estimation. To model the
-uncertainty of the complete system, not only the systematic errors of the
-sensors but also the errors introduced by the image processing processes are
+uncertainty of the complete system, both the systematic errors of the
+sensors and the errors introduced by the image processing processes are
 needed to be investigated.
 
 % modeling uncertainties of RGB-D
@@ -3319,7 +3382,8 @@ uncertainty caused by pseudo inliers grows, it then brings out the issues with
 the linearizations.  Secondly, we claimed that the effect of pseudo inliers on
 the pixel uncertainty would be bounded by the standard deviation values which
 one could identify by running exhaustive tests on many real-world datasets.
-This claim held as we observed that the pixel error were ranged between 6-8 pixels
+This claim held as we observed that the pixel errors were ranged between 6-8 
+pixels
 over seven different datasets. In the end, our solution was to take the largest
 errors to cover the worst case scenario.  As a result, it leads to us obtaining less 
 adaptive covariance estimations. 
@@ -3340,12 +3404,13 @@ successful.
 
 
 % ***************************CP7-EVALUATION***************************
-\appendix
+%\appendix
 
-\renewcommand{\thechapter}{A\arabic{chapter}}
+%\renewcommand{\thechapter}{A\arabic{chapter}}
 
-\chapter{Appendices} \label{cp_appendices}
+\begin{appendices}
 
+\chapter{} \label{cp_appendices}
 
 \section{ORB} \label{sb_sc_orb}
 
@@ -3373,7 +3438,7 @@ features and create descriptors with ORB:
 		{Point of interest or feature points are at the intersection of edges 
 			as seen for the $p,q$ and $r$ pixels and the blue lines correspond 
 			to 
-			the directions of the edges.For this figure, $r=4$ is taken 
+			the directions of the edges. For this figure, $r=4$ is taken 
 			\parencite{Klette2014}.}
 		\label{fig:fast_corners}
 	\end{figure}
@@ -3381,7 +3446,7 @@ features and create descriptors with ORB:
 	The basic principle behind FAST is if the selected pixel $p$ is $\pm t$ 
 	darker or brighter than adjacent pixels $r\in{1,2,\dots,n}$, we call it a 
 	corner, where $t$ is our empiric threshold. Comparison pixel set $r$ is 
-	chosen as a circle around in figure \ref{fig:fast_corners}.
+	chosen as a circle around in Figure \ref{fig:fast_corners}.
 	
 	\begin{equation}
 	S_{p \rightarrow r} = 
@@ -3395,8 +3460,9 @@ features and create descriptors with ORB:
 	If a set of N contiguous pixels are either dark $S_d$ or bright $S_b$, we 
 	call interest point $p$ as a corner $\mathbf{u_c} = M_c(p)$, where $M_c$ 
 	is a function that returns the pixel coordinates of the corner pixel and N 
-	is another empiric parameter whose purpose is to ensure majority of the 
-	comparison either dark or bright.For more details about efficient ways to 
+	is another empiric parameter whose purpose is to ensure a majority of the 
+	comparison results either dark or bright. For more details about efficient 
+	ways to 
 	calculate FAST corners, I refer readers to \parencite{Rosten2006}.
 	
 	\item \textbf{Rank FAST corners with Harris}: After FAST detection, we 
@@ -3412,7 +3478,7 @@ features and create descriptors with ORB:
 	\end{equation}
 	
 	The $\mathbf{A}$ matrix is calculated by the $I_x$ and $I_y$ partial 
-	derivatives with respect to $x$ and $y$ direction on the image plane and 
+	derivatives with respect to $x$ and $y$-direction on the image plane and 
 	$w(x,y)$ weighting window.
 	
 	\begin{equation}
@@ -3427,7 +3493,7 @@ features and create descriptors with ORB:
 	\item \textbf{Calculate orientation of corners with image moments}: ORB 
 	uses BRIEF to create feature descriptors, but BRIEF fails in rotated 
 	images. Therefore, ORB modifies the BRIEF by adding orientation 
-	information. To get orientation, an \textit{image moment} are calculated 
+	information. To get orientation, an \textit{image moment} is calculated 
 	for each patch $\mathbf{S}^{(n)}$:
 	
 	\begin{equation}
@@ -3461,9 +3527,9 @@ features and create descriptors with ORB:
 		{fig/ref_imgs/brief.png}
 		\caption[BRIEF Descriptor]{In order to form BRIEF descriptor, one 
 		needs 
-			to create group of pixel pairs from patch $\mathbf{S}^{(n)}$. 
+			to create a group of pixel pairs from patch $\mathbf{S}^{(n)}$. 
 			There are 
-			two common ways to create pair. As seen in the left figure, we 
+			two common ways to create a pair. As seen in the left figure, we 
 			take the 
 			feature point and pair with pixels around the circle patch. In the 
 			right 
@@ -3474,7 +3540,7 @@ features and create descriptors with ORB:
 	\end{figure}
 	
 	
-	To do so, we randomly (normal distribution) selected 256 pairs 
+	Then, we randomly (normal distribution) selected 256 pairs 
 	$(p^{(i)}=(u^{(i)},v^{(i)},q^{(j)}=(u^{(j)},v^{(j)}))$ inside the patch 
 	$\mathbf{S}^{(n)}$:
 	
@@ -3510,7 +3576,8 @@ features and create descriptors with ORB:
 	\end{cases}
 	\end{equation*}
 	
-	Finally, we sum comparison results with binary form to get the descriptor  
+	Finally, we sum comparison results in the binary form to get the 
+	descriptor  
 	of the patch $\mathbf{S}^{(n)}$:
 	
 	\begin{equation}
@@ -3521,26 +3588,203 @@ features and create descriptors with ORB:
 \end{enumerate}
 
 
+\section{RANSAC} \label{sb_sc_ransac_app}
 
+The model being fitted in 
+RANSAC \parencite{Fischler1981b} is elements of a \textit{homography matrix}, 
+which transforms a 2D 
+image point to another 2D image point.  Remember that we have feature matches 
+from image pairs. One of the pair is the transformed version of the other 
+pair.  We can model this relationship in the following way:
+
+\begin{equation}\label{eq:homography_full}
+k
+\begin{bmatrix}
+\hat{u}^{(i)} \\ \hat{v}^{(i)} \\1
+\end{bmatrix}
+=
+\mathbf{H}
+\begin{bmatrix}
+u^{(i)} \\ v^{(i)} \\1
+\end{bmatrix}
+=
+\begin{bmatrix}
+h_{00} & h_{01} & h_{02} \\
+h_{10} & h_{11} & h_{12} \\
+h_{20} & h_{21} & h_{22}
+\end{bmatrix}
+\begin{bmatrix}
+u^{(i)} \\ v^{(i)} \\1
+\end{bmatrix}
+\end{equation}
+
+The goal is to fit parameters of $\mathbf{H}$ with the selected subset of the 
+matching under the condition where majority of selected point matchings are 
+inliers. In this way, we can easily detect outliers by testing whether they 
+fit model parameters or not. To make notation \eqref{eq:homography_full} 
+more 
+obvious, we form the following linear system of equations:
+
+\begin{equation}
+\underbrace{
+	\begin{bmatrix}
+	u^{(i)} & v^{(i)} & 1 & 0 & 0 & 0 & -\hat{u}^{(i)}u^{(i)} & 
+	-\hat{u}^{(i)}v^{(i)} -\hat{u}^{(i)}\\
+	0 & 0 & 0 & u^{(i)} & v^{(i)} & 1 & -\hat{v}^{(i)}u^{(i)} & 
+	-\hat{v}^{(i)}v^{(i)} -\hat{v}^{(i)}
+	\end{bmatrix}}_{\mathbf{A}}
+\underbrace{
+	\begin{bmatrix}
+	h_{00} \\ h_{01} \\ h_{02} \\ h_{10} \\ h_{11} \\ h_{12} \\ h_{20} \\ 
+	h_{21} \\ h_{22}
+	\end{bmatrix}}_{\mathbf{h}}
+= 
+\begin{bmatrix}
+0\\0
+\end{bmatrix}
+\end{equation}
+
+The first step of RANSAC is to select a subset that contains a minimum number 
+of matching points to determine the parameters of the model. In homography 
+$\mathbf{H}$ case, we need at least 4 point pairs 
+$(\mathbf{u}=(u^{(i)},v^{(i)}),\mathbf{\hat{u}}=(\hat{u}^{(i)},\hat{v}^{(i)}))$
+to solve this linear system of equation. However, due to the noise, we 
+require more than 4 point pairs, but this makes the problem over-determined. 
+Therefore, we might find an approximated solution by solving the least squares 
+problem. Hence, we minimize so-called \textit{algebraic distance error}:
+
+\begin{equation}
+\argmin_h || \mathbf{Ah-0}||^2.
+\end{equation}
+
+In the second step, after estimating $\mathbf{h}$ parameters, we test every 
+matching that is outside the subset which randomly selected at the first 
+step whether they fit to the model with the certain $\mathbf{d}$ threshold we 
+define:
+
+\begin{equation}
+||\mathbf{\hat{u}} - \mathbf{H}\mathbf{u}||^2 > d
+\end{equation}
+
+In the third step, we include the points that passed our test procedure in the 
+second step into our subset. In the fourth and last step, we have another test 
+in 
+which 
+we check whether the number of matching points in our subset is large enough 
+to prove that we include the majority of inliers. If not, we go back to 
+the first step and repeat the whole process until we fulfill the fourth step. 
+As an illustration for outlier rejection, we give a simple line fitting 
+example to 
+visualize the iterative nature of RANSAC in Figure \ref{fig:outlier_matches}.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.8\linewidth,natwidth=640,natheight=640]
+	{fig/drawings/ransac.pdf}
+	\caption[Outlier Rejection with RANSAC]
+	{In VO, RANSAC identifies the outliers by fitting the parameters of the 
+		homography matrix iteratively.  For simplicity, this figure depicts 
+		the 
+		outlier 
+		rejection scenario with a simple line fitting example instead of 
+		homography. As seen in the figure, after the number of iteration 
+		$N=14$, 
+		RANSAC is able to fit line by excluding the outliers in the 
+		optimization 
+		process. Note that we can still have outliers within the RANSAC inlier 
+		threshold which is the area shaded with light blue color.} 
+	\label{fig:outlier_matches}
+\end{figure}
+
+
+The following listing summarizes the algorithm:
+
+\begin{algorithm}[H]
+	\caption{Rejecting outlier matches with RANSAC}
+	\label{algo:ransac}
+	\textbf{Input} \\
+	\hspace*{\algorithmicindent}S: the smallest number of points\\
+	\hspace*{\algorithmicindent}N: the number of iteration\\
+	\hspace*{\algorithmicindent}d: the threshold used to identify a point 
+	which fits the model\\
+	\hspace*{\algorithmicindent}T: the number of nearby points to notify that 
+	there is a good fit\\
+	\textbf{Output} \\
+	\hspace*{\algorithmicindent}C: the (consensus) set of inliers \\
+	\begin{algorithmic}[1]
+		
+		\Procedure{RANSAC}{S,N,d,T}\\
+		\While{iterations $<$ N}
+		\State select random sample subset of S points
+		\State estimate parameters to fit homography with S
+		\ForEach {points outside S}
+		\State calculate the error between estimated point and measured point
+		\If {error $<$ d}
+		\State add the point into S
+		\EndIf
+		\If {S $>$ T}
+		\State return C $=$ S
+		\EndIf
+		\EndFor
+		\EndWhile
+		\EndProcedure
+	\end{algorithmic}
+\end{algorithm}
+
+As it is seen in List \ref{algo:ransac}, there are four empiric parameters 
+that we 
+need to define; S,N,d, and T. In order to make the algorithm as efficient as 
+possible, these parameters must be chosen carefully. As we discussed, S is the 
+subset of matchings that we randomly select, and the initial value should be 
+at 
+least 4 so that we can solve the least squares problem. 
+
+For N, it is insufficient to iterate through every matching points. Thus, we 
+at least select N number of matching points with respect to the following 
+condition:
+
+\begin{equation}
+\text{N} = log(1-p)/log(1-(1-\epsilon)^s)
+\end{equation}
+
+where $p=0.99$ is the probability of covering all inliers, $s$ is the minimum 
+number of iteration that likelihood of choosing a subset with only outliers 
+and $\epsilon$ is the probability that the match is an outlier.
+
+For d, it is chosen empirically if the distribution of outliers is unknown. If 
+it is known, i.e., Gaussian with mean $\mu$ and $\sigma$, the threshold should 
+be $d=5.99\sigma^2$ so that there is a 95\% probability that the point is an 
+inlier.
+
+For T, we might have a case where we reach the expected ratio of inliers; thus 
+we don't have to iterate through N number of times. That means we can 
+terminate it earlier if the following condition is satisfied:
+
+\begin{equation}
+\text{T} = (1-\epsilon)n
+\end{equation}
+
+where $n$ is the total number of matching points.
 
 \section{Rigid-Body Transformations} \label{sc_rigid_body_transformations}
 
 \textit{Rigid-body} refers to objects made of solid materials so deformation is 
 neglected. We idealize it by assuming that any given two points of 
 rigid-body remains constant in time regardless of external forces 
-applied on it. In $\R^3$ space, a rigid-body has 6 degree of freedom; i.e, 
+applied to it. In $\R^3$ space, a rigid-body has 6 degrees of freedom; i.e, 
 3 for the position $(x, y, z)$ and 3 for the orientation $(\alpha, \beta, \gamma)$.
 The motion for a rigid-body is composed of a rotation around an axis and 
 a translation along an axis. 
 Let
-$\mathbf{x}_0=[\mathbf{p}, \mathbf{q}]^T=[p_x, p_y, p_z, q_x, q_y, q_z, q_w]^T$
+$\mathbf{x}_0=[\mathbf{p}, \mathbf{q}]^\top=[p_x, p_y, p_z, q_x, q_y, 
+q_z, q_w]^\top$
 be the initial pose of the frame that is fixed to the rigid-body in $\R^3$ space, 
 where $\mathbf{p}_0$ represents the position and $\mathbf{q}_0$ rotation.
 
 \subsubsection{Translation}
 
 One can translate the rigid-body to another position with a 
-$\mathbf{t}_{0,1}$ simple vector addition operation (see figure 
+$\mathbf{t}_{0,1}$ simple vector addition operation (see Figure 
 \ref{fig:app_translation}):
 
 \begin{equation}
@@ -3565,7 +3809,7 @@ $\mathbf{t}_{0,1}$ simple vector addition operation (see figure
 \subsubsection{Rotation with Quaternions}
 
 One can rotate the rigid-body to another orientation with the 
-$\mathbf{q}_{0,1}$ quaternion product (see figure \ref{fig:app_rotation}):
+$\mathbf{q}_{0,1}$ quaternion product (see Figure \ref{fig:app_rotation}):
 
 \begin{equation}
 \begin{aligned}
@@ -3602,7 +3846,7 @@ where $[\mathbf{q}_{0,1}]_L$ is the left quaternion product in matrix form.
 \subsubsection{Transformation}
 
 The most useful motion is the roto-translation motion, also called 
-transformation (see figure \ref{fig:app_transformation}), 
+transformation (see Figure \ref{fig:app_transformation}), 
 which rotates the rigid-body and then translates it:
 
 \begin{equation}
@@ -3614,7 +3858,7 @@ which rotates the rigid-body and then translates it:
   \mathbf{q}_1 = \mathbf{q}_{0,1} \otimes \mathbf{q}_0\\
 \end{equation}
 
-where $\mathbf{p'}=[0, t_x, t_y, t_z]^T$ is treated as a quaternion of 
+where $\mathbf{p'}=[0, t_x, t_y, t_z]^\top$ is treated as a quaternion of 
 a vector $\mathbf{p}$ with zero scalar part.
 
 \begin{figure}[H]
@@ -3634,42 +3878,32 @@ of out VO system,
 such as camera calibration, RANSAC and most importantly motion estimation, 
 Therefore, we will discuss underlying principles of least squares method in this section.
 However, if the reader wants to dive to the theory more about the non-linear 
-squares solvers, there are plenty resources but 
+squares solvers, there are plenty of resources, but 
 I refer the reader to \parencite{Herzog2018} since we heavily rely on this 
 material 
 in this section.
 
 Ultimately, error minimization is an 
-operation which wish to get the maximum likelihood of the function. In this respect, 
+operation which wishes to get the maximum likelihood of the function. In this 
+respect, 
 we search the most 
 likely state configuration as close as possible to its exact state. 
 In optimization problems,
 the goal is to find interesting points, such as local/global
 maximum or local/global minimum, on the \textit{objective}
 \textit{function}. However, the exact model $F(\mathbf{x})$ of a system 
-mostly unknown due to the high-degree for non-linearty or lack of knowledge.
+mostly unknown due to the high-degree for non-linearity or lack of knowledge.
 %Additionally, one needs to model the noise characteristics of measurements 
 %in real-world. This noise modeling also requires an approximation. 
 Thus, one can (hopefully) find a good enough solution by iteratively searching.
 One way to solve such problems effectively is to generate a quadratic model of 
 the objective function around initial guess $\mathbf{x}^0$ and iterate
-through the function using the \textit{Newton's methods} or its variations.
+through the function using \textit{Newton's methods} or its variations.
 For example,
 an optimal solution (or an interest point)
-figure \ref{fig:lsq_multivariable_function_example} is at the local
+Figure \ref{fig:lsq_multivariable_function_example} is at the local
 minimum of the function that is highlighted as a red point cloud.
 
-
-%\begin{figure}[H]
-%\begin{tabular}{cc}
-%\centering
-%\subcaptionbox{fr1 xyz}{\includegraphics[width = 0.5\linewidth]{fig/lsq_multivariable_function_example.jpg}} &
-%\subcaptionbox{fr1 rpy}{\includegraphics[width = 0.5\linewidth]{fig/lsq_sum_of_squared_error_function_v2.jpg}}
-%\end{tabular}
-%\caption[Boxplots of The Standard Deviations of Pixel Errors]
-%{Boxplots of The Standard Deviations of Pixel Errors in Different Datasets}
-%\label{fig:boxplot_time_based_std_all_datasets}
-%\end{figure}
 
 \begin{figure}[H]
 	\centering
@@ -3679,39 +3913,11 @@ minimum of the function that is highlighted as a red point cloud.
 	\label{fig:lsq_multivariable_function_example}
 \end{figure}
 
-%\begin{figure}[H]
-%	\centering
-%	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
-%	{fig/lsq_sum_of_squared_error_function_v2.jpg}
-%	\caption{Local Minimum at Sum of Squared Error Function}
-%	\label{fig:lsq_sum_of_squared_error_function}
-%\end{figure}
-
-
-
-%In optimization literature,
-%there are many versions of Newton's method 
-%and they all try to find the
-%local maximum/minimum in the most efficient and accurate way.
-
-%However, in the end, they all solve the problem
-%with the \textit{gradient descent} manner.
-%the approximated Hessian function, is one of them and we will be using
-%it in our slam algorithm.
-
 To elaborate the problem, we provide a regression example 
-which can be infact solved with linear least squares techniques but 
+which can be in fact solved with linear least squares techniques but 
 it can serve us 
-as a toy example throughout our explainations for non-linear least squares 
+as a toy example throughout our explanations for non-linear least squares 
 problems.
-
-%\begin{figure}[H]
-%	\includegraphics[width=0.5\linewidth,natwidth=640,natheight=640]
-%	{fig/lsq_model.jpg}
-%	\centering
-%	\caption{Least Square Model}
-%	\label{fig:lsq_model}
-%\end{figure}
 
 Suppose that we have a model function $g(\mathbf{x};a)$. However,
 we don't know what the $\mathbf{x}=(x_1,x_2)$ coefficients (so-called
@@ -3719,21 +3925,8 @@ we don't know what the $\mathbf{x}=(x_1,x_2)$ coefficients (so-called
 plug $a$, which is the \textit{independent} variable, into the
 \textit{model} $S$ to see
 how the output of the model changes given the independent variable. 
-The measurements for this supposed model is given in figure 
+The measurements for this supposed model is given in Figure 
 \ref{fig:lsq_curve_fit}(a).
-
-%\begin{gather}
-%\xi = a \text{ (independent variable)} \in \R \\
-%\eta = S \text{ (dependent variable)} \in \R
-%\label{eq:lsq_model_variables}
-%\end{gather}
-%
-%\begin{equation}
-%  S = g(\mathbf{x};a) := x_1 + x_2a \quad 
-%\text{where} \quad 
-%\mathbf{x} \in \R^2
-%\label{eq}
-%\end{equation}
 
 
 \begin{figure}[H]
@@ -3746,15 +3939,6 @@ The measurements for this supposed model is given in figure
 {A Simple Curve Fitting Example}
 \label{fig:lsq_curve_fit}
 \end{figure}
-
-%\begin{figure}[H]
-%	\centering
-%	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
-%{fig/lsq_curve_fit_measurements_v2.jpg}
-%	\caption{Least Squares Measurements}
-%	\label{fig:lsq_curve_fit_measurements}
-%\end{figure}
-
 
 Our goal is now to find a function, which will fit these measurements. 
 This is a typical least squares curve fitting problem.
@@ -3794,7 +3978,7 @@ configuration that can minimize the errors.
 \end{equation}
 
 At this point, the objective function is ready to be handed over to 
-to any \textit{gradient-decent} or 
+to any \textit{gradient-descent} or 
 \textit{Newton's} method solvers.
 These solvers will try to find the
 \textit{optimal} solution $\mathbf{x}^*$ by minimizing the objective function.
@@ -3805,13 +3989,7 @@ These solvers will try to find the
 \label{eq}
 \end{equation}
 
-%To help our understanding, the objective function is drawn in
-%figure \ref{fig:lsq_sum_of_squared_error_function}.
-%As we can see, the based on the given $\mathbf{x}$ values, 
-%the objective
-%function $F(\mathbf{x})$ behave as follows:
-
-Essentially, what the least squares solvers, which is special type of 
+Essentially, what the least squares solvers, which is a special type of 
 non-linear optimization problem, 
 do is to travel from the initial guess point to the nearest local minimum 
 on the objective function. 
@@ -3819,155 +3997,14 @@ For instance, we set
 the initial guess of our curve fitting problem 
 as optimization parameters $\mathbf{x}=(4,4)$. 
 Then, the solver will 
-manage to descent a local mimimum point 
+manage to descent a local minimum point 
 $\mathbf{\mathbf{x^*}}=(1.9,2.1)$. 
 At the end, if we place the solution into our model function, we
 get the $g(\mathbf{x};a)=1.9+2.1a$. With this line equation, we can draw the resulting fitted line 
-as shown in figure \ref{fig:lsq_curve_fit}(b).
+as shown in Figure \ref{fig:lsq_curve_fit}(b).
 The non-linear least squares solver that we used to find the optimization 
-paratemeters is the \textit{Levenberg-Marquardt} method and we will explain 
+parameters is the \textit{Levenberg-Marquardt} method and we will explain 
 the algorithm in more details.
-
-%\begin{figure}[H]
-%	\centering
-%	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
-%	{fig/lsq_curve_fit_operation_v2.jpg}
-%	\caption{Least Squares Curve Fitting Operation}
-%	\label{fig:lsq_curve_fit_operation}
-%\end{figure}
-
-%Now that we have an intiution how least squares problems are solved 
-%by gradient descent methods, let's further discuss one of them.
-
-
-
-
-%\subsection{The Newton's Method}
-%
-%In order to understand non-linear least square algorithms, 
-%we first need to look at how the Newton's method works. 
-%It provides a guideline for finding roots of a function by 
-%taking differentiations of the function. The interesting phenomena is that the roots of 
-%function corresponds to the interest points of the function such as maximum, mimimum or 
-%saddle points. In least squares problem, we are only interested in minimum 
-%points since we want to minimize the error. Keeping this in mind, let's 
-%consider a non-linear objective function 
-%$F(\mathbf{x}) = \frac{1}{2}\mathbf{f(x)^Tf(x)} = \frac{1}{2}\sum_i f_i(\mathbf{x})^2$ 
-%where 
-%it has $\mathbf{x} = [x_1, \dots, x_n] \in R^n$ multiple unknown variables.
-%We also assume that the function $F(\mathbf{x})$ is differentiable with 
-%respect to each $x_i$ unknown variable and its 
-%first-order derivatives has the following form:
-%
-%\begin{equation}
-%  \nabla F(\mathbf{x}) = \mathbf{J}_F = \mathbf{J_f^Tf}
-%\end{equation}
-%
-%where $\mathbf{J}_F$ is the \textit{Jacobian} matrix that has a special matrix:
-%
-%\begin{equation}
-%  \mathbf{J}_F = \begin{bmatrix} \frac{\partial}{\partial x_j }f_i(\mathbf{x}) \end{bmatrix}_{ij} 
-%  = 
-%  \begin{bmatrix} 
-%    \frac{\partial}{\partial x_1}f_1(\mathbf{x}) & \frac{\partial}{\partial x_2}f_1(\mathbf{x}) & \dots & \frac{\partial}{\partial x_n}f_1(\mathbf{x}) \\
-%    \frac{\partial}{\partial x_1}f_2(\mathbf{x}) & \frac{\partial}{\partial x_2}f_2(\mathbf{x}) & \dots & \frac{\partial}{\partial x_n}f_2(\mathbf{x}) \\
-%    \vdots & \vdots & \vdots & \vdots \\
-%    \frac{\partial}{\partial x_1}f_m(\mathbf{x}) & \frac{\partial}{\partial x_2}f_m(\mathbf{x}) & \dots & \frac{\partial}{\partial x_n}f_m(\mathbf{x}) \\
-%  \end{bmatrix}
-%  \in \R^{ixj}
-%\end{equation}
-%
-%
-%%\begin{figure}[H]
-%%	\centering
-%%	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
-%%	{fig/ref_imgs/taylor_1st_derivative.png}
-%%	\caption{First-order Derivative of Taylor Expansion}
-%%  \label{fig:taylor_1st_derivative}
-%%\end{figure}
-%
-%And the second-order derivatives has another special matrix for called 
-%\textit{Hessian}
-%
-%\begin{equation}
-%\nabla^2 F(x) = \mathbf{H}_F
-%  = 
-%  \begin{bmatrix} 
-%    \frac{\partial^2}{\partial x_1^2}f_1(\mathbf{x}) & \frac{\partial^2}{\partial x_1x_2}f_1(\mathbf{x}) & \dots & \frac{\partial^2}{\partial x_1x_n}f_1(\mathbf{x}) \\
-%    \frac{\partial^2}{\partial x_2x_1}f_2(\mathbf{x}) & \frac{\partial^2}{\partial x_2^2}f_2(\mathbf{x}) & \dots & \frac{\partial^2}{\partial x_2x_n}f_2(\mathbf{x}) \\
-%    \vdots & \vdots & \vdots & \vdots \\
-%    \frac{\partial^2}{\partial x_nx_1}f_m(\mathbf{x}) & \frac{\partial^2}{\partial x_nx_2}f_m(\mathbf{x}) & \dots & \frac{\partial^2}{\partial x_n^2}f_m(\mathbf{x}) \\
-%  \end{bmatrix}
-%  \in \R^{mxn}
-%\end{equation}
-%
-%Having first- and second-order derivatives helps us to 
-%form a so-called \textit{Newton} step:
-%
-%\begin{equation}
-%  \Delta \mathbf{x}^n = - 
-%\frac{\nabla F(\mathbf{x}^n)}{\nabla^2 F(\mathbf{x}^n)} = - \mathbf{H}_F^{-1}\mathbf{J}_F
-%\end{equation}\label{eq:delta_x_descent_direction}
-%
-%If we calculate the Netwon step, we know that $F(\mathbf{x})$ will decrease 
-%in the direction of its negative derivative if the step is added:
-%Then, one can 
-%claim that if we iteratively travel through the function in the direction of its negative 
-%derivative, we would eventually reach to a nearest local minima with respect to the starting 
-%point. 
-%%This is the fundamental idea behind any kind of gradient descent algorithm.
-%%While descenting, one might want to control the length of the Newton step, 
-%%For doing so, a tuning factor, called
-%%\textit{step length} $\alpha$, is used to adjust the size of length:
-%%
-%%\begin{equation}
-%%  \Delta \mathbf{x} = 
-%%  - \alpha \frac{F'(\mathbf{x^n})}{F''(\mathbf{x^n})} = - \alpha \mathbf{H}_F^{-1}\mathbf{J}_F
-%%\end{equation}\label{eq:delta_x_step_length}
-%
-%%% WRONG THE NEWTONS METHOD DOES NOT CREATE QUAD FUNCTIONS!
-%%The analitical intuition behind how we calculate the Newton step is 
-%%to build a $q$ quadratic model of the objective function around the $\mathbf{x}^n$ 
-%%using Taylor expansion:
-%%
-%%\begin{equation}
-%%  q^n(\Delta \mathbf{x}) = F(\mathbf{x}^n) + 
-%%  \nabla F(\mathbf{x}^n)^T \Delta \mathbf{x} + \frac{1}{2} \Delta \mathbf{x}^T \nabla^2 F(\mathbf{x}^n)\Delta \mathbf{x}
-%%\end{equation}
-%%
-%%After $n$ number of iteration of $\mathbf{x}^n$, the $q(\mathbf{x}^n)$ 
-%%quadratic function will hugs (or fits to) the original function $F(\mathbf{x}^n)$ 
-%%at the $\mathbf{x}^{k+n} (= \mathbf{x^*})$.
-%%
-%%\begin{figure}[H]
-%%	\centering
-%%	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
-%%	{fig/ref_imgs/taylor_2nd_derivative.png}
-%%\caption{REMOVE APPROX B - Second-order Derivative of Taylor Expansion}
-%%  \label{fig:taylor_2nd_derivative}
-%%\end{figure}
-%%
-%
-%We can briefly describe the algorithm if 
-%assuming that we have an educated initial guess $\mathbf{x}^0$ from which 
-%we start to search 
-%for a local minimum, we can describe the Newton algorithm as follows:
-%
-%\begin{enumerate}
-%  \item take the first- and second-order derivatives of $F(\mathbf{x})$ 
-%    at the current $\mathbf{x}^n$
-%  \item iterate $\mathbf{x}^{n+1} := \mathbf{x}^n -\Delta \mathbf{x}^n $ until it converges
-%\end{enumerate}
-%
-%As we see, the Newton's method is a simple but an effective algorithm if 
-%we can calculate the first- and second-order derivatives accurately.
-%However, it is either computationally expensive to calculate Hessian or 
-%is unknown beforehand. Therefore, there are several variations of Newton's 
-%method, one of which will be discussed in next section.
-%%However, the problem can get very complicated 
-%%if convergence speed and convergence success is considered. For this reason, 
-%%there are many version of the algoritm that aims to solve the problem 
-%%in the most efficient manner.
 
 \subsection{Levenberg-Marquardt}
 Levenberg-Marquardt (LM) is one of most well-known algoritm 
@@ -3994,26 +4031,33 @@ appears in Jacobian matrix form:
   \end{bmatrix}
   = 
   \begin{bmatrix}
-    \horzbar & \nabla r_1(\mathbf{x}^n)^T & \horzbar \\
+    \horzbar & \nabla r_1(\mathbf{x}^n)^\top & \horzbar \\
      & \vdots & \\
-     \horzbar & \nabla r_m(\mathbf{x}^n)^T & \horzbar 
+     \horzbar & \nabla r_m(\mathbf{x}^n)^\top & \horzbar 
   \end{bmatrix}
   \in \R^{mxn}
 \end{equation}
 
 The least squares problem has special forms which can be exploitted algebraically.
 Here, the residuals function and its derivatives are given:
-%(Keep in mind that multiplication with $\frac{1}{2}$ in front of objective function
-%is for cosmetic reason since it does not effect local mimimum's position in the function)
 
 \begin{equation}
-  F(\mathbf{x}) = \frac{1}{2} ||\mathbf{r}(\mathbf{x}^n)||^2 = \frac{1}{2} \mathbf{r}(\mathbf{x}^n)^T \mathbf{r}(\mathbf{x}^n) \text{  (Objective function)}
+  F(\mathbf{x}) = \frac{1}{2} ||\mathbf{r}(\mathbf{x}^n)||^2 = \frac{1}{2} 
+  \mathbf{r}(\mathbf{x}^n)^\top \mathbf{r}(\mathbf{x}^n) \text{  
+  (Objective 
+  function)}
 \end{equation}\label{eq:residuals_objective}
 \begin{equation}
-\nabla F(\mathbf{x}^n) = \mathbf{J}(\mathbf{x}^n)^T \mathbf{r}(\mathbf{x}^n) = \sum_{i=1}^{m} r_i(\mathbf{x}^n) \nabla r_i(\mathbf{x}^n) \text{  (First-order derivative)}
+\nabla F(\mathbf{x}^n) = \mathbf{J}(\mathbf{x}^n)^\top 
+\mathbf{r}(\mathbf{x}^n) = 
+\sum_{i=1}^{m} r_i(\mathbf{x}^n) \nabla r_i(\mathbf{x}^n) \text{  (First-order 
+derivative)}
 \end{equation}\label{eq:residuals_objective_first_der}
 \begin{equation}
-  \nabla^2 F(\mathbf{x}^n) = \mathbf{J}(\mathbf{x}^n)^T\mathbf{J}(\mathbf{x}^n) + \sum_{i=1}^m r_i(\mathbf{x}^n) \nabla^2 r_i(\mathbf{x}^n) \text{ (Second-order derivative)}
+  \nabla^2 F(\mathbf{x}^n) = 
+  \mathbf{J}(\mathbf{x}^n)^\top\mathbf{J}(\mathbf{x}^n) + \sum_{i=1}^m 
+  r_i(\mathbf{x}^n) \nabla^2 r_i(\mathbf{x}^n) \text{ (Second-order 
+  derivative)}
 \end{equation}\label{eq:residuals_objective_second_der}
 
 
@@ -4028,19 +4072,13 @@ Given
 \eqref{eq:residuals_objective_second_der}, 
 we can form the quadratic model as follows:
 
-%\begin{equation}
-%  F(\mathbf{x}^n + \Delta \mathbf{x}) \approx
-%  q^n(\Delta \mathbf{x}) = 
-%  \frac{1}{2}\mathbf{r}(\mathbf{x}^n)^T\mathbf{r}(\mathbf{x}^n) + 
-%  \mathbf{r}(\mathbf{x}^n)^TJ(\mathbf{x}^n)\Delta \mathbf{x} + 
-%\frac{1}{2}\Delta \mathbf{x}^T(\mathbf{J}^T\mathbf{J}+\mathbf{r}(\mathbf{x}^n)^T\mathbf{H})^n\Delta \mathbf{x}
-%\end{equation}
 \begin{equation}
   F(\mathbf{x}^n + \Delta \mathbf{x}) \approx
   q^n(\Delta \mathbf{x}) = 
   F(\mathbf{x}^n) + 
   \nabla F(\mathbf{x}^n) \Delta \mathbf{x} + 
-  \frac{1}{2}\Delta \mathbf{x}^T \nabla^2 F(\mathbf{x}^n) \Delta \mathbf{x}
+  \frac{1}{2}\Delta \mathbf{x}^\top \nabla^2 F(\mathbf{x}^n) \Delta 
+  \mathbf{x}
 \end{equation}
 
 
@@ -4051,16 +4089,22 @@ The LM does not use the exact
 second-order derivative $\nabla^2F(\mathbf{x}^n)$, that appears in the special form called \textit{Hessian}, 
 in its quadratic model. 
 This is because it is computationaly expensive to calculate Hessians. Instead, it uses an approximated 
-Hessian model by removing $\sum_{i=1}^mr_i(\mathbf{x})\nabla^2r_i(\mathbf{x})$ and replacing with 
+Hessian model by removing $\sum_{i=1}^mr_i(\mathbf{x})\nabla^2r_i(\mathbf{x})$ 
+and replacing with 
 term $\lambda^n \mathbf{I}$. In this case, the approximated quadratic function will be:
 
 \begin{equation}
-  q_{LM}^n(\Delta \mathbf{x}) = \frac{1}{2}\mathbf{r}(\mathbf{x}^n)^T\mathbf{r}(\mathbf{x}^n) + \mathbf{r}(\mathbf{x}^n)^TJ(\mathbf{x}^n)\Delta \mathbf{x} + \frac{1}{2}\Delta \mathbf{x}^T\mathbf{B_{LM}}^n\Delta \mathbf{x}
+  q_{LM}^n(\Delta \mathbf{x}) = 
+  \frac{1}{2}\mathbf{r}(\mathbf{x}^n)^\top\mathbf{r}(\mathbf{x}^n) + 
+  \mathbf{r}(\mathbf{x}^n)^\top J(\mathbf{x}^n)\Delta \mathbf{x} + 
+  \frac{1}{2}\Delta \mathbf{x}^\top\mathbf{B_{LM}}^n\Delta \mathbf{x}
 \end{equation}
 
 where 
 $
-\mathbf{B_{LM}}^n = \mathbf{J}(\mathbf{x}^n)^T \mathbf{J}(\mathbf{x}^n) + \lambda^n \mathbf{I}
+\mathbf{B_{LM}}^n = \mathbf{J}(\mathbf{x}^n)^\top 
+\mathbf{J}(\mathbf{x}^n) + 
+\lambda^n \mathbf{I}
 $ 
 is the approximated Hessian. Also, 
 $\lambda^n>0$ is a positive number and $\mathbf{I}\in \R^{kxk}$ is the identity matrix.
@@ -4074,24 +4118,27 @@ Thus, one calculates the first-order derivative as follows:
 \begin{equation}\label{eq:lm_descent_direction}
   0 = 
   \nabla q^{n}(\Delta \mathbf{x}^n) = 
-  \mathbf{r}(\mathbf{x}^n)^TJ(\mathbf{x}^n) + 
+  \mathbf{r}(\mathbf{x}^n)^\top J(\mathbf{x}^n) + 
   \mathbf{B_{LM}}^n\Delta \mathbf{x}^n
 \end{equation}
 
 
-If we elaborate above equation using the content of Hessian model, 
+If we elaborate the above equation using the content of the Hessian model, 
 we will get the following equation: 
 
 \begin{equation}
-  [\mathbf{J}(\mathbf{x}^n)^T\mathbf{J}(\mathbf{x}^n) + \lambda^n\mathbf{I}]\Delta \mathbf{x}^n = -\mathbf{J}(\mathbf{x}^n)^T\mathbf{r}(\mathbf{x}^n)
+  [\mathbf{J}(\mathbf{x}^n)^\top\mathbf{J}(\mathbf{x}^n) + 
+  \lambda^n\mathbf{I}]\Delta \mathbf{x}^n = 
+  -\mathbf{J}(\mathbf{x}^n)^\top\mathbf{r}(\mathbf{x}^n)
 \end{equation}\label{eq:damping_full}
 
 At this point, one solves above linear system of equations to find the traveling direction 
 $\Delta \mathbf{x}^n$. Another important point is to determine the traveling 
 distance on the objective function when choosing for the next point. This 
-is known as \textit{step length}. It has a great importance in the 
+is known as \textit{step length}. It has great importance in the 
 convergence time. 
-In the LM, the step length is determined by tuning $\lambda$ parameter, also known as 
+In the LM, the step length is determined by tuning $\lambda$ parameter, also 
+known as the 
 \textit{damping parameter}. However, one may ask 
 how to tune the parameter 
 so that it will allow the algorithm to converge to a local minimum efficiently 
@@ -4107,17 +4154,19 @@ Based on the $\rho^n$, one creates an empiric strategy:
 
 \begin{enumerate}
   \item If $\rho^n \geq t_2$ (where $t_2$ upper boundary threshold), then it is considered as a very successful step; 
-    therefore, we can even choose smaller value for damping factor in the next iteration 
+    therefore, we can even choose a smaller value for damping factor in the 
+    next iteration 
     so that 
     we increase the convergence speed.
-  \item If $t_1 \leq \rho^n < t_2$ (where $t_1$ lower boundary threshold), then it is still a successfull step but we 
+  \item If $t_1 \leq \rho^n < t_2$ (where $t_1$ lower boundary threshold), 
+  then it is still a sucessfull step but we 
     can keep the damping factor same in the next iteration so that we don't 
     miss the local minimum.
   \item If $\rho^n < t_1$, then it is a bad step; therefore, we can reject this 
     damping factor choice and choose a larger value.
 \end{enumerate}
 
-Fundemantally, this is how LM algoritm works. 
+Fundamentally, this is how LM algorithm works. 
 One must keep in mind that even the sophisticated LM algorithm might fail to 
 converge a desired interest point on the objective function. Hence, 
 there are two crucial factors on which any gradient descent based algorithm depends:
@@ -4127,8 +4176,8 @@ there are two crucial factors on which any gradient descent based algorithm depe
 \end{itemize}
 
 It is important that we provide a good initial
-guess and remove outliers from dataset. 
-If these two criterias do not meet, the LM might converge to the
+guess and remove outliers from the dataset. 
+If these two criteria do not meet, the LM might converge to the
 different local minimum or might not even converge to
 an optimal solution. 
 That being said, we can now summarize the algorithm into five steps:
@@ -4148,10 +4197,11 @@ That being said, we can now summarize the algorithm into five steps:
 
 \section{Least Squares on a Manifold}\label{sc_lsq_manifold}
 
-A manifold is a special topological space whose local spaces resemble an Euclidean.
+A manifold is a special topological space whose local spaces resemble a 
+Euclidean.
 In fact, manifolds are a vast topic in differential geometry, but
 we will explain how least squares optimization on 
-a manifold works pratically in the context of VO. The formulations and 
+a manifold works practically in the context of VO. The formulations and 
 derivations are mostly taken from \parencite{Sol2016}. However, 
 the original work was implemented for the graph SLAM problem. Thus, 
 we change the residuals function for the VO problem accordingly. 
@@ -4160,9 +4210,10 @@ The ultimate goal in VO is to find the relative pose of a camera from
 $k^{th}$ frame to $k+1^{th}$ frame. 
 We define a relative pose as a state vector $\mathbf{x}_{k,k+1}$. 
 Through LM algorithm, we hope to 
-find a optimal solution $\mathbf{x^*}_{k,k+1}$ where the residuals are minimum.
-Remember that we iterately descent to the minimum by performing an 
-addition operator $\Delta \mathbf{x}$ to each parameters in the state vector. 
+find an optimal solution $\mathbf{x^*}_{k,k+1}$ where the residuals are 
+minimum.
+Remember that we iteratively descent to the minimum by performing an 
+addition operator $\Delta \mathbf{x}$ to each parameter in the state vector. 
 However, one important point to note that our state vector is comprised of 
 translation $\mathbf{t}_{k,k+1}$ and rotation $\mathbf{q}_{k,k+1}$. 
 
@@ -4182,7 +4233,7 @@ A solution to this issue would be optimizing on a manifold.
 Hence, we need to introduce \textit{box-plus} operator
 $\boxplus : \mathcal{S} \times \R^n \rightarrow \mathcal{S}$ where $\mathcal{S}$ 
 is an arbitrary manifold and $\R^n$ is a N-dimensional real value vector space. 
-As illustrated in figure \ref{fig:manifold}, 
+As illustrated in Figure \ref{fig:manifold}, 
 the goal is to perform small changes that are mapped to a local neighborhood in 
 its own state space:
 
@@ -4222,23 +4273,18 @@ with a small unit quaternion as follows:
   \begin{bmatrix} \sqrt{1-||\Delta \phi||^2} \\ \Delta \phi \end{bmatrix}
 \end{equation}
 
-%\begin{equation}
-%  \begin{aligned}
-%  \mathbf{t}^{n+1} &= \mathbf{t}^n + \Delta \mathbf{t} \\
-%  \mathbf{q}^{n+1} & = \mathbf{q}^n \otimes 
-%  \begin{bmatrix} \sqrt{1-||\Delta \phi||^2} \\ \Delta \phi \end{bmatrix}
-%  \end{aligned}
-%\end{equation}
-
 How does our new state vector with a manifold effect the LM algoritm? 
 Remember that we form $q_{LM}(\Delta \mathbf{x})$ quadratic functions 
-from residuals function $\mathbf{r_s}(\mathbf{x}_{k,k+1})=\mathbf{L}^T\mathbf{r}(\mathbf{x}_{k,k+1})$ 
+from residuals function 
+$\mathbf{r_s}(\mathbf{x}_{k,k+1})=\mathbf{L}^\top\mathbf{r}(\mathbf{x}_{k,k+1})$
+ 
 (see notation \eqref{eq:residuals_w_back_and_forward_matrix})
 for each iteration around $\mathbf{x}^n_{k,k+1}$ by calculating Jacobian 
-$\mathbf{J_s}(\mathbf{x}^n_{k,k+1})=\mathbf{L}^T\mathbf{J}(\mathbf{x}^n_{k,k+1})$
+$\mathbf{J_{tqs}}(\mathbf{x}^n_{k,k+1})=\mathbf{L}^\top\mathbf{J_{tq}}(\mathbf{x}^n_{k,k+1})$
 and 
 approximated Hessian matrix 
-$\mathbf{B_{LM,s}}=\mathbf{J_s}(\mathbf{x}^n_{k,k+1})^T\mathbf{J_s}(\mathbf{x}^n_{k,k+1}) + \lambda \mathbf{I}$.
+$\mathbf{B_{LMs}}=\mathbf{J_{tqs}}(\mathbf{x}^n_{k,k+1})^\top\mathbf{J_{tqs}}(\mathbf{x}^n_{k,k+1})
+ + \lambda \mathbf{I}$.
 Since we modify our state vector representation 
 and the corresponding updating operation, we need to modify the way we calculate 
 derivatives as well. We will drop $k,k+1$ subscript from the state vector 
@@ -4250,16 +4296,18 @@ Here is the quadratic function of the residuals function with the modified eleme
   F(\mathbf{x}^n \boxplus \Delta \mathbf{x}) \approx 
   q_{LM} (\Delta \mathbf{x}) = 
   \frac{1}{2}
-\mathbf{r_s}(\mathbf{x}^n)^T\mathbf{r_s}(\mathbf{x}^n) + 
-\mathbf{r_s}(\mathbf{x}^n)^T\mathbf{J'_s}(\mathbf{x}^n)\Delta \mathbf{x} + 
-\frac{1}{2} \Delta \mathbf{x}^T\mathbf{B'_{LM,s}}(\mathbf{x}^n)\Delta \mathbf{x}
+\mathbf{r_s}(\mathbf{x}^n)^\top\mathbf{r_s}(\mathbf{x}^n) + 
+\mathbf{r_s}(\mathbf{x}^n)^\top\mathbf{J_{tqsm}}(\mathbf{x}^n)\Delta 
+\mathbf{x} + 
+\frac{1}{2} \Delta \mathbf{x}^\top\mathbf{B'_{LMs}}(\mathbf{x}^n)\Delta 
+\mathbf{x}
 \end{equation}
 
 One can apply chain rule to form the new Jacobian matrix for the manifold operation:
 
 \begin{equation}
   \begin{aligned}
-  \mathbf{J'_s}(\mathbf{x}^n) = 
+  \mathbf{J_{tqsm}}(\mathbf{x}^n) = 
   \mathbf{L} \frac{\partial \mathbf{r_s}(\mathbf{x}^n)}
   {\partial \Delta \mathbf{x}} \bigg|_{\mathbf{x}^n} & = 
   \mathbf{L} \frac{\partial \mathbf{r_s}(\mathbf{x}^n)}
@@ -4267,24 +4315,26 @@ One can apply chain rule to form the new Jacobian matrix for the manifold operat
   \frac{\partial (\mathbf{x}^n \boxplus \Delta \mathbf{x})}
   {\partial \Delta \mathbf{x}} \bigg|_{\mathbf{x}^n,\Delta \mathbf{x}=0} \\
   & = 
-  \mathbf{L}\mathbf{J}(\mathbf{x}^n) 
+  \mathbf{L}\mathbf{J_{tq}}(\mathbf{x}^n) 
   \mathbf{M}(\mathbf{\mathbf{x}^n \boxplus \Delta \mathbf{x}})
   = 
-  \mathbf{L}\mathbf{J'}(\mathbf{x}^n)
+  \mathbf{L}\mathbf{J_{tqm}}(\mathbf{x}^n)
   = 
-  \mathbf{J'_s}(\mathbf{x}^n)
+  \mathbf{J_{tqsm}}(\mathbf{x}^n)
 \end{aligned}
 \end{equation}\label{eq:new_jacobian_chain_rule}
 
 where $\mathbf{L}$ is the matrix from the Cholesky factorization of information matrix, 
-$\mathbf{J}(\mathbf{x}^n)$ is the older Jacobian matrix with the respect to 
+$\mathbf{J_{tq}}(\mathbf{x}^n)$ is the older Jacobian matrix with the respect 
+to 
 older state vector where we assumed that all elements are in Euclidean space 
 (see notation \eqref{eq:jacob_back_proj}), 
 $\mathbf{M}(\mathbf{\mathbf{x}^n \boxplus \Delta \mathbf{x}})$ is the 
 matrix that we form by taking partial derivative with respect to new state vector.
 Let's investigate further by breaking the new Jacobian matrix into smaller matrices 
 to understand better. For weighting the optimization process, 
-we assign weights with the corresponding cofindence ellipsoid of matched features 
+we assign weights with the corresponding confindence ellipsoid of matched 
+features 
 from both consecutive frames by means of back- and forward-projection.
 
 \begin{equation}
@@ -4302,18 +4352,18 @@ from both consecutive frames by means of back- and forward-projection.
 where $\mathbf{L}^{(i)}_{k} \text{, } \mathbf{L}^{(i)}_{k+1} \in \R^{3x3}$ are 
 calculated from 
 $\mathbf{\Omega_{xyz}}^{(i)}_{,k}  =  {\mathbf{Q_{xyz}}^{(i)}_{,k}}^{-1}$ 
-by factorization $\mathbf{\Omega = LL^T}$.
+by factorization $\mathbf{\Omega = LL^\top}$.
 For each matched feature, 
 the calculation of older Jacobian with back- and forward-projection is the following:
 
 \begin{equation}
-  \mathbf{J}(\mathbf{x}^n) = \frac{\partial 
+  \mathbf{J_{tq}}(\mathbf{x}^n) = \frac{\partial 
   \mathbf{r}(\mathbf{x}^n)}{\partial \mathbf{x}^n } \bigg|_{\mathbf{x}^n}
   = 
   \begin{bmatrix}
-    \horzbar & \nabla \mathbf{r}^{(1)}(\mathbf{x}^n)^T & \horzbar \\
+    \horzbar & \nabla \mathbf{r}^{(1)}(\mathbf{x}^n)^\top & \horzbar \\
      & \vdots & \\
-     \horzbar & \nabla \mathbf{r}^{(m)}(\mathbf{x}^n)^T & \horzbar 
+     \horzbar & \nabla \mathbf{r}^{(m)}(\mathbf{x}^n)^\top & \horzbar 
   \end{bmatrix}
   =
   \begin{bmatrix}
@@ -4322,7 +4372,7 @@ the calculation of older Jacobian with back- and forward-projection is the follo
     \vdots \\
     \mathbf{J_b}^{(m)}(\mathbf{x}^n) \\
     \mathbf{J_f}^{(m)}(\mathbf{x}^n)
-  \end{bmatrix}^T
+  \end{bmatrix}^\top
 \end{equation}
 
 where $\mathbf{J_b}^{(i)}(\mathbf{x}^n) \text{, } 
@@ -4441,10 +4491,10 @@ Thus, we can solve the following linear system of equation for the LM
 to calculate descent direction and step length:
 
 \begin{equation}\label{eq:delta_x_step_length_manifold}
-  (\mathbf{J'_s}(\mathbf{x}^n)^T\mathbf{J'_s}(\mathbf{x}^n) 
+  (\mathbf{J_{tqsm}}(\mathbf{x}^n)^\top\mathbf{J_{tqsm}}(\mathbf{x}^n) 
   + \lambda^n \mathbf{I})
   \Delta \mathbf{x} =  
-  -\mathbf{J'_s}(\mathbf{x}^n)\mathbf{r_s}(\mathbf{x}^n)
+  -\mathbf{J_{tqsm}}(\mathbf{x}^n)\mathbf{r_s}(\mathbf{x}^n)
 \end{equation}
 
 Then, we can add corresponding small changes to the new state vector:
@@ -4460,21 +4510,23 @@ until we converge to an optimal solution as discussed in appendices \ref{sc_leas
 \section{Error Propagation Law} \label{sc_error_prop_law}
 
 In state estimation applications, sensor measurements along with their uncertainty are 
-usually fused together to keep the uncertainy of the estimated state vector bounded 
+usually fused together to keep the uncertainty of the estimated state vector 
+bounded 
 over time. 
 The uncertainty is represented with a probability distribution, 
 which is desired to be distributed as Gaussian. 
-Let's assume that we get the $X$ measurement and the probabilty distribution 
-$p(X)$ representing the uncertainty of the $X$ measurment. 
+Let's assume that we get the $X$ measurement and the probability distribution 
+$p(X)$ representing the uncertainty of the $X$ measurement. 
 There is also a $f(X)=Y$ function that takes $X$ as an input and outputs 
 as a $Y$. 
-To estimate uncertainty of the output $Y$, 
+To estimate the uncertainty of the output $Y$, 
 we map the probability distribution function $p(X)$, 
-to the probabilty distribution function $p(Y)$ with the $f(X)$ function easily.
+to the probability distribution function $p(Y)$ with the $f(X)$ function 
+easily.
 This is called 
 \textit{error propagation law}. However, if $f(X)$ is a non-linear function, 
 it gets slightly complicated. This one-dimensional case with non-linearity is 
-illustrated in figure \ref{fig:error_propagation}.
+illustrated in Figure \ref{fig:error_propagation}.
 
 \begin{figure}[H]
 	\centering
@@ -4511,10 +4563,10 @@ is used to describe the uncertainty:
   \sigma_Y = \frac{\partial f}{\partial X}\bigg|_{X=\mu_x} \sigma_X
 \end{equation}
 
-It is critical to note that propagated $(\mu_x, \sigma_X)$ are only 
+It is critical to note that propagated $(\mu_x, \sigma_X)$ are an only 
 approximation to real mapping $f(X)$ function. To eliminate errors 
 caused by linearization, standard deviation $\sigma_X$ 
-should be small at known $\mu_x$ mean. 
+should be small at the known $\mu_x$ mean. 
 
 As seen, above example considers $f(X)=Y$ with a single input and output. 
 On the other hand, if $\mathbf{X}=(X_1,\dots,X_n) \in \R^n$ has multiple inputs with 
@@ -4548,7 +4600,8 @@ the partial derivates:
 Now that we have the Jacobian matrix, we can propagate the errors for multivariant case:
 
 \begin{equation}
-  \mathbf{Q}_y = \mathbf{J}(\mathbf{X}_{\mu_x})^T \mathbf{Q}_x \mathbf{J}(\mathbf{X}_{\mu_x})
+  \mathbf{Q}_y = \mathbf{J}(\mathbf{X}_{\mu_x})^\top \mathbf{Q}_x 
+  \mathbf{J}(\mathbf{X}_{\mu_x})
 \end{equation}
 
 where $\mathbf{Q}$ is the covariance matrix that corresponds to uncertainty information.
@@ -4560,55 +4613,77 @@ the feature covariances to the pose covariance (see notation
 
 \section{Calibration Parameters of TUM RGB-D}
 
-\begin{center}
-  \begin{tabular}{|c|c|c|c|}\label{tb:tum_calib_param}
+\begin{table}[H]
+	\caption{TUM RGB-D Calibration Parameters}
+	\centering
+  \begin{tabular}{c|c|c|c}
     Dataset & Parameter Name & Value & Explanation\\
-    RGB TUM FR1 & $f_x$ & 517.3 & focal length along x direction\\
+    \hline
+    \multirow{9}{*}{RGB TUM FR1} & $f_x$ & 517.3 & focal length along x 
+    direction\\
     & $f_y$ & 516.5 & focal length along y direction\\
-    & $c_x$ & 318.6 & principle offset point along x direction\\
-    & $c_y$ & 255.3 & principle offset point along y direction\\
-    & $k_1$ & 0.2624 & the coefficients of distortion\\
+    & $c_x$ & 318.6 & principal offset point along x direction\\
+    & $c_y$ & 255.3 & principal offset point along y direction\\
+    & $k_1$ & 0.2624 & \multirow{5}{*}{the coefficients of distortion}\\
     & $k_2$ & -0.9531 & \\
     & $k_3$ & 1.1633 & \\
     & $p_1$ & -0.0054 & \\
     & $p_2$ & 0.0026 & \\
-    RGB TUM FR2 & $f_x$ & 520.9 & focal length along x direction\\
+    \hline
+    \multirow{9}{*}{RGB TUM FR2} & $f_x$ & 520.9 & focal length along x 
+    direction\\
     & $f_y$ & 521.0 & focal length along y direction\\
-    & $c_x$ & 325.1 & principle offset point along x direction\\
-    & $c_y$ & 249.7 & principle offset point along y direction\\
-    & $k_1$ & 0.2312 & the coefficients of distortion\\
+    & $c_x$ & 325.1 & principal offset point along x direction\\
+    & $c_y$ & 249.7 & principal offset point along y direction\\
+    & $k_1$ & 0.2312 & \multirow{5}{*}{the coefficients of distortion}\\
     & $k_2$ & -0.7849 & \\
     & $k_3$ & 0.9172 & \\
     & $p_1$ & -0.0033 & \\
     & $p_2$ & -0.0001 & \\
-\end{tabular}
-\end{center}
+\end{tabular}	
+\label{tb:tum_calib_param}
+\end{table}
+
 
 \section{Tuning Parameters of CoVO}\label{sc_covo_tuning_param}
 
+\begin{table}[H]
+\caption{CoVO Parameters}
+\centering
 \begin{center}
-  \begin{tabular}{|c|c|c|c|}
-    VO Pipeline & Parameter Name & Value & Explanation\\
-    ORB & scale\_factor & 1.2 & Scale factor smoothing images\\
+  \begin{tabular}{c|c|c|p{4.5cm}}
+    VO Pipeline & Parameter Name & Value & Explanation\\ \hline
+    \multirow{7}{*}{ORB} & scale\_factor & 1.2 & Scale factor smoothing 
+    images\\
     & n\_features & 1000 & Number of features \\
     & n\_levels & 8 & Number of pyramid levels\\
     & edge\_thres& 20 & FAST edge threshold (in pix)\\
     & filter\_score\_perc & 75 & Top N corners for matching (in \%)\\
     & wta\_k & 2 & Number of random points to form BRIEF\\
-    & patch\_size & 31 & Number of pixels to form BRIEF\\
-    3D Point & depth\_near\_thres & 0.5 & Nearest depth threshold (in m)\\
-    & depth\_far\_thres & 5 & Farthest depth threshold (in m)\\
-    Operability & insuff\_n\_features & 30 & Insufficient number of matched features for VO\\
-    Uncertainty & var\_u & $8^2$ & Pixel noise variance along $u$ direction\\
+    & patch\_size & 31 & Number of pixels to form BRIEF\\ \hline
+    \multirow{2}{*}{Depth Range} & depth\_near\_thres & 0.5 & Nearest depth 
+    threshold (in m)\\
+    & depth\_far\_thres & 5 & Farthest depth threshold (in m)\\ \hline
+    Operability & insuff\_n\_features & 30 & Insufficient number of matched 
+    features for VO\\ \hline
+    \multirow{3}{*}{Uncertainty} & var\_u & $8^2$ & Pixel noise variance along 
+    $u$ direction\\ 
     & var\_v & $8^2$ & Pixel noise variance along $v$ direction\\
-    & var\_d & $\sigma_Z(Z,\theta)$ (see notation 
-    \eqref{eq:depth_noise_model}) 
-    & Depth noise variance model\\
-    Pose Covariance & cov\_scale & $4^2$ & Scaling factor to keep pose covariance conservative\\
-    Ceres & lin\_solver\_type & DENSE\_SCHUR & Linear solver type for calculating step size\\
-    & cov\_solver\_type & SPARSE\_QR & Linear solver type for calculating covariance matrix\\
+    & var\_d & $\sigma_Z(Z,\theta)$
+    & Depth noise variance model\\ \hline
+    Pose Covariance & cov\_scale & $4^2$ & Scaling factor to keep pose 
+    covariance conservative\\ \hline
+    \multirow{2}{*}{Ceres} & lin\_solver\_type & DENSE\_SCHUR & Linear solver 
+    type for 
+    calculating the step size\\
+    & cov\_solver\_type & SPARSE\_QR & Linear solver type for calculating the 
+    covariance matrix\\
   \end{tabular}
+	\label{tb:covo_param}
 \end{center}
+\end{table}
+
+\end{appendices}
 
 \printbibliography[heading=bibintoc]
 
