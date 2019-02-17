@@ -55,14 +55,14 @@ Thesis Feebacks from Sven
 # Format Checklist 
 
 * [x] Grammar
-* [ ] Clarity of your arguments
-* [ ] TOC
+* [x] Clarity of your arguments
+* [x] TOC
 * [ ] LOF - Left Margin Issue
 * [x] LOA
 * [ ] Acknowledgement
 * [ ] Declaration 
 * [ ] Figures and Tables
-* [ ] Bibliography
+* [x] Bibliography
 * [x] Fix transposes: \top
 * [x] Change J' to J_tq
 

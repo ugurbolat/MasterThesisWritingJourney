@@ -5,6 +5,7 @@
 
 \documentclass[a4paper]{report}
 % ***************************PACKAGES***************************
+\usepackage[Bjornstrup]{fncychap}
 \usepackage{graphicx}
 \usepackage{graphbox}
 \usepackage{caption,setspace}
@@ -22,16 +23,17 @@
 \usepackage[
     backend=biber,
     parentracker=true,
-    style=authoryear,
+    style=authoryear
   ]{biblatex}
-  \addbibresource{/home/bolatu/Documents/mendeley_bib/Master_Thesis_Bib.bib}
+  \addbibresource{../covo.bib}
 \usepackage{hyperref}
 \usepackage{bookmark}
 \usepackage{algorithm}
 \usepackage[noend]{algpseudocode}
 \usepackage{array}
 \usepackage{mathtools}
-\usepackage[titletoc]{appendix}
+%\usepackage[titletoc]{appendix}
+\usepackage{appendix}
 \usepackage{multirow}
 
 % ***************************NEW COMMANDS***************************
@@ -301,7 +303,7 @@ description = pixels noise variance
 
 {\Huge \textbf{Master Thesis}}\\
 \vspace{0.5cm}
-{\huge \textbf{An Error Aware RGB-D \\Visual Odometry}}
+{\huge \textbf{An Error-Aware RGB-D \\Visual Odometry}}
 
 
 \vspace{2.5cm}
@@ -334,15 +336,16 @@ Professorship of Process Automation
 \textit{Robustness} of a robot can be defined as an ability to operate under
 \textit{uncertainty} without the occurrence of a downtime. There are
 well-designed robots whose task is to solve a defined problem without moving
-from its assembled position.  They can operate safely as the uncertainty of
-operational components, and its controlled environment are modeled with
-substantial accuracy and precision.  However, once we build robots that move
+from its assembled position.  They can operate safely because the uncertainty 
+of
+operational components and its controlled environment are modeled with
+substantial accuracy and precision. However, once we build robots that move
 around and interact with the real world, the number of unforeseen events increase
 drastically. In such scenarios, robustness is crucial.  The way we increase
 robustness is to have intelligent agents and accurate uncertainty models of
 their sensors and estimations. That being said, this work focuses on the latter
 and aims to investigate the uncertainty of RGB-D camera sensor in the context
-of Visual Odometry.
+of Visual Odometry (VO).
 
 So far, researchers and engineers have developed many RGB-D camera based VO
 applications.  In filter-based or graph-based SLAM applications, they are
@@ -1524,7 +1527,7 @@ descriptors with the calculated corners' angle. In short, although the overall
 accuracy 
 of SIFT is better than ORB, we choose ORB because it is faster and more than 
 SIFT. For more details on how to extract ORB features, I refer readers to 
-appendices \ref{sb_sc_orb}.
+Appendices \ref{sb_sc_orb}.
 
 
 \section{Feature Matching} \label{sc_feature_matching}
@@ -1605,7 +1608,7 @@ algorithm which fits the desired model with the presence of outliers by
 selecting a subset of dataset randomly and improving parameters of model each 
 iteration. Note that RANSAC works well if at least half of the dataset 
 contains inliers. Since outliers plays a big part of modeling a metric 
-uncertainty of features accurately, I refer readers to appendices 
+uncertainty of features accurately, I refer readers to Appendices 
 \ref{sb_sc_ransac_app} 
 where we discuss details of the RANSAC algorithm. 
 
@@ -1686,7 +1689,9 @@ follows:
 where $\mathbf{q}_{k,k+1} \otimes \mathbf{q}_{k}$ is the product of two 
 quaternions that the former is the rotation of the camera movement and that 
 the latter is the 
-orientation of the camera at the $k^{th}$ pose.
+orientation of the camera at the $k^{th}$ pose. For more detailed formulation 
+and better visualization for rigid-body transformations, I refer readers to 
+Appendices \ref{sc_rigid_body_transformations}.
 
 \begin{figure}[H]
 	\centering
@@ -1959,8 +1964,9 @@ if the operating environment lacks a sufficient number of feature points.
 An \textit{error-aware} Visual Odometry estimates an ego-motion of a camera
 along with the uncertainty of its estimations.  Remember that the primary goal
 of a sensor fusion application is to combine multiple sensors to get a better
-estimation of its pose.  In this case, we need a metric uncertainty
-representation for each sensor.  That is why we require a covariance matrix for
+estimation of its pose.  Hence, we need a metric uncertainty
+representation for each sensor.  That is also why we require a covariance 
+matrix for
 every pose estimation from all sensors so that we can compensate sensors'
 biases dynamically throughout the trajectory.  Ideally, a good error-aware VO
 system should tell us how confident its pose estimation at a specific time
@@ -1996,7 +2002,7 @@ pixel uncertainty of features in the 3D world, the conic ray model
 %   Tracking by a Mobile Robot: A Geometric and Probabilistic Approach
 
 Moreover, one should consider depth uncertainty as well. In this perspective,
-In \parencite{Mallick2014b}, authors gathered existing studies about the depth
+\parencite{Mallick2014b} gathered existing studies about the depth
 camera's noise of Kinect. Since Kinect has two version that uses different
 technologies for measuring depth information, researchers compared the
 performance of both versions in \parencite{Wasenmuller2017b} and 
@@ -2019,20 +2025,21 @@ mathematical model for the standard deviation of depth error.
 %   mapping applications
 % - Choo2014 - Statistical Analysis-Based Error Models for the Microsoft
 
-Even though the studies \parencite{Park2012a} and \parencite{Nguyen2012a} that 
-deals with
-Kinect model the uncertainty, they don't utilize them on a VO system. In
-\parencite{Park2012a}, the author contributed an important methodology on how 
+Even though the studies such as \parencite{Park2012a} and 
+\parencite{Nguyen2012a} 
+deal with Kinect model the uncertainty, they don't utilize them on a VO 
+system. In
+\parencite{Park2012a}, the author offered an method on how 
 to
 model confidence ellipsoids of 3D point features measured by Kinect. In this
 paper, the standard deviation of the depth noise is assumed to be constant.  In
-fact, it increases with distance from camera quadratically. 
-\parencite{Nguyen2012a},
-however, addresses this issue by defining a quadratic function whose parameters
+fact, it increases with distance from camera quadratically. However, 
+\parencite{Nguyen2012a} addresses this issue by defining a quadratic function 
+whose parameters
 are identified with the optimization process.  They even evaluate the
 performance of their proposed model for pose estimation, which is quite
 relevant to our task, but settings of their experimentation are unclear since
-they focus mostly on 3D reconstruction.
+they focus mostly on improving 3D reconstruction accuracy.
 
 For applications such as SLAM and 3D Reconstruction, there are other papers
 \parencite{Endres2014}, \parencite{Konolige08}, \parencite{Di2016a} that 
@@ -2079,9 +2086,9 @@ implementation can be found in:
 Many VO systems require parameter tuning process and have algorithmic
 variations.  Thus, building a reliable VO can be a daunting task.  To minimize
 implementation errors and development time, we take advantage of two commonly
-used open source libraries; i.e., OpenCV (\parencite{opencv}) for handling 
+used open source libraries; i.e., OpenCV \parencite{opencv} for handling 
 image
-feature manipulations and Ceres (\parencite{ceres-solver}) for optimization. We
+feature manipulations and Ceres \parencite{ceres-solver} for optimization. We
 chose these two libraries because they are mature open source projects that
 ensure efficiency and allow required customization.  In the following part of
 this section, we will explain the essential steps that we take to build CoVO:
@@ -2566,8 +2573,8 @@ residual blocks by columns:
 \end{aligned} \end{equation}
 
 Above equation is the final residuals function that we are going to minimize.
-The LM algorithm can be used for the optimization. I refer readers for the
-fundamental theory behind the LM algorithm to appendices
+LM algorithm can be used for the optimization. I refer readers for the
+fundamental theory behind the algorithm to Appendices
 \ref{sc_least_squares}.  However, we also need to extend regular least squares
 problem to weighted least squares problem since we multiply residual blocks
 with inverse covariance matrices.  Let's omit $(k,k+1)$ part and generalize the
@@ -2586,7 +2593,7 @@ where $\mathbf{\Omega_{xyz} = Q^{-1}_{xyz}}$ is the \textit{information
 matrix}, represent a relationship between covariance matrices and weighting
 process.  That is, the smaller covariance (smaller the uncertainty in other
 words) for features, the greater weight will have in the optimization.  In this
-respect, the LM will attempt to converge to an optimal solution in which the
+respect, LM will attempt to converge to an optimal solution in which the
 rotation and translation information is sufficient by iteratively updating the
 state vector:
 
@@ -2598,7 +2605,7 @@ state vector is in Euclidean space. Thus, one can update the state vector with
 a regular vector addition operation.  However, this addition operation does not
 produce good results for the rotational part. This is because the rotation is
 the tangent space.  For the further details of the optimization on a manifold
-for our VO, I refer readers to appendices \ref{sc_lsq_manifold}.
+for our VO, I refer readers to Appendices \ref{sc_lsq_manifold}.
 
 To sum up, we explained how we form the residuals function for the optimization
 by including back-transform and forward-transform function. We also extended
@@ -2643,7 +2650,7 @@ priori-known landmarks, the pose drift will grow forever.}
 Calculating a covariance matrix for the estimated state vector parameters is
 fairly straightforward if the optimization for the relative camera pose is
 performed as described in the previous section. We can simply utilize the
-\textit{error propagation law}, which I refer readers to appendices
+\textit{error propagation law}, which I refer readers to Appendices
 \ref{sc_error_prop_law} for further details of the theory.  In this case, we
 require the Jacobian matrix at the optimal solution and corresponding
 covariance  matrices for each point feature. Then, we can propagate them to get
@@ -3093,7 +3100,7 @@ the pixel error caused by pseudo inliers, we run our CoVO algorithm up until
 the optimization part at which we estimate the 
 $\mathbf{x^*}_{k,k+1}(=\mathbf{T^*}_{k,k+1})$ transformation information.  At 
 this point, we already have feature matches that include pseudo inliers.  Now, 
-instead of estimating the transformation with the LM algorithm, we can rotate 
+instead of estimating the transformation with LM algorithm, we can rotate 
 and translate $\mathbf{u}^{(k,1:m)}$ features from $k^{th}$ frame towards 
 $k+1^{th}$ frame and save them as $\mathbf{\hat{u}}^{(k+1,1:m)}$.  In an ideal 
 case, we expect transformed $\mathbf{\hat{u}}^{(k+1,1:m)}$ features and 
@@ -3267,7 +3274,13 @@ representation of RPE for more explicit comparison in Figure
 \label{fig:comp_all_dataset}
 \end{figure}
 
-We can say that FOVIS is more accurate than CoVO in the context of relative pose estimations for several reasons we can name.  FOVIS utilizes the keyframe scheme and different outlier rejection algorithm than RANSAC. Also, it provides a better initial guess to its optimizer after several refinement processes throughout the pipeline. Most importantly, it minimizes the 3D-to-2D correspondences which are less prone to settle for undesired local minimums in the LM algorithm.
+We can say that FOVIS is more accurate than CoVO in the context of relative 
+pose estimations for several reasons we can name.  FOVIS utilizes the keyframe 
+scheme and different outlier rejection algorithm than RANSAC. Also, it 
+provides a better initial guess to its optimizer after several refinement 
+processes throughout the pipeline. Most importantly, it minimizes the 3D-to-2D 
+correspondences which are less prone to settle for undesired local minimums in 
+LM algorithm.
 
 \begin{table}[H]
 \caption{FOVIS versus CoVO With RMSE RPE}
@@ -3379,18 +3392,18 @@ matches. The fact that RANSAC is non-deterministic results in remaining
 outliers that are greater than RANSAC's acceptance threshold. We suggested that
 the remaining outliers treated as pseudo inliers.  However, once the pixel
 uncertainty caused by pseudo inliers grows, it then brings out the issues with
-the linearizations.  Secondly, we claimed that the effect of pseudo inliers on
-the pixel uncertainty would be bounded by the standard deviation values which
-one could identify by running exhaustive tests on many real-world datasets.
-This claim held as we observed that the pixel errors were ranged between 6-8 
-pixels
+the linearizations.  Secondly, we claimed that 
+one could identify the effect of pseudo inliers by running exhaustive tests on 
+many real-world datasets. 
+This claim held as we observed that the pixel errors were bounded 
 over seven different datasets. In the end, our solution was to take the largest
-errors to cover the worst case scenario.  As a result, it leads to us obtaining less 
+errors to cover the worst case scenario.  As a result, this design choice 
+leads to us obtaining less 
 adaptive covariance estimations. 
 
 In further research, more sophisticated approaches are required, considering
 heavy parameterization being done for the proposed algorithm such as the covariance
-scaling factor due to linearization and the chosen standard deviation of the
+scaling factor due to linearization and the standard deviation of the
 pixel errors caused by pseudo inliers. For example, a more self-tuning approach
 where the parameters of the error model are also estimated based on the
 resulting estimated poses could provide more dynamic uncertainty information.
@@ -3410,7 +3423,7 @@ successful.
 
 \begin{appendices}
 
-\chapter{} \label{cp_appendices}
+\chapter{Appendix} \label{cp_appendices}
 
 \section{ORB} \label{sb_sc_orb}
 
@@ -3802,7 +3815,7 @@ $\mathbf{t}_{0,1}$ simple vector addition operation (see Figure
 \subcaptionbox{p0}{\includegraphics[width = 0.45\linewidth]{fig/eva_graphs/append_p0.pdf}} &
 \subcaptionbox{p1}{\includegraphics[width = 0.45\linewidth]{fig/eva_graphs/append_p1_trans.pdf}}
 \end{tabular}
-\caption{A Translation Example in $\R^3$}
+\caption{Translation Example in $\R^3$}
 \end{figure}\label{fig:app_translation}
 
 
@@ -3839,7 +3852,7 @@ where $[\mathbf{q}_{0,1}]_L$ is the left quaternion product in matrix form.
 \subcaptionbox{p0}{\includegraphics[width = 0.45\linewidth]{fig/eva_graphs/append_p0.pdf}} &
 \subcaptionbox{p1}{\includegraphics[width = 0.45\linewidth]{fig/eva_graphs/append_p2_rot.pdf}}
 \end{tabular}
-\caption{A Rotation Example in $SO(3)$}
+\caption{Rotation Example in $SO(3)$}
 \end{figure}\label{fig:app_rotation}
 
 
@@ -3867,7 +3880,7 @@ a vector $\mathbf{p}$ with zero scalar part.
 \subcaptionbox{p0}{\includegraphics[width = 0.45\linewidth]{fig/eva_graphs/append_p0.pdf}} &
 \subcaptionbox{p1}{\includegraphics[width = 0.45\linewidth]{fig/eva_graphs/append_p3_trans_rot.pdf}}
 \end{tabular}
-\caption{A Transformation Example in $SE(3)$}
+\caption{Transformation Example in $SE(3)$}
 \end{figure}\label{fig:app_transformation}
 
 
@@ -3909,7 +3922,7 @@ minimum of the function that is highlighted as a red point cloud.
 	\centering
   \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
 	{fig/lsq_multivariable_function_example.jpg}
-	\caption{A Local Minimum at a Convex Quadratic Function}
+	\caption{Local Minimum at a Convex Quadratic Function}
 	\label{fig:lsq_multivariable_function_example}
 \end{figure}
 
@@ -3936,7 +3949,7 @@ The measurements for this supposed model is given in Figure
 \subcaptionbox{A Fitted Line}{\includegraphics[width = 0.5\linewidth]{fig/lsq_curve_fit_operation_v2.jpg}}
 \end{tabular}
 \caption
-{A Simple Curve Fitting Example}
+{Simple Curve Fitting Example}
 \label{fig:lsq_curve_fit}
 \end{figure}
 
@@ -4002,15 +4015,17 @@ $\mathbf{\mathbf{x^*}}=(1.9,2.1)$.
 At the end, if we place the solution into our model function, we
 get the $g(\mathbf{x};a)=1.9+2.1a$. With this line equation, we can draw the resulting fitted line 
 as shown in Figure \ref{fig:lsq_curve_fit}(b).
-The non-linear least squares solver that we used to find the optimization 
+In this thesis, the non-linear least squares solver that we used to find the 
+optimization 
 parameters is the \textit{Levenberg-Marquardt} method and we will explain 
 the algorithm in more details.
 
 \subsection{Levenberg-Marquardt}
-Levenberg-Marquardt (LM) is one of most well-known algoritm 
+Levenberg-Marquardt (LM) is one of most well-known algorithm 
 to solve least squares problem. It is the modified version of the \textit{Netwon's method}. 
 In this section, we describe the idea behind 
-the LM algorithm. Assume that we have a $\mathbf{r}(\mathbf{x}^n)$ residuals function which we 
+LM algorithm. Assume that we have a $\mathbf{r}(\mathbf{x}^n)$ residuals 
+function which we 
 wish to model:
 
 \begin{equation}
@@ -4038,7 +4053,8 @@ appears in Jacobian matrix form:
   \in \R^{mxn}
 \end{equation}
 
-The least squares problem has special forms which can be exploitted algebraically.
+The least squares problem has special forms which can be exploited 
+algebraically.
 Here, the residuals function and its derivatives are given:
 
 \begin{equation}
@@ -4061,7 +4077,8 @@ derivative)}
 \end{equation}\label{eq:residuals_objective_second_der}
 
 
-The fundamental idea behind the Newton's method is to form quadratic functions $q(\mathbf{x})$ 
+The fundamental idea behind Newton's method is to form quadratic functions 
+$q(\mathbf{x})$ 
 around the initial guess point $\mathbf{x}^0$ and search intelligently an optimal point at which 
 the quadratic function hugs (or fits) the objective function $F(\mathbf{x})$. 
 The quadratic function $q(\mathbf{x})$ is formed by approximating the objective function $F(\mathbf{x})$ 
@@ -4082,13 +4099,14 @@ we can form the quadratic model as follows:
 \end{equation}
 
 
-As said earlier, the LM is the modified version of the Netwon's method. 
+As said earlier, LM is the modified version of the Netwon's method. 
 The biggest difference lies on the utilization of second-order derivatives 
 in the algorithm. 
 The LM does not use the exact 
 second-order derivative $\nabla^2F(\mathbf{x}^n)$, that appears in the special form called \textit{Hessian}, 
 in its quadratic model. 
-This is because it is computationaly expensive to calculate Hessians. Instead, it uses an approximated 
+This is because it is computationally expensive to calculate Hessians. 
+Instead, it uses an approximated 
 Hessian model by removing $\sum_{i=1}^mr_i(\mathbf{x})\nabla^2r_i(\mathbf{x})$ 
 and replacing with 
 term $\lambda^n \mathbf{I}$. In this case, the approximated quadratic function will be:
@@ -4108,7 +4126,7 @@ $
 $ 
 is the approximated Hessian. Also, 
 $\lambda^n>0$ is a positive number and $\mathbf{I}\in \R^{kxk}$ is the identity matrix.
-After forming an approximated function at the initial guess, the LM 
+After forming an approximated function at the initial guess, LM 
 will search for the next point where the quadratic function converges to an  
 optimal solution which is a local minimum point. An intelligent direction  
 to search for a minimum point would be the direction along  
@@ -4137,7 +4155,7 @@ $\Delta \mathbf{x}^n$. Another important point is to determine the traveling
 distance on the objective function when choosing for the next point. This 
 is known as \textit{step length}. It has great importance in the 
 convergence time. 
-In the LM, the step length is determined by tuning $\lambda$ parameter, also 
+In LM, the step length is determined by tuning $\lambda$ parameter, also 
 known as the 
 \textit{damping parameter}. However, one may ask 
 how to tune the parameter 
@@ -4159,7 +4177,7 @@ Based on the $\rho^n$, one creates an empiric strategy:
     so that 
     we increase the convergence speed.
   \item If $t_1 \leq \rho^n < t_2$ (where $t_1$ lower boundary threshold), 
-  then it is still a sucessfull step but we 
+  then it is still a successful step but we 
     can keep the damping factor same in the next iteration so that we don't 
     miss the local minimum.
   \item If $\rho^n < t_1$, then it is a bad step; therefore, we can reject this 
@@ -4177,7 +4195,7 @@ there are two crucial factors on which any gradient descent based algorithm depe
 
 It is important that we provide a good initial
 guess and remove outliers from the dataset. 
-If these two criteria do not meet, the LM might converge to the
+If these two criteria do not meet, LM might converge to the
 different local minimum or might not even converge to
 an optimal solution. 
 That being said, we can now summarize the algorithm into five steps:
@@ -4227,7 +4245,8 @@ One can perform a regular $+$ addition operation with translation
 to travel on the objective function $F(\mathbf{x}_{k,k+1})$ since 
 it is in Euclidean space $\R^3$ where one can add vectors to each other. 
 Conversely, this does not apply for rotation 
-since it is $SO(3)$ lie group in which the elements $\phi \in \R^3$ of rotation 
+since it is $SO(3)$ Lie group in which the elements $\phi \in \R^3$ of 
+rotation 
 are in the tangent space $\mathcal{R} \in SO(3)$.
 A solution to this issue would be optimizing on a manifold.
 Hence, we need to introduce \textit{box-plus} operator
@@ -4245,7 +4264,7 @@ its own state space:
 	\centering
   \includegraphics[width=0.5\linewidth,natwidth=640,natheight=640]
   {fig/ref_imgs/sphere_manifold.png}
-  \caption[A Sphere Manifold]
+  \caption[Sphere Manifold]
   {Mapping a local neighborhood of the unit sphere $\mathcal{S}^2$ 
   onto the plane $R^2$. The image is taken from \parencite{Hertzberg2013}}
 	\label{fig:manifold}
@@ -4273,7 +4292,7 @@ with a small unit quaternion as follows:
   \begin{bmatrix} \sqrt{1-||\Delta \phi||^2} \\ \Delta \phi \end{bmatrix}
 \end{equation}
 
-How does our new state vector with a manifold effect the LM algoritm? 
+How does our new state vector with a manifold effect LM algorithm? 
 Remember that we form $q_{LM}(\Delta \mathbf{x})$ quadratic functions 
 from residuals function 
 $\mathbf{r_s}(\mathbf{x}_{k,k+1})=\mathbf{L}^\top\mathbf{r}(\mathbf{x}_{k,k+1})$
@@ -4333,7 +4352,7 @@ $\mathbf{M}(\mathbf{\mathbf{x}^n \boxplus \Delta \mathbf{x}})$ is the
 matrix that we form by taking partial derivative with respect to new state vector.
 Let's investigate further by breaking the new Jacobian matrix into smaller matrices 
 to understand better. For weighting the optimization process, 
-we assign weights with the corresponding confindence ellipsoid of matched 
+we assign weights with the corresponding confidence ellipsoid of matched 
 features 
 from both consecutive frames by means of back- and forward-projection.
 
@@ -4399,8 +4418,9 @@ Whereas, when taking partial derivative with the respect to
 new state vector that has same 3 elements from translation and 3 elements from 
 rotation as we choose the quaternion to be a unit.
 In total, it makes 6 unknown parameters for the new state vector. 
-This reducation in unknown parameters by constrainting a parameter 
-called \textit{local parameterization}. In this way, the covergence success and 
+This reduction in unknown parameters by constraining a parameter 
+called \textit{local parameterization}. In this way, the convergence success 
+and 
 speed will be improved. 
 Finally, to take the derivative with respect to new state vector, we need to consider 
 Euclidean space for translation and tangent space for rotation. For translation part, 
@@ -4487,7 +4507,7 @@ Now, let's combine both translation and rotation part into a single matrix:
 \end{equation}
 
 As explained, we now have the new Jacobian matrix based on a manifold operation.
-Thus, we can solve the following linear system of equation for the LM 
+Thus, we can solve the following linear system of equation for LM 
 to calculate descent direction and step length:
 
 \begin{equation}\label{eq:delta_x_step_length_manifold}
@@ -4505,7 +4525,8 @@ Then, we can add corresponding small changes to the new state vector:
 
 Finally, we keep updating the unknown state vector after solving 
 the equation \eqref{eq:delta_x_step_length_manifold} for the current iteration 
-until we converge to an optimal solution as discussed in appendices \ref{sc_least_squares}.
+until we converge to an optimal solution as discussed in Appendices 
+\ref{sc_least_squares}.
 
 \section{Error Propagation Law} \label{sc_error_prop_law}
 
@@ -4583,7 +4604,7 @@ matrix:
 \end{equation}
 
 where $\mathbf{J}(\mathbf{X}_{\mu_x})$ is the \textit{Jacobian} matrix formed by 
-the partial derivates:
+the partial derivatives:
 
 \begin{equation}
   \mathbf{J}(\mathbf{X}_{\mu_x}) = \begin{bmatrix} \frac{\partial}{\partial x_j }f_i(\mathbf{X}_{\mu_x}) \end{bmatrix}_{ij} 
@@ -4597,7 +4618,8 @@ the partial derivates:
   \in \R^{ixj}
 \end{equation}
 
-Now that we have the Jacobian matrix, we can propagate the errors for multivariant case:
+Now that we have the Jacobian matrix, we can propagate the errors for 
+the multivariate case:
 
 \begin{equation}
   \mathbf{Q}_y = \mathbf{J}(\mathbf{X}_{\mu_x})^\top \mathbf{Q}_x 
