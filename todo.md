@@ -57,11 +57,10 @@ Thesis Feebacks from Sven
 * [x] Grammar
 * [x] Clarity of your arguments
 * [x] TOC
-* [ ] LOF - Left Margin Issue
+* [x] LOF - Left Margin Issue
 * [x] LOA
-* [ ] Acknowledgement
 * [ ] Declaration 
-* [ ] Figures and Tables
+* [x] Figures and Tables
 * [x] Bibliography
 * [x] Fix transposes: \top
 * [x] Change J' to J_tq

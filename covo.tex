@@ -3,9 +3,18 @@
 % Last Change: Di Okt 16 10:00  2018 C
 %
 
-\documentclass[a4paper]{report}
+%\documentclass[12pt,twoside]{report}
+\documentclass[12pt]{report}
+\usepackage[utf8]{inputenc}
 % ***************************PACKAGES***************************
+\usepackage[a4paper,width=150mm,top=25mm,bottom=25mm]{geometry}
 \usepackage[Bjornstrup]{fncychap}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[CE,CO]{\leftmark}
+\fancyfoot[CE,CO]{\thepage}
+
 \usepackage{graphicx}
 \usepackage{graphbox}
 \usepackage{caption,setspace}
@@ -36,7 +45,9 @@
 \usepackage{appendix}
 \usepackage{multirow}
 
+
 % ***************************NEW COMMANDS***************************
+
 % for numbering per section
 \numberwithin{figure}{section}
 % removing ugly colored rectangles from references
@@ -97,12 +108,31 @@
 %\cftsetindents{subsection}{4.4em}{3.2em}
 %\DeclareTOCStyleEntry[indent=0pt]{tocline}{figure}
 %\DeclareTOCStyleEntry[indent=0pt]{tocline}{table}
+\usepackage[titles]{tocloft}
+
+\setlength{\cftfignumwidth}{3 em}
+\setlength{\cftfigindent}{0 em}  % remove indentation from figures in lof
+\renewcommand\cftfigfont{\footnotesize}
+%\renewcommand\cftfigpresnum{Fig. }
+\renewcommand\cftfigpagefont{\footnotesize}
+
+
 
 % ***************************ACRONYM AND SYMBOL DEFINITIONS*******************
 
-\usepackage[acronym,nonumberlist,toc]{glossaries}
+
+\usepackage[nopostdot,acronym,nonumberlist,toc,style=long]{glossaries}
+\renewcommand{\glsnamefont}[1]{\textbf{#1}}
+
+\setlength\LTleft{0pt}
+\setlength\LTright{0pt}
+\setlength\glsdescwidth{1\hsize}
+
+\renewcommand*{\glsgroupskip}{}
 \makenoidxglossaries
 % Acronyms
+
+
 \newacronym{vo}{VO}{Visual Odometry}
 \newacronym{slam}{SLAM}{Simultenous Localization and Mapping}
 \newacronym{rgbd}{RGB-D}{RGB Color Camera with Depth Sensor}
@@ -115,7 +145,7 @@
 \newacronym{brief}{BRIEF}{Binary Robust Independent Elementary Features}
 \newacronym{orb}{ORB}{Oriented FAST and Rotated BRIEF}
 \newacronym{ransac}{RANSAC}{Random Sample Consensus}
-\newacronym{sfm}{SFM}{Structure from Motion}
+\newacronym{sfm}{SFM}{Structure-from-Motion}
 \newacronym{icp}{ICP}{Iterative Closest Point}
 \newacronym{dvo}{DVO}{Dense Visual Odometry}
 \newacronym{covo}{CoVO}{Covariance-enabled Visual Odometry}
@@ -124,18 +154,19 @@
 \newacronym{nees}{NEES}{Normalized Estimation Error Squared}
 \newacronym{anees}{ANEES}{Average Normalized Estimation Error Squared}
 
+
 % Symbols
 \newglossaryentry{world_coord}{
   name = \ensuremath{\mathcal{W}},
-  description = index for the world coordinate system
+  description = index of world coordinate system
 }
 \newglossaryentry{cam_coord}{
   name = \ensuremath{\mathcal{C}},
-  description = index for the camera coordinate system
+  description = index of camera coordinate system
 }
 \newglossaryentry{disparity_space}{
   name = \ensuremath{\mathcal{D}},
-  description = index for the disparity image space
+  description = index of disparity image space
 }
 \newglossaryentry{state_vector}{
   name = \ensuremath{\mathbf{x}},
@@ -153,18 +184,10 @@
   name = \ensuremath{\mathbf{q}},
   description = quaternion vector in $SO(3)$
 }
-%\newglossaryentry{transformation}{
-%  name = \ensuremath{\mathbf{T}_{k,k+1}},
-%  description = camera transformation from $k^{th}$ to $k+1^{th}$ frame
-%}
 \newglossaryentry{translation}{
   name = \ensuremath{\mathbf{t}},
   description = translation vector in $\R^3$
 }
-%\newglossaryentry{rotation}{
-%  name = \ensuremath{\mathbf{q}_{k,k+1}},
-%  description = camera rotation from $k^{th}$ to $k+1^{th}$ frame
-%}
 \newglossaryentry{2d_feature_pix_coord}{
   name = \ensuremath{\mathbf{u}},
   description = pixels coordinates of 2D image feature
@@ -173,19 +196,10 @@
   name = {\ensuremath{\mathbf{X}}} ,
   description = position of 3D point feature 
 }
-%\newglossaryentry{3d_point_world_coords}{
-%  name = $\mathbf{X^{\mathcal{W}}}^{(i)}$ ,
-%  description = $i^{th}$ 3D feature point's position coordinates
-%  in world coordinate system
-%}
 \newglossaryentry{instrinsic}{
   name = {\ensuremath{\mathbf{K}}} ,
   description = instrinsic matrix
 }
-%\newglossaryentry{transformation}{
-%  name = $\mathbf{T}$,
-%  description = homogeneous transformation
-%}
 \newglossaryentry{transformation_ab}{
   name = $\mathbf{T}_{A,B}$,
   description = homogeneous transformation representing frame $A$ with respect 
@@ -296,34 +310,46 @@ description = pixels noise variance
 \begin{titlepage}
 \begin{center}
 
-%  \includegraphics[width=\textwidth]{../fig/tuc_logo.jpg}
+\includegraphics[width=\textwidth]{fig/tuc_logo.pdf}
 
-\vspace{1.5cm}
+\vspace{0.5cm}
 
+{\Large Faculty of Electrical Engineering and Information Technology}\\
+\vspace{0.2cm}
+{\large Professorship of Process Automation}
+
+\vspace{3cm}
 
 {\Huge \textbf{Master Thesis}}\\
 \vspace{0.5cm}
-{\huge \textbf{An Error-Aware RGB-D \\Visual Odometry}}
+{\huge \textbf{An Error-Aware RGB-D \\ \vspace{0.2cm} Visual Odometry}}
 
 
 \vspace{2.5cm}
 
-{\huge \textbf{U\u{g}ur Bolat}}
-
-\vfill
-
-Date:
+{\LARGE U\u{g}ur Bolat}\\
 
 \vspace{1.2cm}
 
-Supervisors: \\
-Dr.-Ing. Sven Lange \\
-M.Sc. Tim Pfeifer
+{\Large Chemnitz, 18. February 2019}
 
+\vfill
+
+\vspace{1.2cm}
+
+
+\begin{tabular}[t]{ll}
+Examiner: &
+	Prof. Dr.-Ing. Peter Protzel\\
+\\
+Supervisors: &
+	Dr.-Ing. Sven Lange \\
+	& M.Sc. Tim Pfeifer
+
+\end{tabular}
 \vspace{0.8cm}
 
-Faculty of Electrical Engineering and Information Technology\\
-Professorship of Process Automation
+
 
 \end{center}
 \end{titlepage}
@@ -388,15 +414,13 @@ are modeled with the sensor characteristics of an RGB-D camera.
 \printnoidxglossary[title=List of Notations,sort=def]
 \glsaddallunused
 \printacronyms
-\chapter*{Acknowledgement}
-\addcontentsline{toc}{chapter}{Acknowledgments}
 \newpage
 
 % ***************************DOCUMENT***************************
 \pagenumbering{arabic}
 
 % ***************************CP1-INTRO***************************
-\chapter{Introduction} \label{cp_intro}
+\chapter{Introduction and Motivation} \label{cp_intro}
 
 The essence of a mobile robot is autonomy. 
 A fully autonomous robot first \textit{senses} its environment, then 
@@ -969,7 +993,7 @@ mostly constructed by using papers; i.e., \parencite{Park2012a} and
 
 \begin{figure}[H]
 	\centering
-  \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
+  \includegraphics[width=0.6\linewidth,natwidth=640,natheight=640]
   {fig/ref_imgs/kinect_depth_img.png}
   \caption[Kinect's Depth Measurement]{On the left, the IR camera capture the 
   patterns of speckles projected on an object. On the right, we see the 
@@ -1001,7 +1025,7 @@ placed along the x-axis parallel to the IR camera with \textit{baseline}
 $b$ distance.  
 Additionally, we measure $d$ as \textit{disparity} data and the maximum 
 range that can be measured refers to $Z_r$. Ultimately, we are interested in 
-finding $Z^{\mathcal{C}}$ distance if depth information of a point 
+finding $Z_o$ distance if depth information of a point 
 $\mathbf{X}^{\mathcal{C}}$ is 
 desired. In this respect, we build two useful relationships using similarity 
 of 
@@ -1009,59 +1033,58 @@ triangles:
 
 
 \begin{equation}
-  \frac{D}{b} = \frac{Z_r - Z^{\mathcal{C}}}{Z_r} \text{ and } \frac{d}{f} = 
-  \frac{D}{Z^{\mathcal{C}}}
+  \frac{D}{b} = \frac{Z_r - Z_o}{Z_r} \text{ and } \frac{d}{f} = 
+  \frac{D}{Z_o}
 \end{equation}
 
 If the depth camera parameters such as $f, b,$ and $Z_r$ is calibrated and we 
-get $d$ disparity data, we can easily extract $Z^{\mathcal{C}}$ depth 
+get $d$ disparity data, we can easily extract $Z_o$ depth 
 information with the 
 following formula:
 
 \begin{equation}\label{eq:depth_wo_disparity}
-  Z^{\mathcal{C}} = \frac{Z_r}{1+\frac{Z_r}{fb}d}
+  Z_o = \frac{Z_r}{1+\frac{Z_r}{fb}d}
 \end{equation}
 
 Another critical point to note is that Kinect or other depth cameras might not 
 provide the depth metric information directly in practice. For instance, 
 Kinect provides us disparity image data that correspond to inverse depth 
-quantized with 11 bits. The relationship between disparity data and real 
-depth is non-linear as shown in Figure \ref{fig:depth_disparity_relation}.
-
-\begin{figure}[H]
-	\centering
-  \includegraphics[width=0.6\linewidth,natwidth=640,natheight=640]
-  {fig/ref_imgs/depth_disparity_relation.png}
-  \caption[Relationship Between Inverse Depth and Disparity]{Non-linear 
-  Relationship Between Inverse Depth and Disparity \parencite{Smisek2011}}
-	\label{fig:depth_disparity_relation}
-\end{figure}
-
+quantized with 11 bits. 
+%The relationship between disparity data and real 
+%depth is non-linear as shown in Figure \ref{fig:depth_disparity_relation}.
+%\begin{figure}[H]
+%	\centering
+%  \includegraphics[width=0.6\linewidth,natwidth=640,natheight=640]
+%  {fig/ref_imgs/depth_disparity_relation.png}
+%  \caption[Relationship Between Inverse Depth and Disparity]{Non-linear 
+%  Relationship Between Inverse Depth and Disparity \parencite{Smisek2011}}
+%	\label{fig:depth_disparity_relation}
+%\end{figure}
 Thus, we need to update depth equation \eqref{eq:depth_wo_disparity} by taking 
 its inverse and introducing normalization factor replacing with $d$ with 
 $md'+n$:
 
 \begin{equation}\label{eq:depth_w_disparity_reverse}
-  {Z^{\mathcal{C}}}^{-1} = (\frac{m}{fb})d' + (Z_r^{-1} + \frac{n}{fb})
+  {Z_o}^{-1} = (\frac{m}{fb})d' + (Z_r^{-1} + \frac{n}{fb})
 \end{equation}
 
 To make it convenient to calculate, we can take its inverse again:
 
 \begin{equation}\label{eq:depth_w_disparity}
-  Z^{\mathcal{C}} = \frac{1}{(\frac{m}{fb})d' + (Z_r^{-1} + \frac{n}{fb})}
+  Z_o = \frac{1}{(\frac{m}{fb})d' + (Z_r^{-1} + \frac{n}{fb})}
 \end{equation}
 
 The relationship between disparity data and metric depth measurement can be 
 written as a function in the following form:
 
 \begin{equation}\label{eq:ir_cam_proj_func}
-  Z^{\mathcal{C}}
+  Z_o
   =
   F_d(d')
 \end{equation} 
 
 
-Now that we know how to get metric depth information $Z^{\mathcal{C}}$ from 
+Now that we know how to get metric depth information $Z_o$ from 
 disparity data 
 by utilizing the triangulation model, we can briefly write down similar 
 projection operation for the IR camera.
@@ -1277,9 +1300,9 @@ image.
 Then, our one last step will be to convert disparity measurement to depth for 
 every feature on the checkerboard and minimize the error between measured 
 depth 
-$\hat{Z^{\mathcal{C}}}=F_d(d')$ (see notation \eqref{eq:ir_cam_proj_func}) and 
+$\hat{Z_o}=F_d(d')$ (see notation \eqref{eq:ir_cam_proj_func}) and 
 real depth 
-$Z^{\mathcal{C}}$:
+$Z_o$:
 
 \begin{equation}\label{eq:proj_lsq}
   \mathbf{x^*} = 
@@ -1802,7 +1825,7 @@ transformation 3D-to-2D Correspondences in four steps:
 
 \begin{figure}[H]
 	\centering
-  \includegraphics[width=0.9\linewidth,natwidth=640,natheight=640]
+  \includegraphics[width=0.8\linewidth,natwidth=640,natheight=640]
   {fig/drawings/3d_to_2d.pdf}
   \caption[3D-to-2D Correspondences]{Assuming that we have two frames taken in 
   the different poses. What 3D-to-2D correspondences method does is that it 
@@ -2222,7 +2245,7 @@ we investigate the pixel error caused by pseudo inliers in section
 \ref{sc_pseudo_inliers} and treat them as pixel uncertainty.
 
 \begin{figure}[H] \centering
-\includegraphics[width=0.6\linewidth,natwidth=640,natheight=640]
+\includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
 {fig/drawings/conic_ray.pdf} \caption[The Conic Ray Error Model]{ The conic ray
 model is inspired from \parencite{Sola2007a} and we expand a confidence 
 ellipse 
@@ -2482,7 +2505,7 @@ f_b(\mathbf{t}_{k,k+1}, \mathbf{q}_{k,k+1}, \mathbf{X}^{(k+1,i)})||^2
 \end{equation}
 
 The important part of the error-aware VO that we propose in this thesis lies on
-having estimated uncertainty of the features and then to propogate it through
+having estimated uncertainty of the features and then to propagate it through
 uncertainty of estimated relative pose.  If we utilized our conic ray model, we
 would have different covariance matrices for each feature.  Thus, let's include
 covariance matrices into the optimization problem:
@@ -2874,7 +2897,7 @@ will be comprised of the following steps:
         \end{itemize}
     \item For every measurements, convariance matrices 
       $(\mathbf{Q}_{\mathbf{xyz},0}^{(1:500)}, \mathbf{Q}_{\mathbf{xyz},1}^{(1:500)})$ are formed with 
-      the same standard deviations of the added noises, where  
+      the same standard deviations of the added noises, where  \\
     $\mathbf{Q}_{\mathbf{xyz},0}^{(i)} = 
     \mathbf{J_{bp}}(\mathbf{u}^{(k,i)})^\top
   \begin{bmatrix} 
@@ -2903,7 +2926,7 @@ determined by the conic ray model and are scaled with $3\sigma$.
 % Distribution of Point Clouds in 3D at p0
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\linewidth,natwidth=640,natheight=640]
+  \includegraphics[width=0.9\linewidth,natwidth=640,natheight=640]
   {fig/eva_graphs/sim_at_p0_edit.pdf}
   \caption[Simulation Environment At The Initial Pose]
   {Simulation Environment At The Initial $\mathbf{x}_0^{\mathcal{C}}$ Pose}
@@ -2920,7 +2943,7 @@ the conic ray model.
 % Distribution of Point Clouds in 3D at p1
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\linewidth,natwidth=640,natheight=640]
+  \includegraphics[width=0.9\linewidth,natwidth=640,natheight=640]
   {fig/eva_graphs/sim_at_p1_edit.pdf}
   \caption[Simulation Environment At The Next Pose]
   {Simulation Environment At The Next $\mathbf{x}_1^{\mathcal{C}}$ Pose}
@@ -2935,7 +2958,7 @@ the new camera pose accordingly.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\linewidth,natwidth=640,natheight=640]
+  \includegraphics[width=0.9\linewidth,natwidth=640,natheight=640]
   {fig/eva_graphs/sim_at_p0p1_edit.pdf}
   \caption[Simulation Environment At Both Poses]
   {Simulation Environment At Both 
@@ -3067,7 +3090,7 @@ system.
     \hline
   \end{tabular}
 \end{center}
-  \caption{List of Chosen TUM RGB-D Datasets}
+  \caption{List of Selected TUM RGB-D Datasets}
   \label{tb:tum_dataset}
 \end{table}
 
@@ -3093,7 +3116,12 @@ pixel error of the pseudo inliers by aligning feature matches with
 transformation information from ground truth.
 
 
-\begin{figure}[H] \makebox[\textwidth][c]{\includegraphics[width=1.4\linewidth,natwidth=640,natheight=640] {fig/eva_graphs/tum_fr1_xyz_tbased_hist_uv_err.pdf}} \caption[Time-based Histogram of Pixel Errors]{ This illustration shows how the pixel error distances are distibuted along the trajectory. Note that we grouped the errors every 20 frames.} \label{fig:time_based_hist_pix_err} \end{figure}
+\begin{figure}[H] 
+\makebox[\textwidth][c]{\includegraphics[width=\linewidth,natwidth=640,natheight=640]
+ {fig/eva_graphs/tum_fr1_xyz_tbased_hist_uv_err.pdf}} \caption[Time-based 
+Histogram of Pixel Errors]{ This illustration shows how the pixel error 
+distances are distibuted along the trajectory. Note that we grouped the errors 
+every 20 frames.} \label{fig:time_based_hist_pix_err} \end{figure}
 
 To be more specific, let's remind ourselves with the CoVO pipeline.  To find 
 the pixel error caused by pseudo inliers, we run our CoVO algorithm up until 
@@ -3812,8 +3840,10 @@ $\mathbf{t}_{0,1}$ simple vector addition operation (see Figure
 \begin{figure}[H]
 \begin{tabular}{ccc}
 \centering
-\subcaptionbox{p0}{\includegraphics[width = 0.45\linewidth]{fig/eva_graphs/append_p0.pdf}} &
-\subcaptionbox{p1}{\includegraphics[width = 0.45\linewidth]{fig/eva_graphs/append_p1_trans.pdf}}
+\subcaptionbox{p0}{\includegraphics[width = 
+0.48\linewidth]{fig/eva_graphs/append_p0.pdf}} &
+\subcaptionbox{p1}{\includegraphics[width = 
+0.48\linewidth]{fig/eva_graphs/append_p1_trans.pdf}}
 \end{tabular}
 \caption{Translation Example in $\R^3$}
 \end{figure}\label{fig:app_translation}
@@ -3849,8 +3879,10 @@ where $[\mathbf{q}_{0,1}]_L$ is the left quaternion product in matrix form.
 \begin{figure}[H]
 \begin{tabular}{ccc}
 \centering
-\subcaptionbox{p0}{\includegraphics[width = 0.45\linewidth]{fig/eva_graphs/append_p0.pdf}} &
-\subcaptionbox{p1}{\includegraphics[width = 0.45\linewidth]{fig/eva_graphs/append_p2_rot.pdf}}
+\subcaptionbox{p0}{\includegraphics[width = 
+0.48\linewidth]{fig/eva_graphs/append_p0.pdf}} &
+\subcaptionbox{p1}{\includegraphics[width = 
+0.48\linewidth]{fig/eva_graphs/append_p2_rot.pdf}}
 \end{tabular}
 \caption{Rotation Example in $SO(3)$}
 \end{figure}\label{fig:app_rotation}
@@ -3877,8 +3909,10 @@ a vector $\mathbf{p}$ with zero scalar part.
 \begin{figure}[H]
 \begin{tabular}{ccc}
 \centering
-\subcaptionbox{p0}{\includegraphics[width = 0.45\linewidth]{fig/eva_graphs/append_p0.pdf}} &
-\subcaptionbox{p1}{\includegraphics[width = 0.45\linewidth]{fig/eva_graphs/append_p3_trans_rot.pdf}}
+\subcaptionbox{p0}{\includegraphics[width = 
+0.48\linewidth]{fig/eva_graphs/append_p0.pdf}} &
+\subcaptionbox{p1}{\includegraphics[width = 
+0.48\linewidth]{fig/eva_graphs/append_p3_trans_rot.pdf}}
 \end{tabular}
 \caption{Transformation Example in $SE(3)$}
 \end{figure}\label{fig:app_transformation}
@@ -4301,7 +4335,7 @@ $\mathbf{r_s}(\mathbf{x}_{k,k+1})=\mathbf{L}^\top\mathbf{r}(\mathbf{x}_{k,k+1})$
 for each iteration around $\mathbf{x}^n_{k,k+1}$ by calculating Jacobian 
 $\mathbf{J_{tqs}}(\mathbf{x}^n_{k,k+1})=\mathbf{L}^\top\mathbf{J_{tq}}(\mathbf{x}^n_{k,k+1})$
 and 
-approximated Hessian matrix 
+approximated Hessian matrix \\
 $\mathbf{B_{LMs}}=\mathbf{J_{tqs}}(\mathbf{x}^n_{k,k+1})^\top\mathbf{J_{tqs}}(\mathbf{x}^n_{k,k+1})
  + \lambda \mathbf{I}$.
 Since we modify our state vector representation 
