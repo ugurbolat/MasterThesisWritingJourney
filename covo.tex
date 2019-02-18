@@ -44,6 +44,7 @@
 %\usepackage[titletoc]{appendix}
 \usepackage{appendix}
 \usepackage{multirow}
+\usepackage{pdfpages} 
 
 
 % ***************************NEW COMMANDS***************************
@@ -255,15 +256,15 @@
 }
 \newglossaryentry{pixel_uncertainty}{
 name = {\ensuremath{\sigma_u, \sigma_v}} ,
-description = pixels noise variance
+description = standard deviations of pixels noise 
 }
 \newglossaryentry{depth_axial_uncertainty}{
 	name = {\ensuremath{\sigma_Z}} ,
-	description = axial depth noise variance
+	description = standard deviation of axial depth noise
 }
 \newglossaryentry{lateral_axial_uncertainty}{
 	name = {\ensuremath{\sigma_L}} ,
-	description = lateral depth noise variance
+	description = standard deviation of lateral depth noise
 }
 \newglossaryentry{back_proj_jacob}{
 	name = {\ensuremath{\mathbf{J_{bp}}}} ,
@@ -1720,7 +1721,7 @@ Appendices \ref{sc_rigid_body_transformations}.
 	\centering
   \includegraphics[width=0.7\linewidth,natwidth=640,natheight=640]
   {fig/drawings/rel_pose.pdf}
-  \caption[Trajectory From Relative Pose]
+  \caption[Trajectory From Relative Poses]
   {VO estimates the ego-motion of the camera by relative poses estimated from  
   image pairs. Thus, it assumes that the initial pose $\mathbf{x}_0$ of the 
   camera is 
@@ -2928,7 +2929,7 @@ determined by the conic ray model and are scaled with $3\sigma$.
   \centering
   \includegraphics[width=0.9\linewidth,natwidth=640,natheight=640]
   {fig/eva_graphs/sim_at_p0_edit.pdf}
-  \caption[Simulation Environment At The Initial Pose]
+  \caption[Simulation Environment at the Initial Pose]
   {Simulation Environment At The Initial $\mathbf{x}_0^{\mathcal{C}}$ Pose}
 	\label{fig:sim_at_p0}
 \end{figure}
@@ -2945,7 +2946,7 @@ the conic ray model.
   \centering
   \includegraphics[width=0.9\linewidth,natwidth=640,natheight=640]
   {fig/eva_graphs/sim_at_p1_edit.pdf}
-  \caption[Simulation Environment At The Next Pose]
+  \caption[Simulation Environment at the Next Pose]
   {Simulation Environment At The Next $\mathbf{x}_1^{\mathcal{C}}$ Pose}
 	\label{fig:sim_at_p1}
 \end{figure}
@@ -2960,7 +2961,7 @@ the new camera pose accordingly.
   \centering
   \includegraphics[width=0.9\linewidth,natwidth=640,natheight=640]
   {fig/eva_graphs/sim_at_p0p1_edit.pdf}
-  \caption[Simulation Environment At Both Poses]
+  \caption[Simulation Environment at Both Poses]
   {Simulation Environment At Both 
   $\mathbf{x}_0^{\mathcal{C}}$ and $\mathbf{x}_1^{\mathcal{C}}$ Poses}
 	\label{fig:sim_at_p0p1}
@@ -3174,8 +3175,8 @@ datasets are given in in Figure \ref{fig:boxplot_time_based_std_all_datasets}.
 \subcaptionbox{fr1 desk}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/boxplot_tbased_uv_err_std_fr1_desk.pdf}} &
 \subcaptionbox{fr1 desk2}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/boxplot_tbased_uv_err_std_fr1_desk2.pdf}}
 \end{tabular}
-\caption[Boxplots of The Standard Deviations of Pixel Errors]
-{Boxplots of The Standard Deviations of Pixel Errors in Different Datasets}
+\caption[The Standard Deviations of Pixel Errors]
+{The Standard Deviations of Pixel Errors in Different Datasets}
 \label{fig:boxplot_time_based_std_all_datasets}
 \end{figure}
 
@@ -3276,9 +3277,10 @@ of RPEs.
 \begin{tabular}{ccc}
 \centering
 \subcaptionbox{The 3D Trajectories}{\includegraphics[width = 0.5\linewidth]{fig/eva_graphs/fovis_comp_3d_tum_fr2_desk.pdf}} &
-\subcaptionbox{Boxplots of RPE}{\includegraphics[width = 0.45\linewidth]{fig/eva_graphs/fovis_comp_boxplot_tum_fr2_desk.pdf}}
+\subcaptionbox{RPE}{\includegraphics[width = 
+0.45\linewidth]{fig/eva_graphs/fovis_comp_boxplot_tum_fr2_desk.pdf}}
 \end{tabular}
-\caption{FOVIS versus CoVO in The TUM FR2 Desk Dataset}
+\caption{FOVIS versus CoVO in TUM FR2 Desk}
 \label{fig:comp_fr2_desk}
 \end{figure}
 
@@ -3298,7 +3300,7 @@ representation of RPE for more explicit comparison in Figure
 \subcaptionbox{fr1 desk}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/fovis_comp_boxplot_tum_fr1_desk.pdf}} &
 \subcaptionbox{fr1 desk2}{\includegraphics[width = 0.3\linewidth]{fig/eva_graphs/fovis_comp_boxplot_tum_fr1_desk2.pdf}}
 \end{tabular}
-\caption{FOVIS versus CoVO With RPE Boxplots}
+\caption{FOVIS versus CoVO with RPE}
 \label{fig:comp_all_dataset}
 \end{figure}
 
@@ -4587,8 +4589,8 @@ illustrated in Figure \ref{fig:error_propagation}.
 	\centering
 	\includegraphics[width=\linewidth,natwidth=640,natheight=640]
 	{fig/ref_imgs/error_propagation.jpg}
-\caption[The Non-linear Error Propagation]
-{The Non-linear Error Propagation. The figure is taken from 
+\caption[Non-linear Error Propagation]
+{Non-linear Error Propagation. The figure is taken from 
 \parencite{Arras1998b}}
   \label{fig:error_propagation}
 \end{figure}
@@ -4739,9 +4741,34 @@ the feature covariances to the pose covariance (see notation
 \end{center}
 \end{table}
 
+\newpage
+
+\section{Content of the Electronic (DVD) Copy}\label{sc_dvd}
+
+The electronic copy of the thesis document and related source codes are 
+contained in the provided DVD. The content of the DVD in the following format:
+
+
+{\renewcommand{\arraystretch}{2} 
+\begin{table}[H]
+	\centering
+\begin{tabular}{l m{7cm}}
+
+Tex/ & Latex documents\\
+SourceCodes/CoVO & Source codes of CoVO \\
+SourceCodes/SimCoVO & Source codes of CoVO testing in simulation environment \\
+SourceCodes/TumTestCoVO & Source codes of CoVO testing with TUM RGB-D Datasets 
+\\
+MasterThesis\_Ugur\_Bolat.pdf & PDF document of the thesis
+\end{tabular}
+\end{table}}
+
 \end{appendices}
 
 \printbibliography[heading=bibintoc]
+
+
+\includepdf[pages=-]{fig/declaration.png}
 
 \end{document}
 
